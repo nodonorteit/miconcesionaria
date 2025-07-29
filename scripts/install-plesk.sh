@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script de instalación para Mi Concesionaria en Plesk
+# Script de instalación genérico para Mi Concesionaria en Plesk
 # Uso: ./scripts/install-plesk.sh
 
 set -e
@@ -12,7 +12,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Función para imprimir mensajes
 print_status() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -32,18 +31,6 @@ print_error() {
 # Función para verificar si un comando existe
 command_exists() {
     command -v "$1" >/dev/null 2>&1
-}
-
-# Función para detectar el sistema operativo
-detect_os() {
-    if [ -f /etc/os-release ]; then
-        . /etc/os-release
-        OS=$NAME
-        VER=$VERSION_ID
-    else
-        print_error "No se pudo detectar el sistema operativo"
-        exit 1
-    fi
 }
 
 # Función para instalar Docker
@@ -124,214 +111,127 @@ install_git() {
     print_success "Git instalado correctamente"
 }
 
-# Función para configurar firewall
-configure_firewall() {
-    print_status "Configurando firewall..."
+# Función para obtener configuración del usuario
+get_configuration() {
+    echo ""
+    echo "🔧 CONFIGURACIÓN DE LA INSTALACIÓN"
+    echo "=================================="
+    echo ""
     
-    if command_exists ufw; then
-        # Permitir SSH
-        sudo ufw allow ssh
-        
-        # Permitir HTTP y HTTPS
-        sudo ufw allow 80/tcp
-        sudo ufw allow 443/tcp
-        
-        # Permitir puerto de la aplicación (si es necesario)
-        sudo ufw allow 3000/tcp
-        
-        # Habilitar firewall
-        echo "y" | sudo ufw enable
-        
-        print_success "Firewall configurado correctamente"
-    else
-        print_warning "UFW no está instalado, saltando configuración de firewall"
-    fi
+    # Solicitar información del usuario
+    read -p "Ingresa el directorio de la aplicación (ej: /var/www/vhosts/tudominio.com/miconcesionaria): " APP_DIR
+    read -p "Ingresa el dominio (ej: miconcesionaria.tudominio.com): " DOMAIN
+    read -p "Ingresa el host de la base de datos (ej: localhost): " DB_HOST
+    read -p "Ingresa el nombre de la base de datos: " DB_NAME
+    read -p "Ingresa el usuario de la base de datos: " DB_USER
+    read -s -p "Ingresa la contraseña de la base de datos: " DB_PASSWORD
+    echo ""
+    read -p "Ingresa el host SMTP: " SMTP_HOST
+    read -p "Ingresa el puerto SMTP: " SMTP_PORT
+    read -p "Ingresa el usuario SMTP: " SMTP_USER
+    read -s -p "Ingresa la contraseña SMTP: " SMTP_PASS
+    echo ""
+    read -p "Ingresa el directorio de backups (ej: /var/www/vhosts/tudominio.com/backups): " BACKUP_DIR
+    read -p "Ingresa el directorio de logs (ej: /var/www/vhosts/tudominio.com/logs): " LOG_DIR
+    
+    echo ""
+    print_success "Configuración capturada"
 }
 
-# Función para crear directorio de la aplicación
-setup_app_directory() {
-    print_status "Configurando directorio de la aplicación..."
+# Función para crear directorios necesarios
+create_directories() {
+    print_status "Creando directorios necesarios..."
     
-    # Crear directorio si no existe
-    sudo mkdir -p /var/www/miconcesionaria
+    # Crear directorio de la aplicación
+    sudo mkdir -p $APP_DIR
+    sudo chown $USER:$USER $APP_DIR
     
-    # Cambiar propietario al usuario actual
-    sudo chown $USER:$USER /var/www/miconcesionaria
+    # Crear directorio de backups
+    sudo mkdir -p $BACKUP_DIR
+    sudo chown $USER:$USER $BACKUP_DIR
     
-    print_success "Directorio configurado: /var/www/miconcesionaria"
+    # Crear directorio de logs
+    sudo mkdir -p $LOG_DIR
+    sudo chown $USER:$USER $LOG_DIR
+    
+    # Crear directorio de uploads
+    sudo mkdir -p $APP_DIR/uploads
+    sudo chown $USER:$USER $APP_DIR/uploads
+    
+    print_success "Directorios creados correctamente"
 }
 
 # Función para configurar variables de entorno
 setup_environment() {
     print_status "Configurando variables de entorno..."
     
-    if [ ! -f .env.production ]; then
-        cp env.production.example .env.production
-        print_warning "Archivo .env.production creado. Por favor edítalo con tus configuraciones:"
-        print_warning "nano .env.production"
-    else
-        print_warning "Archivo .env.production ya existe"
+    # Crear archivo .env.production con la configuración específica
+    cat > $APP_DIR/.env.production <<EOF
+# Database Configuration
+DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:3306/${DB_NAME}
+
+# NextAuth Configuration
+NEXTAUTH_URL=https://${DOMAIN}
+NEXTAUTH_SECRET=$(openssl rand -base64 32)
+
+# SMTP Configuration
+SMTP_HOST=${SMTP_HOST}
+SMTP_PORT=${SMTP_PORT}
+SMTP_USER=${SMTP_USER}
+SMTP_PASS=${SMTP_PASS}
+
+# Application Configuration
+NODE_ENV=production
+EOF
+    
+    print_success "Variables de entorno configuradas"
+}
+
+# Función para mostrar instrucciones de proxy reverso
+show_proxy_instructions() {
+    print_status "Configuración de proxy reverso en Plesk con Nginx..."
+    echo ""
+    echo "📋 INSTRUCCIONES PARA CONFIGURAR PROXY REVERSO EN PLESK (NGINX):"
+    echo "1. Ve al panel de Plesk"
+    echo "2. Selecciona el dominio: ${DOMAIN}"
+    echo "3. Ve a 'Apache & nginx Settings'"
+    echo "4. En la sección 'Nginx Settings', agrega en 'Additional nginx directives':"
+    echo ""
+    echo "   location / {"
+    echo "       proxy_pass http://localhost:3000;"
+    echo "       proxy_http_version 1.1;"
+    echo "       proxy_set_header Upgrade \$http_upgrade;"
+    echo "       proxy_set_header Connection 'upgrade';"
+    echo "       proxy_set_header Host \$host;"
+    echo "       proxy_set_header X-Real-IP \$remote_addr;"
+    echo "       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;"
+    echo "       proxy_set_header X-Forwarded-Proto \$scheme;"
+    echo "       proxy_cache_bypass \$http_upgrade;"
+    echo "   }"
+    echo ""
+    echo "5. Guarda los cambios"
+    echo "6. Reinicia el servicio web si es necesario"
+    echo ""
+}
+
+# Función para configurar SSL
+configure_ssl() {
+    print_status "Configurando SSL con Let's Encrypt..."
+    
+    # Verificar si certbot está instalado
+    if ! command -v certbot &> /dev/null; then
+        print_status "Instalando certbot..."
+        sudo apt-get update
+        sudo apt-get install -y certbot python3-certbot-apache
     fi
-}
-
-# Función para configurar logs
-setup_logs() {
-    print_status "Configurando sistema de logs..."
     
-    # Crear directorio de logs
-    sudo mkdir -p /var/log/miconcesionaria
-    sudo chown $USER:$USER /var/log/miconcesionaria
+    # Obtener certificado SSL
+    sudo certbot --apache -d ${DOMAIN} --non-interactive --agree-tos --email admin@${DOMAIN}
     
-    # Crear archivo de configuración para logrotate
-    sudo tee /etc/logrotate.d/miconcesionaria > /dev/null <<EOF
-/var/log/miconcesionaria/*.log {
-    daily
-    missingok
-    rotate 30
-    compress
-    delaycompress
-    notifempty
-    create 644 $USER $USER
-}
-EOF
+    # Configurar renovación automática
+    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | crontab -
     
-    print_success "Sistema de logs configurado"
-}
-
-# Función para crear script de mantenimiento
-create_maintenance_script() {
-    print_status "Creando script de mantenimiento..."
-    
-    cat > /var/www/miconcesionaria/maintenance.sh <<'EOF'
-#!/bin/bash
-
-# Script de mantenimiento para Mi Concesionaria
-# Uso: ./maintenance.sh [backup|restore|update|logs]
-
-set -e
-
-APP_DIR="/var/www/miconcesionaria"
-BACKUP_DIR="/var/backups/miconcesionaria"
-DATE=$(date +%Y%m%d_%H%M%S)
-
-case "$1" in
-    backup)
-        echo "Creando backup..."
-        mkdir -p $BACKUP_DIR
-        cd $APP_DIR
-        
-        # Backup de la base de datos
-        docker-compose -f docker-compose.prod.yml exec -T db pg_dump -U postgres miconcesionaria > $BACKUP_DIR/db_backup_$DATE.sql
-        
-        # Backup de archivos
-        tar -czf $BACKUP_DIR/files_backup_$DATE.tar.gz uploads/
-        
-        echo "Backup completado: $BACKUP_DIR/"
-        ;;
-    restore)
-        if [ -z "$2" ]; then
-            echo "Uso: $0 restore <fecha_backup>"
-            exit 1
-        fi
-        echo "Restaurando backup del $2..."
-        cd $APP_DIR
-        
-        # Restaurar base de datos
-        docker-compose -f docker-compose.prod.yml exec -T db psql -U postgres miconcesionaria < $BACKUP_DIR/db_backup_$2.sql
-        
-        # Restaurar archivos
-        tar -xzf $BACKUP_DIR/files_backup_$2.tar.gz
-        
-        echo "Restauración completada"
-        ;;
-    update)
-        echo "Actualizando aplicación..."
-        cd $APP_DIR
-        
-        # Backup antes de actualizar
-        ./maintenance.sh backup
-        
-        # Actualizar código
-        git pull origin master
-        
-        # Reconstruir y reiniciar
-        docker-compose -f docker-compose.prod.yml down
-        docker-compose -f docker-compose.prod.yml up --build -d
-        
-        echo "Actualización completada"
-        ;;
-    logs)
-        cd $APP_DIR
-        docker-compose -f docker-compose.prod.yml logs -f
-        ;;
-    *)
-        echo "Uso: $0 {backup|restore|update|logs}"
-        exit 1
-        ;;
-esac
-EOF
-    
-    chmod +x /var/www/miconcesionaria/maintenance.sh
-    print_success "Script de mantenimiento creado: /var/www/miconcesionaria/maintenance.sh"
-}
-
-# Función para crear servicio systemd
-create_systemd_service() {
-    print_status "Creando servicio systemd..."
-    
-    sudo tee /etc/systemd/system/miconcesionaria.service > /dev/null <<EOF
-[Unit]
-Description=Mi Concesionaria Docker Compose
-Requires=docker.service
-After=docker.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/var/www/miconcesionaria
-ExecStart=/usr/bin/docker-compose -f docker-compose.prod.yml up -d
-ExecStop=/usr/bin/docker-compose -f docker-compose.prod.yml down
-TimeoutStartSec=0
-
-[Install]
-WantedBy=multi-user.target
-EOF
-    
-    # Recargar systemd y habilitar servicio
-    sudo systemctl daemon-reload
-    sudo systemctl enable miconcesionaria.service
-    
-    print_success "Servicio systemd creado y habilitado"
-}
-
-# Función para configurar monitoreo
-setup_monitoring() {
-    print_status "Configurando monitoreo básico..."
-    
-    # Crear script de health check
-    cat > /var/www/miconcesionaria/health-check.sh <<'EOF'
-#!/bin/bash
-
-# Health check para Mi Concesionaria
-APP_URL="http://localhost:3000/api/health"
-
-response=$(curl -s -o /dev/null -w "%{http_code}" $APP_URL)
-
-if [ $response -eq 200 ]; then
-    echo "OK - Aplicación funcionando correctamente"
-    exit 0
-else
-    echo "ERROR - Aplicación no responde (HTTP $response)"
-    exit 1
-fi
-EOF
-    
-    chmod +x /var/www/miconcesionaria/health-check.sh
-    
-    # Agregar al crontab para monitoreo cada 5 minutos
-    (crontab -l 2>/dev/null; echo "*/5 * * * * /var/www/miconcesionaria/health-check.sh >> /var/log/miconcesionaria/health.log 2>&1") | crontab -
-    
-    print_success "Monitoreo configurado"
+    print_success "SSL configurado con Let's Encrypt"
 }
 
 # Función para mostrar información final
@@ -341,25 +241,26 @@ show_final_info() {
     echo "🎉 INSTALACIÓN COMPLETADA EXITOSAMENTE"
     echo "=========================================="
     echo ""
-    echo "📁 Directorio de la aplicación: /var/www/miconcesionaria"
-    echo "🔧 Script de despliegue: /var/www/miconcesionaria/scripts/deploy.sh"
-    echo "🛠️  Script de mantenimiento: /var/www/miconcesionaria/maintenance.sh"
-    echo "📊 Logs: /var/log/miconcesionaria/"
-    echo "💾 Backups: /var/backups/miconcesionaria/"
+    echo "📁 Directorio de la aplicación: $APP_DIR"
+    echo "🌐 URL de la aplicación: https://${DOMAIN}"
+    echo "🔧 Script de despliegue: $APP_DIR/scripts/deploy.sh"
+    echo "📊 Logs: $LOG_DIR"
+    echo "💾 Backups: $BACKUP_DIR"
     echo ""
     echo "🚀 PRÓXIMOS PASOS:"
-    echo "1. cd /var/www/miconcesionaria"
-    echo "2. nano .env.production (configurar variables)"
-    echo "3. ./scripts/deploy.sh"
-    echo "4. Configurar proxy reverso en Plesk"
+    echo "1. cd $APP_DIR"
+    echo "2. ./scripts/deploy.sh"
+    echo "3. Configurar proxy reverso en Plesk (ver instrucciones arriba)"
+    echo "4. Acceder a https://${DOMAIN}"
     echo ""
     echo "📋 COMANDOS ÚTILES:"
-    echo "• Ver logs: ./maintenance.sh logs"
-    echo "• Crear backup: ./maintenance.sh backup"
-    echo "• Actualizar: ./maintenance.sh update"
-    echo "• Estado del servicio: sudo systemctl status miconcesionaria"
+    echo "• Ver logs: docker-compose -f docker-compose.prod.yml logs -f"
+    echo "• Estado: docker-compose -f docker-compose.prod.yml ps"
+    echo "• Reiniciar: docker-compose -f docker-compose.prod.yml restart"
     echo ""
-    echo "🌐 La aplicación estará disponible en: http://localhost:3000"
+    echo "🔐 CREDENCIALES POR DEFECTO:"
+    echo "• Email: admin@miconcesionaria.com"
+    echo "• Contraseña: admin123"
     echo ""
 }
 
@@ -375,30 +276,19 @@ main() {
         exit 1
     fi
     
-    # Detectar sistema operativo
-    detect_os
-    print_status "Sistema operativo detectado: $OS $VER"
-    
-    # Verificar que sea Ubuntu
-    if [[ ! "$OS" =~ "Ubuntu" ]]; then
-        print_warning "Este script está optimizado para Ubuntu. Otros sistemas pueden requerir ajustes."
-    fi
+    # Obtener configuración del usuario
+    get_configuration
     
     # Instalar dependencias
     install_git
     install_docker
     install_docker_compose
     
-    # Configurar sistema
-    configure_firewall
-    setup_app_directory
-    setup_logs
-    create_maintenance_script
-    create_systemd_service
-    setup_monitoring
+    # Configurar directorios
+    create_directories
     
     # Cambiar al directorio de la aplicación
-    cd /var/www/miconcesionaria
+    cd $APP_DIR
     
     # Clonar repositorio si no existe
     if [ ! -d ".git" ]; then
@@ -406,8 +296,10 @@ main() {
         git clone https://github.com/nodonorteit/miconcesionaria.git .
     fi
     
-    # Configurar variables de entorno
+    # Configurar aplicación
     setup_environment
+    show_proxy_instructions
+    configure_ssl
     
     # Hacer scripts ejecutables
     chmod +x scripts/*.sh
