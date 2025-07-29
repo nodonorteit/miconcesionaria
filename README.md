@@ -2,7 +2,7 @@
 
 > Sistema completo de gestión para concesionaria de vehículos con Next.js, Docker y MariaDB
 
-**🚀 TEST 5: Solo imagen de app (MariaDB nativo en servidor)**
+**🚀 TEST 6: Build simplificado (solo AMD64, tags simples)**
 
 ## ✨ Características
 
