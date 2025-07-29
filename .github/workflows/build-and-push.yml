@@ -34,23 +34,17 @@ jobs:
         password: ${{ secrets.HUAWEI_SECRET_ACCESS_KEY }}
         ecr: auto
 
-    - name: Extract metadata
+    - name: Set image tag
       id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=raw,value=latest
-          type=ref,event=branch
+      run: |
+        echo "tags=swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest" >> $GITHUB_OUTPUT
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
-        platforms: linux/amd64
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
