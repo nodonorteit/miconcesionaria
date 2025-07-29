@@ -1,6 +1,8 @@
 # 🚗 Mi Concesionaria - Sistema de Gestión
 
-Sistema completo de gestión para concesionaria de vehículos desarrollado con Next.js, TypeScript, Prisma y Docker.
+> Sistema completo de gestión para concesionaria de vehículos con Next.js, Docker y MariaDB
+
+**🚀 TEST: Probando GitHub Actions → Huawei Cloud Pipeline**
 
 ## ✨ Características
 
