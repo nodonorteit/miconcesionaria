@@ -29,6 +29,7 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ secrets.HUAWEI_ACCESS_KEY_ID }}
         password: ${{ secrets.HUAWEI_SECRET_ACCESS_KEY }}
+        ecr: auto
 
     - name: Extract metadata
       id: meta
