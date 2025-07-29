@@ -2,20 +2,19 @@ version: '3.8'
 
 services:
   app:
-    build: .
+    image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
     platform: linux/amd64
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@db:5432/miconcesionaria
+      - DATABASE_URL=mysql://${DB_USER}:${DB_PASSWORD}@localhost:3306/${DB_NAME}
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT}
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
-    depends_on:
-      - db
+      - NODE_ENV=production
     volumes:
       - ./uploads:/app/uploads
     restart: unless-stopped
@@ -24,24 +23,9 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    # No depends_on needed - using native MariaDB
 
-  db:
-    image: postgres:15-alpine
-    platform: linux/amd64
-    environment:
-      - POSTGRES_DB=miconcesionaria
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  # MariaDB service removed - using native MariaDB on server
+  # Database connection will be configured via environment variables
 
-volumes:
-  postgres_data: 
+# No volumes needed - using native MariaDB
