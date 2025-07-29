@@ -1,0 +1,308 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sales      Sale[]
+  commissions Commission[]
+  payments   Payment[]
+
+  @@map("users")
+}
+
+model VehicleType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vehicles Vehicle[]
+
+  @@map("vehicle_types")
+}
+
+model Vehicle {
+  id            String      @id @default(cuid())
+  brand         String
+  model         String
+  year          Int
+  color         String
+  mileage       Int
+  price         Decimal     @db.Decimal(10, 2)
+  description   String?
+  vin           String?     @unique
+  licensePlate  String?
+  fuelType      FuelType
+  transmission  Transmission
+  status        VehicleStatus @default(AVAILABLE)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  // Relations
+  vehicleTypeId String
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  images        VehicleImage[]
+  sales         Sale[]
+
+  @@map("vehicles")
+}
+
+model VehicleImage {
+  id        String   @id @default(cuid())
+  filename  String
+  path      String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  vehicleId String
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_images")
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String?  @unique
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  documentNumber String? @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sales       Sale[]
+  payments    Payment[]
+
+  @@map("customers")
+}
+
+model Seller {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  phone     String?
+  commissionRate Decimal @db.Decimal(5, 2) @default(0.05) // 5% default
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sales       Sale[]
+  commissions Commission[]
+
+  @@map("sellers")
+}
+
+model Provider {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  taxId       String?  @unique
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("providers")
+}
+
+model Workshop {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  zipCode     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("workshops")
+}
+
+model Sale {
+  id          String   @id @default(cuid())
+  saleNumber  String   @unique
+  saleDate    DateTime @default(now())
+  totalAmount Decimal  @db.Decimal(10, 2)
+  commission  Decimal  @db.Decimal(10, 2)
+  status      SaleStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vehicleId   String
+  vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  sellerId    String
+  seller      Seller @relation(fields: [sellerId], references: [id])
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+  payments    Payment[]
+  receipts    Receipt[]
+
+  @@map("sales")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  amount      Decimal  @db.Decimal(10, 2)
+  paymentDate DateTime @default(now())
+  paymentMethod PaymentMethod
+  reference   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  saleId      String
+  sale        Sale @relation(fields: [saleId], references: [id])
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id])
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+model Commission {
+  id          String   @id @default(cuid())
+  amount      Decimal  @db.Decimal(10, 2)
+  commissionDate DateTime @default(now())
+  status      CommissionStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  sellerId    String
+  seller      Seller @relation(fields: [sellerId], references: [id])
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
+
+  @@map("commissions")
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  receiptNumber String @unique
+  receiptDate DateTime @default(now())
+  amount      Decimal  @db.Decimal(10, 2)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  saleId      String
+  sale        Sale @relation(fields: [saleId], references: [id])
+
+  @@map("receipts")
+}
+
+model PurchaseTicket {
+  id          String   @id @default(cuid())
+  ticketNumber String  @unique
+  issueDate   DateTime @default(now())
+  vehicleInfo String
+  sellerInfo  String
+  buyerInfo   String
+  price       Decimal  @db.Decimal(10, 2)
+  status      TicketStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("purchase_tickets")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+  LPG
+}
+
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+  CVT
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  SOLD
+  RESERVED
+  MAINTENANCE
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  CHECK
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+enum TicketStatus {
+  PENDING
+  APPROVED
+  REJECTED
+} 
