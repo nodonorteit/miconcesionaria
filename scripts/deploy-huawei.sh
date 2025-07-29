@@ -70,8 +70,7 @@ pull_images() {
                     # Descargar imagen de la aplicación
                 docker pull $REGISTRY/$ORGANIZATION/miconcesionaria:latest
                 
-                # Descargar imagen de la base de datos
-                docker pull $REGISTRY/$ORGANIZATION/miconcesionaria-db:latest
+                # MariaDB image removed - using native MariaDB on server
     
     print_success "Imágenes descargadas correctamente"
 }
