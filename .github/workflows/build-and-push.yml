@@ -17,6 +17,9 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     
     steps:
@@ -81,5 +84,5 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add docker-compose.prod.yml
-        git commit -m "🔄 Update docker-compose with Huawei Cloud images" || exit 0
-        git push 
+        git commit -m "🔄 Update docker-compose with Huawei Cloud images" || echo "No changes to commit"
+        git push || echo "Push failed - manual update may be needed" 
