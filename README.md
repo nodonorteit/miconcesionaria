@@ -2,7 +2,7 @@
 
 > Sistema completo de gestión para concesionaria de vehículos con Next.js, Docker y MariaDB
 
-**🚀 TEST: Probando GitHub Actions → Huawei Cloud Pipeline**
+**🚀 TEST 2: Probando con Repository Secrets configurados**
 
 ## ✨ Características
 
