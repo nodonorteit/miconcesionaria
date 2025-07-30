@@ -9,7 +9,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@host.docker.internal:3306/miconcesionaria
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@172.17.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - SMTP_HOST=${SMTP_HOST}
