@@ -4,12 +4,13 @@ services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
     platform: linux/amd64
+    network_mode: host
     env_file:
       - .env.production
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@172.17.0.1:3306/miconcesionaria
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - SMTP_HOST=${SMTP_HOST}
