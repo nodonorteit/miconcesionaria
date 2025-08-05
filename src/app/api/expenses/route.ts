@@ -6,14 +6,17 @@ import { join } from 'path'
 // GET - Obtener todos los egresos
 export async function GET() {
   try {
-    const expenses = await prisma.expense.findMany({
-      where: { isActive: true },
-      include: {
-        workshop: true,
-        seller: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const expenses = await prisma.$queryRaw`
+      SELECT 
+        e.*,
+        w.name as workshopName,
+        s.name as sellerName
+      FROM expenses e
+      LEFT JOIN workshops w ON e.workshopId = w.id
+      LEFT JOIN sellers s ON e.sellerId = s.id
+      WHERE e.isActive = 1
+      ORDER BY e.createdAt DESC
+    `
 
     return NextResponse.json(expenses)
   } catch (error) {
@@ -82,30 +85,35 @@ export async function POST(request: NextRequest) {
       receiptPath = `/uploads/${filename}`
     }
 
-    // Crear el egreso
-    const expense = await prisma.expense.create({
-      data: {
-        type: type as any,
-        amount: parseFloat(amount),
-        description,
-        workshopId: workshopId || null,
-        sellerId: sellerId || null,
-        receiptPath,
-        isActive: true
-      },
-      include: {
-        workshop: true,
-        seller: true
-      }
-    })
+    // Crear el egreso usando SQL directo
+    const expenseId = `exp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    await prisma.$executeRaw`
+      INSERT INTO expenses (id, type, amount, description, workshopId, sellerId, receiptPath, isActive, createdAt, updatedAt)
+      VALUES (${expenseId}, ${type}, ${parseFloat(amount)}, ${description}, 
+              ${workshopId || null}, ${sellerId || null}, ${receiptPath}, 1, NOW(), NOW())
+    `
 
-    // Crear entrada en cashflow (usando la tabla correcta)
+    // Crear entrada en cashflow
     await prisma.$executeRaw`
       INSERT INTO cashflow (id, type, amount, description, category, receiptPath, isActive, createdAt, updatedAt)
       VALUES (UUID(), 'EXPENSE', ${-parseFloat(amount)}, ${`Egreso: ${description}`}, 
               ${type === 'WORKSHOP' ? 'MAINTENANCE' : type === 'PARTS' ? 'PURCHASE' : 'COMMISSION'}, 
               ${receiptPath}, 1, NOW(), NOW())
     `
+
+    // Obtener el egreso creado
+    const expenses = await prisma.$queryRaw`
+      SELECT 
+        e.*,
+        w.name as workshopName,
+        s.name as sellerName
+      FROM expenses e
+      LEFT JOIN workshops w ON e.workshopId = w.id
+      LEFT JOIN sellers s ON e.sellerId = s.id
+      WHERE e.id = ${expenseId}
+    `
+    const expense = Array.isArray(expenses) ? expenses[0] : expenses
 
     return NextResponse.json(expense)
   } catch (error) {

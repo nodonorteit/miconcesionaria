@@ -9,13 +9,18 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const expense = await prisma.expense.findUnique({
-      where: { id: params.id },
-      include: {
-        workshop: true,
-        seller: true
-      }
-    })
+    const expenses = await prisma.$queryRaw`
+      SELECT 
+        e.*,
+        w.name as workshopName,
+        s.name as sellerName
+      FROM expenses e
+      LEFT JOIN workshops w ON e.workshopId = w.id
+      LEFT JOIN sellers s ON e.sellerId = s.id
+      WHERE e.id = ${params.id}
+    `
+
+    const expense = Array.isArray(expenses) ? expenses[0] : expenses
 
     if (!expense) {
       return NextResponse.json(
@@ -59,9 +64,10 @@ export async function PUT(
     }
 
     // Obtener egreso existente
-    const existingExpense = await prisma.expense.findUnique({
-      where: { id: params.id }
-    })
+    const existingExpenses = await prisma.$queryRaw`
+      SELECT * FROM expenses WHERE id = ${params.id}
+    `
+    const existingExpense = Array.isArray(existingExpenses) ? existingExpenses[0] : existingExpenses
 
     if (!existingExpense) {
       return NextResponse.json(
@@ -102,23 +108,19 @@ export async function PUT(
     }
 
     // Actualizar el egreso
-    const expense = await prisma.expense.update({
-      where: { id: params.id },
-      data: {
-        type: type as any,
-        amount: parseFloat(amount),
-        description,
-        workshopId: workshopId || null,
-        sellerId: sellerId || null,
-        receiptPath
-      },
-      include: {
-        workshop: true,
-        seller: true
-      }
-    })
+    await prisma.$executeRaw`
+      UPDATE expenses 
+      SET type = ${type}, 
+          amount = ${parseFloat(amount)}, 
+          description = ${description},
+          workshopId = ${workshopId || null},
+          sellerId = ${sellerId || null},
+          receiptPath = ${receiptPath},
+          updatedAt = NOW()
+      WHERE id = ${params.id}
+    `
 
-    // Actualizar entrada en cashflow (usando SQL directo)
+    // Actualizar entrada en cashflow
     await prisma.$executeRaw`
       UPDATE cashflow 
       SET amount = ${-parseFloat(amount)}, 
@@ -128,6 +130,20 @@ export async function PUT(
       WHERE description = ${`Egreso: ${existingExpense.description}`} 
         AND amount = ${-existingExpense.amount}
     `
+
+    // Obtener el egreso actualizado
+    const updatedExpenses = await prisma.$queryRaw`
+      SELECT 
+        e.*,
+        w.name as workshopName,
+        s.name as sellerName
+      FROM expenses e
+      LEFT JOIN workshops w ON e.workshopId = w.id
+      LEFT JOIN sellers s ON e.sellerId = s.id
+      WHERE e.id = ${params.id}
+    `
+
+    const expense = Array.isArray(updatedExpenses) ? updatedExpenses[0] : updatedExpenses
 
     return NextResponse.json(expense)
   } catch (error) {
@@ -145,9 +161,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const expense = await prisma.expense.findUnique({
-      where: { id: params.id }
-    })
+    const expenses = await prisma.$queryRaw`
+      SELECT * FROM expenses WHERE id = ${params.id}
+    `
+    const expense = Array.isArray(expenses) ? expenses[0] : expenses
 
     if (!expense) {
       return NextResponse.json(
@@ -157,19 +174,17 @@ export async function DELETE(
     }
 
     // Soft delete del egreso
-    await prisma.expense.update({
-      where: { id: params.id },
-      data: { isActive: false }
-    })
+    await prisma.$executeRaw`
+      UPDATE expenses SET isActive = 0, updatedAt = NOW() WHERE id = ${params.id}
+    `
 
     // Eliminar entrada correspondiente en cashflow
-    await prisma.cashflow.updateMany({
-      where: {
-        description: `Egreso: ${expense.description}`,
-        amount: -expense.amount
-      },
-      data: { isActive: false }
-    })
+    await prisma.$executeRaw`
+      UPDATE cashflow 
+      SET isActive = 0, updatedAt = NOW()
+      WHERE description = ${`Egreso: ${expense.description}`} 
+        AND amount = ${-expense.amount}
+    `
 
     return NextResponse.json({ message: 'Expense deleted successfully' })
   } catch (error) {
