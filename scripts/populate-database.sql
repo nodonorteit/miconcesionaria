@@ -111,12 +111,12 @@ INSERT INTO workshops (id, name, email, phone, address, taxId, specialties, isAc
 INSERT INTO sellers (id, name, email, phone, commissionRate, isActive, createdAt, updatedAt) VALUES
 ('sel-001', 'Alejandro Vendedor', 'alejandro@miconcesionaria.com', '+54 11 1111-1111', 5.0, 1, NOW(), NOW()),
 ('sel-002', 'Mariana Comercial', 'mariana@miconcesionaria.com', '+54 11 2222-2222', 4.5, 1, NOW(), NOW()),
-('sel-003', 'Diego Ventas', 'diego@miconcesionaria.com', '+54 11 3333-3333', 5.5, 1, NOW(), NOW()),
-('sel-004', 'Carolina Negocios', 'carolina@miconcesionaria.com', '+54 11 4444-4444', 4.0, 1, NOW(), NOW()),
-('sel-005', 'Roberto Comercial', 'roberto@miconcesionaria.com', '+54 11 5555-5555', 6.0, 1, NOW(), NOW()),
-('sel-006', 'Sofía Ventas', 'sofia@miconcesionaria.com', '+54 11 6666-6666', 4.8, 1, NOW(), NOW()),
-('sel-007', 'Luis Negociador', 'luis@miconcesionaria.com', '+54 11 7777-7777', 5.2, 1, NOW(), NOW()),
-('sel-008', 'Ana Comercial', 'ana@miconcesionaria.com', '+54 11 8888-8888', 4.3, 1, NOW(), NOW());
+('sel-003', 'Carlos Ventas', 'carlos@miconcesionaria.com', '+54 11 3333-3333', 6.0, 1, NOW(), NOW()),
+('sel-004', 'Laura Negocios', 'laura@miconcesionaria.com', '+54 11 4444-4444', 5.5, 1, NOW(), NOW()),
+('sel-005', 'Roberto Comercial', 'roberto@miconcesionaria.com', '+54 11 5555-5555', 4.0, 1, NOW(), NOW()),
+('sel-006', 'Sofía Ventas', 'sofia@miconcesionaria.com', '+54 11 6666-6666', 5.5, 1, NOW(), NOW()),
+('sel-007', 'Miguel Negocios', 'miguel@miconcesionaria.com', '+54 11 7777-7777', 6.5, 1, NOW(), NOW()),
+('sel-008', 'Ana Comercial', 'ana@miconcesionaria.com', '+54 11 8888-8888', 4.5, 1, NOW(), NOW());
 
 -- ========================================
 -- 6. VEHÍCULOS
