@@ -35,21 +35,27 @@ export async function POST(request: NextRequest) {
 
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
-      // Crear directorio de uploads si no existe
-      const uploadsDir = join(process.cwd(), 'public', 'uploads')
-      await mkdir(uploadsDir, { recursive: true })
+      try {
+        // Crear directorio de uploads si no existe
+        const uploadsDir = join(process.cwd(), 'public', 'uploads')
+        await mkdir(uploadsDir, { recursive: true })
 
-      const bytes = await logo.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      
-      // Generar nombre único para el archivo
-      const timestamp = Date.now()
-      const filename = `company_logo_${timestamp}_${logo.name}`
-      const filepath = join(uploadsDir, filename)
-      
-      // Guardar archivo
-      await writeFile(filepath, buffer)
-      logoUrl = `/uploads/${filename}`
+        const bytes = await logo.arrayBuffer()
+        const buffer = Buffer.from(bytes)
+        
+        // Generar nombre único para el archivo
+        const timestamp = Date.now()
+        const filename = `company_logo_${timestamp}_${logo.name}`
+        const filepath = join(uploadsDir, filename)
+        
+        // Guardar archivo
+        await writeFile(filepath, buffer)
+        logoUrl = `/uploads/${filename}`
+      } catch (error) {
+        console.error('Error saving logo:', error)
+        // Si no se puede guardar, usar el logo por defecto
+        logoUrl = '/logo.svg'
+      }
     }
 
     // Por ahora solo devolvemos la configuración actualizada
