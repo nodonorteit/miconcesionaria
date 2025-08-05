@@ -4,11 +4,10 @@ services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
     platform: linux/amd64
-    network_mode: host
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@172.17.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
       - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
       - SMTP_HOST=smtp1.s.ipzmarketing.com
