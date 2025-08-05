@@ -23,13 +23,26 @@ interface Vehicle {
   fuelType: string
   transmission: string
   status: string
+  vehicleTypeId: string
+  vehicleType?: {
+    id: string
+    name: string
+  }
   isActive: boolean
   createdAt: string
   updatedAt: string
 }
 
+interface VehicleType {
+  id: string
+  name: string
+  category: string
+  description?: string
+}
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
@@ -46,12 +59,26 @@ export default function VehiclesPage() {
     fuelType: 'GASOLINE',
     transmission: 'MANUAL',
     status: 'AVAILABLE',
+    vehicleTypeId: '',
     images: [] as File[]
   })
 
   useEffect(() => {
     fetchVehicles()
+    fetchVehicleTypes()
   }, [])
+
+  const fetchVehicleTypes = async () => {
+    try {
+      const response = await fetch('/api/vehicle-types')
+      if (response.ok) {
+        const data = await response.json()
+        setVehicleTypes(data)
+      }
+    } catch (error) {
+      console.error('Error fetching vehicle types:', error)
+    }
+  }
 
   const fetchVehicles = async () => {
     try {
@@ -132,6 +159,7 @@ export default function VehiclesPage() {
       fuelType: vehicle.fuelType,
       transmission: vehicle.transmission,
       status: vehicle.status,
+      vehicleTypeId: vehicle.vehicleTypeId,
       images: []
     })
     setShowForm(true)
@@ -170,6 +198,7 @@ export default function VehiclesPage() {
       fuelType: 'GASOLINE',
       transmission: 'MANUAL',
       status: 'AVAILABLE',
+      vehicleTypeId: '',
       images: []
     })
   }
@@ -205,6 +234,23 @@ export default function VehiclesPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="vehicleTypeId">Tipo de Vehículo</Label>
+                  <select
+                    id="vehicleTypeId"
+                    value={formData.vehicleTypeId}
+                    onChange={(e) => setFormData({...formData, vehicleTypeId: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Seleccionar tipo...</option>
+                    {vehicleTypes.map((type) => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <Label htmlFor="brand">Marca</Label>
                   <Input
@@ -339,6 +385,11 @@ export default function VehiclesPage() {
                     <option value="ELECTRIC">Eléctrico</option>
                     <option value="HYBRID">Híbrido</option>
                     <option value="LPG">GLP</option>
+                    <option value="CNG">GNC</option>
+                    <option value="HYDROGEN">Hidrógeno</option>
+                    <option value="BIOFUEL">Biocombustible</option>
+                    <option value="SOLAR">Solar</option>
+                    <option value="WIND">Eólico</option>
                   </select>
                 </div>
                 <div>
@@ -352,6 +403,10 @@ export default function VehiclesPage() {
                     <option value="MANUAL">Manual</option>
                     <option value="AUTOMATIC">Automático</option>
                     <option value="CVT">CVT</option>
+                    <option value="SEMI_AUTOMATIC">Semi-automático</option>
+                    <option value="DCT">DCT</option>
+                    <option value="HYDRAULIC">Hidráulico</option>
+                    <option value="ELECTRIC_DRIVE">Tracción eléctrica</option>
                   </select>
                 </div>
                 <div>
@@ -366,6 +421,9 @@ export default function VehiclesPage() {
                     <option value="SOLD">Vendido</option>
                     <option value="RESERVED">Reservado</option>
                     <option value="MAINTENANCE">En Mantenimiento</option>
+                    <option value="REPAIR">En Reparación</option>
+                    <option value="INSPECTION">En Inspección</option>
+                    <option value="STORAGE">En Almacenamiento</option>
                   </select>
                 </div>
               </div>
@@ -416,6 +474,7 @@ export default function VehiclesPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                <p><strong>Tipo:</strong> {vehicle.vehicleType?.name || 'Sin tipo'}</p>
                 <p><strong>Año:</strong> {vehicle.year}</p>
                 <p><strong>Color:</strong> {vehicle.color}</p>
                 <p><strong>Kilometraje:</strong> {vehicle.mileage.toLocaleString()} km</p>

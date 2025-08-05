@@ -20,14 +20,22 @@ async function main() {
     },
   })
 
-  // Create vehicle types
+  // Create vehicle types - Automotriz
   const vehicleTypes = await Promise.all([
     prisma.vehicleType.upsert({
-      where: { name: 'Automóvil' },
+      where: { name: 'Sedán' },
       update: {},
       create: {
-        name: 'Automóvil',
-        description: 'Vehículos de pasajeros',
+        name: 'Sedán',
+        description: 'Vehículo de pasajeros con 4 puertas',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'SUV' },
+      update: {},
+      create: {
+        name: 'SUV',
+        description: 'Vehículo utilitario deportivo',
       },
     }),
     prisma.vehicleType.upsert({
@@ -35,23 +43,149 @@ async function main() {
       update: {},
       create: {
         name: 'Camioneta',
-        description: 'Vehículos utilitarios',
+        description: 'Vehículo de carga ligera',
       },
     }),
     prisma.vehicleType.upsert({
-      where: { name: 'Camión' },
+      where: { name: 'Hatchback' },
       update: {},
       create: {
-        name: 'Camión',
-        description: 'Vehículos de carga',
+        name: 'Hatchback',
+        description: 'Vehículo compacto con portón trasero',
       },
     }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Pickup' },
+      update: {},
+      create: {
+        name: 'Pickup',
+        description: 'Camioneta con caja de carga',
+      },
+    }),
+    // Motocicletas
     prisma.vehicleType.upsert({
       where: { name: 'Moto' },
       update: {},
       create: {
         name: 'Moto',
-        description: 'Motocicletas',
+        description: 'Motocicleta de dos ruedas',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Scooter' },
+      update: {},
+      create: {
+        name: 'Scooter',
+        description: 'Motocicleta urbana con plataforma',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Cuatriciclo' },
+      update: {},
+      create: {
+        name: 'Cuatriciclo',
+        description: 'Vehículo todo terreno de 4 ruedas',
+      },
+    }),
+    // Comercial
+    prisma.vehicleType.upsert({
+      where: { name: 'Camión' },
+      update: {},
+      create: {
+        name: 'Camión',
+        description: 'Vehículo de carga pesada',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Furgón' },
+      update: {},
+      create: {
+        name: 'Furgón',
+        description: 'Vehículo de carga cerrado',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Van Comercial' },
+      update: {},
+      create: {
+        name: 'Van Comercial',
+        description: 'Furgoneta para uso comercial',
+      },
+    }),
+    // Agrícola
+    prisma.vehicleType.upsert({
+      where: { name: 'Tractor' },
+      update: {},
+      create: {
+        name: 'Tractor',
+        description: 'Maquinaria agrícola',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Cosechadora' },
+      update: {},
+      create: {
+        name: 'Cosechadora',
+        description: 'Maquinaria para cosecha',
+      },
+    }),
+    // Marítimo
+    prisma.vehicleType.upsert({
+      where: { name: 'Lancha' },
+      update: {},
+      create: {
+        name: 'Lancha',
+        description: 'Embarcación recreativa',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Yate' },
+      update: {},
+      create: {
+        name: 'Yate',
+        description: 'Embarcación de lujo',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Moto de Agua' },
+      update: {},
+      create: {
+        name: 'Moto de Agua',
+        description: 'Vehículo acuático recreativo',
+      },
+    }),
+    // Construcción
+    prisma.vehicleType.upsert({
+      where: { name: 'Excavadora' },
+      update: {},
+      create: {
+        name: 'Excavadora',
+        description: 'Maquinaria de construcción',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Grúa' },
+      update: {},
+      create: {
+        name: 'Grúa',
+        description: 'Maquinaria para elevación',
+      },
+    }),
+    // Recreativo
+    prisma.vehicleType.upsert({
+      where: { name: 'Caravana' },
+      update: {},
+      create: {
+        name: 'Caravana',
+        description: 'Vehículo recreativo remolcable',
+      },
+    }),
+    prisma.vehicleType.upsert({
+      where: { name: 'Motorhome' },
+      update: {},
+      create: {
+        name: 'Motorhome',
+        description: 'Vehículo recreativo autopropulsado',
       },
     }),
   ])

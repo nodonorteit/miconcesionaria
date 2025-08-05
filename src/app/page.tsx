@@ -167,6 +167,11 @@ export default function Dashboard() {
                   Agregar Vehículo
                 </Button>
               </Link>
+              <Link href="/vehicle-types">
+                <Button className="w-full" variant="outline">
+                  Tipos de Vehículos
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 

@@ -32,6 +32,7 @@ model User {
 model VehicleType {
   id          String   @id @default(cuid())
   name        String   @unique
+  category    VehicleCategory @default(AUTOMOTIVE)
   description String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -261,18 +262,38 @@ enum UserRole {
   USER
 }
 
+enum VehicleCategory {
+  AUTOMOTIVE      // Autos, camionetas, SUVs
+  MOTORCYCLE      // Motos, scooters, cuatriciclos
+  COMMERCIAL      // Camiones, furgones, vans comerciales
+  AGRICULTURAL    // Tractores, cosechadoras, implementos agrícolas
+  MARINE          // Barcos, lanchas, yates, motos de agua
+  CONSTRUCTION    // Excavadoras, grúas, maquinaria pesada
+  RECREATIONAL    // Caravanas, motorhomes, trailers
+  SPECIALTY       // Vehículos especiales, militares, etc.
+}
+
 enum FuelType {
   GASOLINE
   DIESEL
   ELECTRIC
   HYBRID
   LPG
+  CNG
+  HYDROGEN
+  BIOFUEL
+  SOLAR
+  WIND
 }
 
 enum Transmission {
   MANUAL
   AUTOMATIC
   CVT
+  SEMI_AUTOMATIC
+  DCT
+  HYDRAULIC
+  ELECTRIC_DRIVE
 }
 
 enum VehicleStatus {
@@ -280,6 +301,9 @@ enum VehicleStatus {
   SOLD
   RESERVED
   MAINTENANCE
+  REPAIR
+  INSPECTION
+  STORAGE
 }
 
 enum SaleStatus {
