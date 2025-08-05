@@ -122,6 +122,9 @@ model Seller {
   sales       Sale[]
   commissions Commission[]
 
+  // Relations
+  expenses Expense[]
+
   @@map("sellers")
 }
 
@@ -154,6 +157,9 @@ model Workshop {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // Relations
+  expenses Expense[]
 
   @@map("workshops")
 }
@@ -221,6 +227,25 @@ model Commission {
   user        User @relation(fields: [userId], references: [id])
 
   @@map("commissions")
+}
+
+model Expense {
+  id          String      @id @default(cuid())
+  type        ExpenseType
+  amount      Decimal     @db.Decimal(10, 2)
+  description String
+  workshopId  String?
+  sellerId    String?
+  receiptPath String?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  workshop Workshop? @relation(fields: [workshopId], references: [id])
+  seller   Seller?   @relation(fields: [sellerId], references: [id])
+
+  @@map("expenses")
 }
 
 model Receipt {
@@ -330,4 +355,10 @@ enum TicketStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum ExpenseType {
+  WORKSHOP
+  PARTS
+  COMMISSION
 } 

@@ -16,7 +16,8 @@ import {
   Wrench,
   TrendingUp,
   Calendar,
-  Search
+  Search,
+  MinusCircle
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -275,6 +276,12 @@ export default function Dashboard() {
               <Link href="/cashflow">
                 <Button className="w-full" variant="outline">
                   Ver Flujo de Caja
+                </Button>
+              </Link>
+              <Link href="/expenses">
+                <Button className="w-full" variant="outline">
+                  <MinusCircle className="h-4 w-4 mr-2" />
+                  Egresos
                 </Button>
               </Link>
             </CardContent>
