@@ -15,19 +15,28 @@ interface DollarRates {
 // GET - Obtener todas las cotizaciones del dólar
 export async function GET() {
   try {
+    console.log('🔄 Iniciando fetch de cotizaciones desde dolarmep.com...')
+    
     // Intentar obtener el valor del dólar desde dolarmep.com
     const response = await fetch('https://dolarmep.com/', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'es-AR,es;q=0.8,en-US;q=0.5,en;q=0.3',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
       },
       next: { revalidate: 300 } // Cache por 5 minutos
     })
 
     if (!response.ok) {
-      throw new Error('Failed to fetch dollar rates')
+      console.error('❌ Error en la respuesta HTTP:', response.status, response.statusText)
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
 
     const html = await response.text()
+    console.log('✅ HTML obtenido, longitud:', html.length)
     
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
@@ -52,56 +61,67 @@ export async function GET() {
       return null
     }
 
-    // Dólar MEP
+    // Función helper para buscar valores en el HTML usando IDs específicos
+    const findValueById = (id: string): number | null => {
+      const pattern = new RegExp(`id="${id}">\\$?([\\d,]+\\.?\\d*)`, 'i')
+      const match = html.match(pattern)
+      if (match && match[1]) {
+        const value = extractNumber(match[1])
+        if (value) {
+          console.log(`✅ Encontrado valor para ${id}: ${value}`)
+          return value
+        }
+      }
+      return null
+    }
+
+    // Dólar Blue - usando IDs específicos
+    rates.blue.compra = findValueById('price-blue-buy')
+    rates.blue.venta = findValueById('price-blue-sell')
+
+    // Dólar CCL
+    rates.ccl.venta = findValueById('price-ccl-sell')
+
+    // Dólar Cripto
+    rates.crypto.compra = findValueById('price-cripto-buy')
+    rates.crypto.venta = findValueById('price-cripto-sell')
+
+    // Dólar Tarjeta
+    rates.tarjeta.venta = findValueById('price-tarjeta-sell')
+
+    // Dólar Ahorro
+    rates.ahorro.compra = findValueById('price-ahorro-buy')
+    rates.ahorro.venta = findValueById('price-ahorro-sell')
+
+    // Dólar Oficial
+    rates.oficial.compra = findValueById('price-oficial-buy')
+    rates.oficial.venta = findValueById('price-oficial-sell')
+
+    // Dólar MEP - buscar en el contenido general ya que no aparece en el HTML proporcionado
     const mepPatterns = [
-      /cotización del Dólar MEP hoy es de:\s*\$?([\d,]+\.?\d*)/i,
-      /Dólar MEP.*?(\$?[\d,]+\.?\d*)/i,
-      /(\$?[\d,]+\.?\d*).*?MEP/i
+      /Dólar MEP.*?(\$?[\d,]+\.?\d*)/gi,
+      /MEP.*?(\$?[\d,]+\.?\d*)/gi,
+      /cotización.*?MEP.*?(\$?[\d,]+\.?\d*)/gi
     ]
+    
     for (const pattern of mepPatterns) {
       const match = html.match(pattern)
       if (match && match[1]) {
-        rates.mep = extractNumber(match[1])
-        if (rates.mep) break
+        const value = extractNumber(match[1])
+        if (value) {
+          console.log(`✅ Encontrado Dólar MEP: ${value}`)
+          rates.mep = value
+          break
+        }
       }
     }
 
-    // Dólar Blue
-    const blueCompraMatch = html.match(/Dólar Blue.*?Compra.*?(\$?[\d,]+\.?\d*)/i)
-    const blueVentaMatch = html.match(/Dólar Blue.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (blueCompraMatch) rates.blue.compra = extractNumber(blueCompraMatch[1])
-    if (blueVentaMatch) rates.blue.venta = extractNumber(blueVentaMatch[1])
-
-    // Dólar CCL
-    const cclMatch = html.match(/Dólar CCL.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (cclMatch) rates.ccl.venta = extractNumber(cclMatch[1])
-
-    // Dólar Cripto
-    const cryptoCompraMatch = html.match(/Dólar Cripto.*?Compra.*?(\$?[\d,]+\.?\d*)/i)
-    const cryptoVentaMatch = html.match(/Dólar Cripto.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (cryptoCompraMatch) rates.crypto.compra = extractNumber(cryptoCompraMatch[1])
-    if (cryptoVentaMatch) rates.crypto.venta = extractNumber(cryptoVentaMatch[1])
-
-    // Dólar Tarjeta
-    const tarjetaMatch = html.match(/Dólar Tarjeta.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (tarjetaMatch) rates.tarjeta.venta = extractNumber(tarjetaMatch[1])
-
-    // Dólar Ahorro
-    const ahorroCompraMatch = html.match(/Dólar Ahorro.*?Compra.*?(\$?[\d,]+\.?\d*)/i)
-    const ahorroVentaMatch = html.match(/Dólar Ahorro.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (ahorroCompraMatch) rates.ahorro.compra = extractNumber(ahorroCompraMatch[1])
-    if (ahorroVentaMatch) rates.ahorro.venta = extractNumber(ahorroVentaMatch[1])
-
-    // Dólar Oficial
-    const oficialCompraMatch = html.match(/Dólar Oficial.*?Compra.*?(\$?[\d,]+\.?\d*)/i)
-    const oficialVentaMatch = html.match(/Dólar Oficial.*?Venta.*?(\$?[\d,]+\.?\d*)/i)
-    if (oficialCompraMatch) rates.oficial.compra = extractNumber(oficialCompraMatch[1])
-    if (oficialVentaMatch) rates.oficial.venta = extractNumber(oficialVentaMatch[1])
+    console.log('📊 Cotizaciones extraídas:', JSON.stringify(rates, null, 2))
 
     return NextResponse.json(rates)
 
   } catch (error) {
-    console.error('Error fetching dollar rates:', error)
+    console.error('❌ Error fetching dollar rates:', error)
     return NextResponse.json({
       mep: null,
       blue: { compra: null, venta: null },
