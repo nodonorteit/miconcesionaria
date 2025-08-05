@@ -44,7 +44,7 @@ fi
 
 # 4. Poblar la base de datos con datos de prueba
 echo "🎯 Poblando base de datos con datos de prueba..."
-mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/populate-database.sql
+mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/populate-database.sh
 
 if [ $? -eq 0 ]; then
     echo "✅ Base de datos poblada exitosamente"
