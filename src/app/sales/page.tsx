@@ -329,7 +329,7 @@ export default function SalesPage() {
                     <option value="">Seleccionar vendedor</option>
                     {sellers.map((seller) => (
                       <option key={seller.id} value={seller.id}>
-                        {seller.firstName} {seller.lastName} ({seller.commissionRate}%)
+                        {seller.firstName} {seller.lastName}
                       </option>
                     ))}
                   </select>

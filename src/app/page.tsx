@@ -32,6 +32,18 @@ interface DashboardStats {
   totalWorkshops: number
 }
 
+interface DollarRates {
+  mep: number | null
+  blue: { compra: number | null; venta: number | null }
+  ccl: { venta: number | null }
+  crypto: { compra: number | null; venta: number | null }
+  tarjeta: { venta: number | null }
+  ahorro: { compra: number | null; venta: number | null }
+  oficial: { compra: number | null; venta: number | null }
+  timestamp: string
+  source: string
+}
+
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const [stats, setStats] = useState<DashboardStats>({
@@ -44,6 +56,8 @@ export default function Dashboard() {
     totalProviders: 0,
     totalWorkshops: 0
   })
+  const [dollarRates, setDollarRates] = useState<DollarRates | null>(null)
+  const [dollarLoading, setDollarLoading] = useState(true)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -52,6 +66,8 @@ export default function Dashboard() {
 
     // Fetch dashboard stats
     fetchDashboardStats()
+    // Fetch dollar rate
+    fetchDollarRate()
   }, [status])
 
   const fetchDashboardStats = async () => {
@@ -63,6 +79,21 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)
+    }
+  }
+
+  const fetchDollarRate = async () => {
+    try {
+      setDollarLoading(true)
+      const response = await fetch('/api/dollar')
+      if (response.ok) {
+        const data = await response.json()
+        setDollarRates(data)
+      }
+    } catch (error) {
+      console.error('Error fetching dollar rates:', error)
+    } finally {
+      setDollarLoading(false)
     }
   }
 
@@ -146,6 +177,159 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Dólar MEP Widget */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+              Cotizaciones del Dólar
+            </CardTitle>
+            <CardDescription>Cotizaciones en tiempo real desde dolarmep.com</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {dollarLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-pulse text-lg">Cargando cotizaciones...</div>
+              </div>
+            ) : dollarRates ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Dólar MEP */}
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="text-sm font-medium text-green-800">Dólar MEP</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {dollarRates.mep ? `$${dollarRates.mep.toLocaleString('es-AR')}` : 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Dólar Blue */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="text-sm font-medium text-blue-800">Dólar Blue</div>
+                    <div className="space-y-1">
+                      <div className="text-lg font-bold text-blue-600">
+                        {dollarRates.blue.venta ? `$${dollarRates.blue.venta.toLocaleString('es-AR')}` : 'N/A'}
+                      </div>
+                      <div className="text-xs text-blue-600">
+                        Compra: {dollarRates.blue.compra ? `$${dollarRates.blue.compra.toLocaleString('es-AR')}` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dólar CCL */}
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <div className="text-sm font-medium text-purple-800">Dólar CCL</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {dollarRates.ccl.venta ? `$${dollarRates.ccl.venta.toLocaleString('es-AR')}` : 'N/A'}
+                    </div>
+                  </div>
+
+                  {/* Dólar Oficial */}
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="text-sm font-medium text-gray-800">Dólar Oficial</div>
+                    <div className="space-y-1">
+                      <div className="text-lg font-bold text-gray-600">
+                        {dollarRates.oficial.venta ? `$${dollarRates.oficial.venta.toLocaleString('es-AR')}` : 'N/A'}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        Compra: {dollarRates.oficial.compra ? `$${dollarRates.oficial.compra.toLocaleString('es-AR')}` : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabla completa */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-medium">Tipo</th>
+                        <th className="text-right py-2 font-medium">Compra</th>
+                        <th className="text-right py-2 font-medium">Venta</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">MEP</td>
+                        <td className="text-right py-2">-</td>
+                        <td className="text-right py-2 font-bold text-green-600">
+                          {dollarRates.mep ? `$${dollarRates.mep.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Blue</td>
+                        <td className="text-right py-2">
+                          {dollarRates.blue.compra ? `$${dollarRates.blue.compra.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                        <td className="text-right py-2 font-bold text-blue-600">
+                          {dollarRates.blue.venta ? `$${dollarRates.blue.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">CCL</td>
+                        <td className="text-right py-2">-</td>
+                        <td className="text-right py-2 font-bold text-purple-600">
+                          {dollarRates.ccl.venta ? `$${dollarRates.ccl.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Cripto</td>
+                        <td className="text-right py-2">
+                          {dollarRates.crypto.compra ? `$${dollarRates.crypto.compra.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                        <td className="text-right py-2 font-bold text-orange-600">
+                          {dollarRates.crypto.venta ? `$${dollarRates.crypto.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Tarjeta</td>
+                        <td className="text-right py-2">-</td>
+                        <td className="text-right py-2 font-bold text-red-600">
+                          {dollarRates.tarjeta.venta ? `$${dollarRates.tarjeta.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2 font-medium">Ahorro</td>
+                        <td className="text-right py-2">
+                          {dollarRates.ahorro.compra ? `$${dollarRates.ahorro.compra.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                        <td className="text-right py-2 font-bold text-indigo-600">
+                          {dollarRates.ahorro.venta ? `$${dollarRates.ahorro.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 font-medium">Oficial</td>
+                        <td className="text-right py-2">
+                          {dollarRates.oficial.compra ? `$${dollarRates.oficial.compra.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                        <td className="text-right py-2 font-bold text-gray-600">
+                          {dollarRates.oficial.venta ? `$${dollarRates.oficial.venta.toLocaleString('es-AR')}` : 'N/A'}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Última actualización: {new Date(dollarRates.timestamp).toLocaleString('es-AR')}</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={fetchDollarRate}
+                    disabled={dollarLoading}
+                  >
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Actualizar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-red-500">
+                Error al cargar las cotizaciones
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
