@@ -3,51 +3,15 @@
 -- ========================================
 
 -- Limpiar datos existentes (mantener admin user)
--- Usar DELETE con verificación de existencia de tabla
-SET @sql = 'DELETE FROM vehicle_images';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM Vehicle';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM vehicle_types';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM sales';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM cashflow';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM Client';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM Provider';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM Workshop';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
-SET @sql = 'DELETE FROM Seller';
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+DELETE FROM vehicle_images;
+DELETE FROM Vehicle;
+DELETE FROM vehicle_types;
+DELETE FROM sales;
+DELETE FROM cashflow;
+DELETE FROM Client;
+DELETE FROM Provider;
+DELETE FROM Workshop;
+DELETE FROM Seller;
 
 -- ========================================
 -- 1. TIPOS DE VEHÍCULOS
@@ -104,17 +68,17 @@ INSERT INTO vehicle_types (id, name, category, description, isActive, createdAt,
 -- ========================================
 -- 2. CLIENTES
 -- ========================================
-INSERT INTO Client (id, name, email, phone, address, taxId, isActive, createdAt, updatedAt) VALUES
-('cl-001', 'Juan Pérez', 'juan.perez@email.com', '+54 11 1234-5678', 'Av. Corrientes 1234, CABA', '20-12345678-9', 1, NOW(), NOW()),
-('cl-002', 'María González', 'maria.gonzalez@email.com', '+54 11 2345-6789', 'Belgrano 567, CABA', '27-23456789-0', 1, NOW(), NOW()),
-('cl-003', 'Carlos Rodríguez', 'carlos.rodriguez@email.com', '+54 11 3456-7890', 'Palermo 890, CABA', '20-34567890-1', 1, NOW(), NOW()),
-('cl-004', 'Ana Martínez', 'ana.martinez@email.com', '+54 11 4567-8901', 'Recoleta 234, CABA', '27-45678901-2', 1, NOW(), NOW()),
-('cl-005', 'Luis Fernández', 'luis.fernandez@email.com', '+54 11 5678-9012', 'San Telmo 456, CABA', '20-56789012-3', 1, NOW(), NOW()),
-('cl-006', 'Sofía López', 'sofia.lopez@email.com', '+54 11 6789-0123', 'Villa Crespo 789, CABA', '27-67890123-4', 1, NOW(), NOW()),
-('cl-007', 'Roberto Silva', 'roberto.silva@email.com', '+54 11 7890-1234', 'Caballito 123, CABA', '20-78901234-5', 1, NOW(), NOW()),
-('cl-008', 'Carmen Ruiz', 'carmen.ruiz@email.com', '+54 11 8901-2345', 'Almagro 567, CABA', '27-89012345-6', 1, NOW(), NOW()),
-('cl-009', 'Diego Morales', 'diego.morales@email.com', '+54 11 9012-3456', 'Villa del Parque 890, CABA', '20-90123456-7', 1, NOW(), NOW()),
-('cl-010', 'Laura Torres', 'laura.torres@email.com', '+54 11 0123-4567', 'Villa Devoto 234, CABA', '27-01234567-8', 1, NOW(), NOW());
+INSERT INTO Client (id, firstName, lastName, email, phone, address, city, state, zipCode, documentNumber, isActive, createdAt, updatedAt) VALUES
+('cl-001', 'Juan', 'Pérez', 'juan.perez@email.com', '+54 11 1234-5678', 'Av. Corrientes 1234', 'CABA', 'Buenos Aires', '1043', '12345678', 1, NOW(), NOW()),
+('cl-002', 'María', 'González', 'maria.gonzalez@email.com', '+54 11 2345-6789', 'Belgrano 567', 'CABA', 'Buenos Aires', '1425', '23456789', 1, NOW(), NOW()),
+('cl-003', 'Carlos', 'Rodríguez', 'carlos.rodriguez@email.com', '+54 11 3456-7890', 'Palermo 890', 'CABA', 'Buenos Aires', '1414', '34567890', 1, NOW(), NOW()),
+('cl-004', 'Ana', 'Martínez', 'ana.martinez@email.com', '+54 11 4567-8901', 'Recoleta 234', 'CABA', 'Buenos Aires', '1121', '45678901', 1, NOW(), NOW()),
+('cl-005', 'Luis', 'Fernández', 'luis.fernandez@email.com', '+54 11 5678-9012', 'San Telmo 456', 'CABA', 'Buenos Aires', '1103', '56789012', 1, NOW(), NOW()),
+('cl-006', 'Sofía', 'López', 'sofia.lopez@email.com', '+54 11 6789-0123', 'Villa Crespo 789', 'CABA', 'Buenos Aires', '1414', '67890123', 1, NOW(), NOW()),
+('cl-007', 'Roberto', 'Silva', 'roberto.silva@email.com', '+54 11 7890-1234', 'Caballito 123', 'CABA', 'Buenos Aires', '1405', '78901234', 1, NOW(), NOW()),
+('cl-008', 'Carmen', 'Ruiz', 'carmen.ruiz@email.com', '+54 11 8901-2345', 'Almagro 567', 'CABA', 'Buenos Aires', '1221', '89012345', 1, NOW(), NOW()),
+('cl-009', 'Diego', 'Morales', 'diego.morales@email.com', '+54 11 9012-3456', 'Villa del Parque 890', 'CABA', 'Buenos Aires', '1415', '90123456', 1, NOW(), NOW()),
+('cl-010', 'Laura', 'Torres', 'laura.torres@email.com', '+54 11 0123-4567', 'Villa Devoto 234', 'CABA', 'Buenos Aires', '1419', '01234567', 1, NOW(), NOW());
 
 -- ========================================
 -- 3. PROVEEDORES
@@ -197,14 +161,14 @@ INSERT INTO Vehicle (id, brand, model, year, color, mileage, price, description,
 -- ========================================
 -- 7. VENTAS
 -- ========================================
-INSERT INTO sales (id, saleNumber, vehicleId, customerId, sellerId, saleDate, salePrice, commission, status, isActive, createdAt, updatedAt) VALUES
-('sale-001', 'V-2024-001', 'vh-001', 'cl-001', 'sel-001', DATE_SUB(NOW(), INTERVAL 30 DAY), 25000.00, 1250.00, 'COMPLETED', 1, NOW(), NOW()),
-('sale-002', 'V-2024-002', 'vh-006', 'cl-002', 'sel-002', DATE_SUB(NOW(), INTERVAL 25 DAY), 8500.00, 382.50, 'COMPLETED', 1, NOW(), NOW()),
-('sale-003', 'V-2024-003', 'vh-013', 'cl-003', 'sel-003', DATE_SUB(NOW(), INTERVAL 20 DAY), 25000.00, 1375.00, 'COMPLETED', 1, NOW(), NOW()),
-('sale-004', 'V-2024-004', 'vh-011', 'cl-004', 'sel-004', DATE_SUB(NOW(), INTERVAL 15 DAY), 45000.00, 1800.00, 'COMPLETED', 1, NOW(), NOW()),
-('sale-005', 'V-2024-005', 'vh-017', 'cl-005', 'sel-005', DATE_SUB(NOW(), INTERVAL 10 DAY), 75000.00, 4500.00, 'COMPLETED', 1, NOW(), NOW()),
-('sale-006', 'V-2024-006', 'vh-019', 'cl-006', 'sel-006', DATE_SUB(NOW(), INTERVAL 5 DAY), 85000.00, 4080.00, 'COMPLETED', 1, NOW(), NOW()),
-('sale-007', 'V-2024-007', 'vh-003', 'cl-007', 'sel-007', DATE_SUB(NOW(), INTERVAL 2 DAY), 28000.00, 1456.00, 'COMPLETED', 1, NOW(), NOW());
+INSERT INTO sales (id, saleNumber, vehicleId, customerId, sellerId, userId, saleDate, totalAmount, commission, status, notes, createdAt, updatedAt) VALUES
+('sale-001', 'V-2024-001', 'vh-001', 'cl-001', 'sel-001', 'admin-2', DATE_SUB(NOW(), INTERVAL 30 DAY), 25000.00, 1250.00, 'COMPLETED', 'Venta Toyota Corolla', NOW(), NOW()),
+('sale-002', 'V-2024-002', 'vh-006', 'cl-002', 'sel-002', 'admin-2', DATE_SUB(NOW(), INTERVAL 25 DAY), 8500.00, 382.50, 'COMPLETED', 'Venta Honda CBR 600RR', NOW(), NOW()),
+('sale-003', 'V-2024-003', 'vh-013', 'cl-003', 'sel-003', 'admin-2', DATE_SUB(NOW(), INTERVAL 20 DAY), 25000.00, 1375.00, 'COMPLETED', 'Venta Bayliner Element 7', NOW(), NOW()),
+('sale-004', 'V-2024-004', 'vh-011', 'cl-004', 'sel-004', 'admin-2', DATE_SUB(NOW(), INTERVAL 15 DAY), 45000.00, 1800.00, 'COMPLETED', 'Venta John Deere 5075E', NOW(), NOW()),
+('sale-005', 'V-2024-005', 'vh-017', 'cl-005', 'sel-005', 'admin-2', DATE_SUB(NOW(), INTERVAL 10 DAY), 75000.00, 4500.00, 'COMPLETED', 'Venta Winnebago Travato', NOW(), NOW()),
+('sale-006', 'V-2024-006', 'vh-019', 'cl-006', 'sel-006', 'admin-2', DATE_SUB(NOW(), INTERVAL 5 DAY), 85000.00, 4080.00, 'COMPLETED', 'Venta Mercedes Sprinter Ambulancia', NOW(), NOW()),
+('sale-007', 'V-2024-007', 'vh-003', 'cl-007', 'sel-007', 'admin-2', DATE_SUB(NOW(), INTERVAL 2 DAY), 28000.00, 1456.00, 'COMPLETED', 'Venta Ford Ranger', NOW(), NOW());
 
 -- Actualizar estado de vehículos vendidos
 UPDATE Vehicle SET status = 'SOLD' WHERE id IN ('vh-001', 'vh-006', 'vh-013', 'vh-011', 'vh-017', 'vh-019', 'vh-003');
