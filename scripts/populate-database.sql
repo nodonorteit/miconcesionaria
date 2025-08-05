@@ -9,9 +9,9 @@ DELETE FROM vehicle_types;
 DELETE FROM sales;
 DELETE FROM cashflow;
 DELETE FROM Client;
-DELETE FROM Provider;
-DELETE FROM Workshop;
-DELETE FROM Seller;
+DELETE FROM providers;
+DELETE FROM workshops;
+DELETE FROM sellers;
 
 -- ========================================
 -- 1. TIPOS DE VEHÍCULOS
@@ -83,7 +83,7 @@ INSERT INTO Client (id, firstName, lastName, email, phone, address, city, state,
 -- ========================================
 -- 3. PROVEEDORES
 -- ========================================
-INSERT INTO Provider (id, name, email, phone, address, taxId, contactPerson, isActive, createdAt, updatedAt) VALUES
+INSERT INTO providers (id, name, email, phone, address, taxId, contactPerson, isActive, createdAt, updatedAt) VALUES
 ('prov-001', 'AutoParts S.A.', 'info@autoparts.com', '+54 11 1111-1111', 'Av. Industrial 1000, Pilar', '30-11111111-1', 'Roberto García', 1, NOW(), NOW()),
 ('prov-002', 'MotorSport Import', 'ventas@motorsport.com', '+54 11 2222-2222', 'Ruta 9 Km 50, Escobar', '30-22222222-2', 'María López', 1, NOW(), NOW()),
 ('prov-003', 'CarDealer Group', 'contact@cardealer.com', '+54 11 3333-3333', 'Av. Libertador 2000, San Isidro', '30-33333333-3', 'Carlos Ruiz', 1, NOW(), NOW()),
@@ -96,7 +96,7 @@ INSERT INTO Provider (id, name, email, phone, address, taxId, contactPerson, isA
 -- ========================================
 -- 4. TALLERES
 -- ========================================
-INSERT INTO Workshop (id, name, email, phone, address, taxId, contactPerson, specialties, isActive, createdAt, updatedAt) VALUES
+INSERT INTO workshops (id, name, email, phone, address, taxId, contactPerson, specialties, isActive, createdAt, updatedAt) VALUES
 ('ws-001', 'Taller Mecánico Central', 'info@tallercentral.com', '+54 11 1111-0001', 'Av. Corrientes 2000, CABA', '30-11111111-1', 'Miguel Ángel', 'Mecánica general, Electricidad', 1, NOW(), NOW()),
 ('ws-002', 'Auto Service Premium', 'contact@autoservice.com', '+54 11 2222-0002', 'Belgrano 1000, CABA', '30-22222222-2', 'Roberto Carlos', 'Diagnóstico computarizado, Suspensión', 1, NOW(), NOW()),
 ('ws-003', 'Taller Especializado BMW', 'bmw@tallerbmw.com', '+54 11 3333-0003', 'Palermo 1500, CABA', '30-33333333-3', 'Juan Pablo', 'BMW, Mercedes, Audi', 1, NOW(), NOW()),
@@ -108,7 +108,7 @@ INSERT INTO Workshop (id, name, email, phone, address, taxId, contactPerson, spe
 -- ========================================
 -- 5. VENDEDORES
 -- ========================================
-INSERT INTO Seller (id, name, email, phone, commissionRate, isActive, createdAt, updatedAt) VALUES
+INSERT INTO sellers (id, name, email, phone, commissionRate, isActive, createdAt, updatedAt) VALUES
 ('sel-001', 'Alejandro Vendedor', 'alejandro@miconcesionaria.com', '+54 11 1111-1111', 5.0, 1, NOW(), NOW()),
 ('sel-002', 'Mariana Comercial', 'mariana@miconcesionaria.com', '+54 11 2222-2222', 4.5, 1, NOW(), NOW()),
 ('sel-003', 'Diego Ventas', 'diego@miconcesionaria.com', '+54 11 3333-3333', 5.5, 1, NOW(), NOW()),
@@ -231,9 +231,9 @@ INSERT INTO vehicle_images (id, filename, path, isPrimary, createdAt, vehicleId)
 SELECT 'RESUMEN DE DATOS INSERTADOS' as info;
 SELECT 'Tipos de vehículos:' as tipo, COUNT(*) as cantidad FROM vehicle_types;
 SELECT 'Clientes:' as tipo, COUNT(*) as cantidad FROM Client;
-SELECT 'Proveedores:' as tipo, COUNT(*) as cantidad FROM Provider;
-SELECT 'Talleres:' as tipo, COUNT(*) as cantidad FROM Workshop;
-SELECT 'Vendedores:' as tipo, COUNT(*) as cantidad FROM Seller;
+SELECT 'Proveedores:' as tipo, COUNT(*) as cantidad FROM providers;
+SELECT 'Talleres:' as tipo, COUNT(*) as cantidad FROM workshops;
+SELECT 'Vendedores:' as tipo, COUNT(*) as cantidad FROM sellers;
 SELECT 'Vehículos:' as tipo, COUNT(*) as cantidad FROM Vehicle;
 SELECT 'Ventas:' as tipo, COUNT(*) as cantidad FROM sales;
 SELECT 'Flujo de caja:' as tipo, COUNT(*) as cantidad FROM cashflow;
