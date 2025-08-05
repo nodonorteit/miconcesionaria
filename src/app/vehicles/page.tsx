@@ -379,7 +379,9 @@ export default function VehiclesPage() {
                     value={formData.fuelType}
                     onChange={(e) => setFormData({...formData, fuelType: e.target.value})}
                     className="w-full p-2 border rounded"
+                    required
                   >
+                    <option value="">Seleccionar combustible...</option>
                     <option value="GASOLINE">Gasolina</option>
                     <option value="DIESEL">Diesel</option>
                     <option value="ELECTRIC">Eléctrico</option>
@@ -399,7 +401,9 @@ export default function VehiclesPage() {
                     value={formData.transmission}
                     onChange={(e) => setFormData({...formData, transmission: e.target.value})}
                     className="w-full p-2 border rounded"
+                    required
                   >
+                    <option value="">Seleccionar transmisión...</option>
                     <option value="MANUAL">Manual</option>
                     <option value="AUTOMATIC">Automático</option>
                     <option value="CVT">CVT</option>
@@ -416,7 +420,9 @@ export default function VehiclesPage() {
                     value={formData.status}
                     onChange={(e) => setFormData({...formData, status: e.target.value})}
                     className="w-full p-2 border rounded"
+                    required
                   >
+                    <option value="">Seleccionar estado...</option>
                     <option value="AVAILABLE">Disponible</option>
                     <option value="SOLD">Vendido</option>
                     <option value="RESERVED">Reservado</option>
