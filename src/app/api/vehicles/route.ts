@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { writeFile, mkdir } from 'fs/promises'
+import { join } from 'path'
 
 // GET - Obtener todos los vehículos
 export async function GET() {
@@ -26,23 +28,47 @@ export async function GET() {
 // POST - Crear un nuevo vehículo
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const formData = await request.formData()
     
+    // Extraer datos del formulario
+    const brand = formData.get('brand') as string
+    const model = formData.get('model') as string
+    const year = formData.get('year') as string
+    const color = formData.get('color') as string
+    const mileage = formData.get('mileage') as string
+    const price = formData.get('price') as string
+    const description = formData.get('description') as string
+    const vin = formData.get('vin') as string
+    const licensePlate = formData.get('licensePlate') as string
+    const fuelType = formData.get('fuelType') as string
+    const transmission = formData.get('transmission') as string
+    const status = formData.get('status') as string
+    const vehicleTypeId = formData.get('vehicleTypeId') as string
+
+    // Validar campos requeridos
+    if (!brand || !model || !year || !color || !mileage || !price || !vehicleTypeId) {
+      return NextResponse.json(
+        { error: 'Todos los campos requeridos deben estar completos' },
+        { status: 400 }
+      )
+    }
+
+    // Crear el vehículo
     const vehicle = await prisma.vehicle.create({
       data: {
-        brand: body.brand,
-        model: body.model,
-        year: parseInt(body.year),
-        color: body.color,
-        mileage: parseInt(body.mileage),
-        price: parseFloat(body.price),
-        description: body.description,
-        vin: body.vin,
-        licensePlate: body.licensePlate,
-        fuelType: body.fuelType,
-        transmission: body.transmission,
-        status: body.status || 'AVAILABLE',
-        vehicleTypeId: body.vehicleTypeId,
+        brand,
+        model,
+        year: parseInt(year),
+        color,
+        mileage: parseInt(mileage),
+        price: parseFloat(price),
+        description: description || null,
+        vin: vin || null,
+        licensePlate: licensePlate || null,
+        fuelType: fuelType as any,
+        transmission: transmission as any,
+        status: (status || 'AVAILABLE') as any,
+        vehicleTypeId,
         isActive: true
       },
       include: {
@@ -51,7 +77,50 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(vehicle, { status: 201 })
+    // Procesar imágenes si existen
+    const images = formData.getAll('images') as File[]
+    if (images.length > 0) {
+      // Crear directorio de uploads si no existe
+      const uploadsDir = join(process.cwd(), 'uploads')
+      await mkdir(uploadsDir, { recursive: true })
+
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i]
+        if (image.size > 0) {
+          const bytes = await image.arrayBuffer()
+          const buffer = Buffer.from(bytes)
+          
+          // Generar nombre único para la imagen
+          const timestamp = Date.now()
+          const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
+          const filepath = join(uploadsDir, filename)
+          
+          // Guardar archivo
+          await writeFile(filepath, buffer)
+          
+          // Guardar referencia en la base de datos
+          await prisma.vehicleImage.create({
+            data: {
+              filename,
+              path: `/uploads/${filename}`,
+              isPrimary: i === 0, // La primera imagen es la principal
+              vehicleId: vehicle.id
+            }
+          })
+        }
+      }
+    }
+
+    // Obtener el vehículo con las imágenes
+    const vehicleWithImages = await prisma.vehicle.findUnique({
+      where: { id: vehicle.id },
+      include: {
+        vehicleType: true,
+        images: true
+      }
+    })
+
+    return NextResponse.json(vehicleWithImages, { status: 201 })
   } catch (error) {
     console.error('Error creating vehicle:', error)
     return NextResponse.json(
