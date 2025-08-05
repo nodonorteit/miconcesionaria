@@ -10,7 +10,7 @@ export async function GET() {
       SELECT 
         e.*,
         w.name as workshopName,
-        s.name as sellerName
+        CONCAT(s.firstName, ' ', s.lastName) as sellerName
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id
       LEFT JOIN sellers s ON e.sellerId = s.id
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       SELECT 
         e.*,
         w.name as workshopName,
-        s.name as sellerName
+        CONCAT(s.firstName, ' ', s.lastName) as sellerName
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id
       LEFT JOIN sellers s ON e.sellerId = s.id

@@ -63,15 +63,25 @@ export async function GET() {
 
     // Función helper para buscar valores en el HTML usando IDs específicos
     const findValueById = (id: string): number | null => {
-      const pattern = new RegExp(`id="${id}">\\$?([\\d,]+\\.?\\d*)`, 'i')
-      const match = html.match(pattern)
-      if (match && match[1]) {
-        const value = extractNumber(match[1])
-        if (value) {
-          console.log(`✅ Encontrado valor para ${id}: ${value}`)
-          return value
+      // Múltiples patrones para mayor compatibilidad
+      const patterns = [
+        new RegExp(`id="${id}">\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`id="${id}"[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`id="${id}">([^<]+)`, 'i')
+      ]
+      
+      for (const pattern of patterns) {
+        const match = html.match(pattern)
+        if (match && match[1]) {
+          const value = extractNumber(match[1])
+          if (value) {
+            console.log(`✅ Encontrado valor para ${id}: ${value}`)
+            return value
+          }
         }
       }
+      
+      console.log(`❌ No se encontró valor para ${id}`)
       return null
     }
 
