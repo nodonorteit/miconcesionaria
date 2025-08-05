@@ -63,16 +63,23 @@ export async function GET() {
 
     // Función helper para buscar valores en el HTML de ámbito.com
     const findValueBySection = (sectionTitle: string, type: 'compra' | 'venta'): number | null => {
+      // Debug: mostrar fragmento del HTML donde buscar
+      const sectionMatch = html.match(new RegExp(`${sectionTitle}[^>]*>.*?${type}[^>]*>.*?`, 'i'))
+      if (sectionMatch) {
+        console.log(`🔍 Fragmento encontrado para ${sectionTitle} ${type}:`, sectionMatch[0].substring(0, 200))
+      }
+      
       const patterns = [
         new RegExp(`${sectionTitle}[^>]*>.*?${type}[^>]*>.*?\\$?([\\d,]+\\.?\\d*)`, 'i'),
-        new RegExp(`${sectionTitle}[^>]*>.*?\\$?([\\d,]+\\.?\\d*)`, 'i')
+        new RegExp(`${sectionTitle}[^>]*>.*?\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`${sectionTitle}.*?${type}.*?\\$?([\\d,]+\\.?\\d*)`, 'i')
       ]
       
       for (const pattern of patterns) {
         const match = html.match(pattern)
         if (match && match[1]) {
           const value = extractNumber(match[1])
-          if (value) {
+          if (value && value > 10) { // Filtrar valores muy bajos
             console.log(`✅ Encontrado ${sectionTitle} ${type}: ${value}`)
             return value
           }
