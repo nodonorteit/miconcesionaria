@@ -1,0 +1,17 @@
+<svg width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="30" cy="30" r="25" fill="#2563eb"/>
+  
+  <!-- Car icon -->
+  <path d="M20 35h20v2H20v-2zm-2-8h24v2H18v-2z" fill="white"/>
+  <circle cx="22" cy="40" r="3" fill="white"/>
+  <circle cx="38" cy="40" r="3" fill="white"/>
+  
+  <!-- Text -->
+  <text x="70" y="35" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1f2937">
+    AutoMax
+  </text>
+  <text x="70" y="50" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+    Sistema de Gestión
+  </text>
+</svg> 

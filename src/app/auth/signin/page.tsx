@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Car } from 'lucide-react'
+import Image from 'next/image'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -48,9 +49,14 @@ export default function SignIn() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Car className="h-12 w-12 text-blue-600" />
+            <Image 
+              src="/logo.svg" 
+              alt="AutoMax Logo" 
+              width={160} 
+              height={48} 
+              className="h-12 w-auto"
+            />
           </div>
-          <CardTitle className="text-2xl">Mi Concesionaria</CardTitle>
           <CardDescription>
             Inicia sesión en tu cuenta
           </CardDescription>
