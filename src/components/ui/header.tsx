@@ -2,11 +2,21 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, User, Clock, Calendar } from 'lucide-react'
 import Image from 'next/image'
+import { useState, useEffect } from 'react'
 
 export function Header() {
   const { data: session } = useSession()
+  const [currentDateTime, setCurrentDateTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/auth/signin' })
@@ -26,6 +36,14 @@ export function Header() {
         </div>
         
         <div className="flex items-center space-x-4">
+          {/* Fecha y Hora */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <Calendar className="h-4 w-4" />
+            <span>{currentDateTime.toLocaleDateString('es-AR')}</span>
+            <Clock className="h-4 w-4 ml-2" />
+            <span>{currentDateTime.toLocaleTimeString('es-AR')}</span>
+          </div>
+          
           {session?.user && (
             <>
               <div className="flex items-center space-x-2">

@@ -10,10 +10,10 @@ export async function GET() {
     const vehicles = await prisma.$queryRaw`
       SELECT 
         v.*,
-        vt.name as vehicleTypeName,
-        vt.description as vehicleTypeDescription
+        COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
+        COALESCE(vt.description, '') as vehicleTypeDescription
       FROM Vehicle v
-      LEFT JOIN VehicleType vt ON v.vehicleTypeId = vt.id
+      LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
       WHERE v.isActive = 1
       ORDER BY v.createdAt DESC
     `
