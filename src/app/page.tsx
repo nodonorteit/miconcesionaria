@@ -449,9 +449,9 @@ export default function Dashboard() {
                   Reporte de Ventas
                 </Button>
               </Link>
-              <Link href="/reports/inventory">
+              <Link href="/reports/commissions">
                 <Button className="w-full" variant="outline">
-                  Reporte de Inventario
+                  Reporte de Comisiones
                 </Button>
               </Link>
             </CardContent>
@@ -469,6 +469,11 @@ export default function Dashboard() {
               <Link href="/admin/users">
                 <Button className="w-full" variant="outline">
                   Gestión de Usuarios
+                </Button>
+              </Link>
+              <Link href="/admin/company">
+                <Button className="w-full" variant="outline">
+                  Configuración de Empresa
                 </Button>
               </Link>
             </CardContent>

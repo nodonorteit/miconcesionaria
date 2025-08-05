@@ -13,9 +13,9 @@ export async function GET() {
         s.email,
         s.commissionRate,
         COALESCE(COUNT(sa.id), 0) as totalSales,
-        COALESCE(SUM(sa.amount * s.commissionRate), 0) as totalCommission
+        COALESCE(SUM(sa.totalAmount * s.commissionRate), 0) as totalCommission
       FROM sellers s
-      LEFT JOIN sales sa ON s.id = sa.sellerId AND sa.isActive = 1
+      LEFT JOIN sales sa ON s.id = sa.sellerId
       WHERE s.isActive = 1
       GROUP BY s.id, s.firstName, s.lastName, s.email, s.commissionRate
       ORDER BY totalCommission DESC
@@ -29,9 +29,9 @@ export async function GET() {
             DATE_FORMAT(sa.createdAt, '%Y-%m') as month,
             DATE_FORMAT(sa.createdAt, '%M %Y') as monthName,
             COUNT(sa.id) as sales,
-            SUM(sa.amount * ${seller.commissionRate}) as commission
+            SUM(sa.totalAmount * ${seller.commissionRate}) as commission
           FROM sales sa
-          WHERE sa.sellerId = ${seller.id} AND sa.isActive = 1
+          WHERE sa.sellerId = ${seller.id}
           GROUP BY DATE_FORMAT(sa.createdAt, '%Y-%m'), DATE_FORMAT(sa.createdAt, '%M %Y')
           ORDER BY month DESC
           LIMIT 12
