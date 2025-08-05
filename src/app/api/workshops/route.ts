@@ -4,10 +4,11 @@ import { prisma } from '@/lib/prisma'
 // GET - Obtener todos los talleres
 export async function GET() {
   try {
-    const workshops = await prisma.workshop.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: 'desc' }
-    })
+    const workshops = await prisma.$queryRaw`
+      SELECT * FROM workshops 
+      WHERE isActive = 1 
+      ORDER BY createdAt DESC
+    `
 
     return NextResponse.json(workshops)
   } catch (error) {
@@ -24,18 +25,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const workshop = await prisma.workshop.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        phone: body.phone,
-        address: body.address,
-        city: body.city,
-        state: body.state,
-        zipCode: body.zipCode,
-        isActive: true
-      }
-    })
+    const workshopId = `ws-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    await prisma.$executeRaw`
+      INSERT INTO workshops (id, name, email, phone, address, city, state, zipCode, isActive, createdAt, updatedAt)
+      VALUES (${workshopId}, ${body.name}, ${body.email || null}, ${body.phone || null}, 
+              ${body.address || null}, ${body.city || null}, ${body.state || null}, ${body.zipCode || null}, 
+              1, NOW(), NOW())
+    `
+
+    const workshops = await prisma.$queryRaw`
+      SELECT * FROM workshops WHERE id = ${workshopId}
+    `
+    const workshop = Array.isArray(workshops) ? workshops[0] : workshops
 
     return NextResponse.json(workshop, { status: 201 })
   } catch (error) {

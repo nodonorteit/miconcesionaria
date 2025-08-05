@@ -105,21 +105,23 @@ export default function WorkshopsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este taller?')) return
-    
+    if (!confirm('¿Está seguro de que desea eliminar este taller?')) {
+      return
+    }
+
     try {
       const response = await fetch(`/api/workshops/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       })
 
       if (response.ok) {
-        toast.success('Taller eliminado')
+        toast.success('Taller eliminado exitosamente')
         fetchWorkshops()
       } else {
-        toast.error('Error al eliminar taller')
+        toast.error('Error al eliminar el taller')
       }
     } catch (error) {
-      toast.error('Error al eliminar taller')
+      toast.error('Error al eliminar el taller')
     }
   }
 
@@ -133,111 +135,124 @@ export default function WorkshopsPage() {
       state: '',
       zipCode: ''
     })
+    setEditingWorkshop(null)
+    setShowForm(false)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-AR')
   }
 
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Cargando talleres...</div>
+        <Navigation title="Talleres" />
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Cargando talleres...</div>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="container mx-auto p-6">
-      <Navigation 
-        title="Gestión de Talleres" 
-        breadcrumbs={[{ label: 'Talleres' }]}
-      />
-      <div className="flex justify-end mb-6">
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Taller
+      <Navigation title="Talleres" />
+      
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Gestión de Talleres</h1>
+        <Button onClick={() => setShowForm(true)} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Nuevo Taller
         </Button>
       </div>
 
       {showForm && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>
-              {editingWorkshop ? 'Editar Taller' : 'Nuevo Taller'}
-            </CardTitle>
+            <CardTitle>{editingWorkshop ? 'Editar Taller' : 'Nuevo Taller'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Nombre</Label>
+                  <Label htmlFor="name">Nombre del Taller *</Label>
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nombre del taller"
                     required
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@taller.com"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="phone">Teléfono</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="+54 11 1234-5678"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="address">Dirección</Label>
                   <Input
                     id="address"
                     value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="Av. Corrientes 1234"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="city">Ciudad</Label>
                   <Input
                     id="city"
                     value={formData.city}
-                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                    placeholder="Buenos Aires"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="state">Provincia</Label>
                   <Input
                     id="state"
                     value={formData.state}
-                    onChange={(e) => setFormData({...formData, state: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    placeholder="CABA"
                   />
                 </div>
+
                 <div>
                   <Label htmlFor="zipCode">Código Postal</Label>
                   <Input
                     id="zipCode"
                     value={formData.zipCode}
-                    onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                    placeholder="1234"
                   />
                 </div>
               </div>
+
               <div className="flex gap-2">
-                <Button type="submit">
+                <Button type="submit" className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
                   {editingWorkshop ? 'Actualizar' : 'Crear'} Taller
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false)
-                    setEditingWorkshop(null)
-                    resetForm()
-                  }}
-                >
+                <Button type="button" variant="outline" onClick={resetForm}>
                   Cancelar
                 </Button>
               </div>
@@ -246,55 +261,78 @@ export default function WorkshopsPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {workshops.map((workshop) => (
-          <Card key={workshop.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{workshop.name}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(workshop)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(workshop.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {workshop.email && (
-                  <p><strong>Email:</strong> {workshop.email}</p>
-                )}
-                {workshop.phone && (
-                  <p><strong>Teléfono:</strong> {workshop.phone}</p>
-                )}
-                {workshop.address && (
-                  <p><strong>Dirección:</strong> {workshop.address}</p>
-                )}
-                {(workshop.city || workshop.state) && (
-                  <p><strong>Ubicación:</strong> {workshop.city}, {workshop.state}</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* Tabla de Talleres */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Lista de Talleres</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 px-4 py-2 text-left">Nombre</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Email</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Teléfono</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Dirección</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Ciudad</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Fecha Creación</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {workshops.map((workshop) => (
+                  <tr key={workshop.id} className="hover:bg-gray-50">
+                    <td className="border border-gray-300 px-4 py-2 font-medium">
+                      {workshop.name}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {workshop.email || '-'}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {workshop.phone || '-'}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {workshop.address || '-'}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {workshop.city || '-'}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      {formatDate(workshop.createdAt)}
+                    </td>
+                    <td className="border border-gray-300 px-4 py-2">
+                      <div className="flex justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(workshop)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(workshop.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      {workshops.length === 0 && !loading && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">No hay talleres registrados</p>
-        </div>
-      )}
+          {workshops.length === 0 && !loading && (
+            <div className="text-center py-8">
+              <Wrench className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No hay talleres registrados</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 } 

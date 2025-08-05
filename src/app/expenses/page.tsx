@@ -332,7 +332,7 @@ export default function ExpensesPage() {
                       <option value="">Seleccionar vendedor</option>
                       {sellers.map((seller) => (
                         <option key={seller.id} value={seller.id}>
-                          {seller.name} ({seller.commissionRate}%)
+                          {seller.name}
                         </option>
                       ))}
                     </select>
