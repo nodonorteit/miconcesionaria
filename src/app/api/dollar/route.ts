@@ -15,10 +15,10 @@ interface DollarRates {
 // GET - Obtener todas las cotizaciones del dólar
 export async function GET() {
   try {
-    console.log('🔄 Iniciando fetch de cotizaciones desde API simple...')
+    console.log('🔄 Iniciando fetch de cotizaciones desde dolarapi.com...')
     
-    // Usar una API más simple y confiable
-    const response = await fetch('https://api.bluelytics.com.ar/v2/latest', {
+    // Usar dolarapi.com - API confiable y gratuita
+    const response = await fetch('https://dolarapi.com/v1/dolares', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       },
@@ -31,7 +31,7 @@ export async function GET() {
     }
 
     const data = await response.json()
-    console.log('✅ Datos obtenidos de Bluelytics')
+    console.log('✅ Datos obtenidos de dolarapi.com')
     
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
@@ -43,41 +43,52 @@ export async function GET() {
       ahorro: { compra: null, venta: null },
       oficial: { compra: null, venta: null },
       timestamp: new Date().toISOString(),
-      source: 'bluelytics.com.ar'
+      source: 'dolarapi.com'
     }
 
-    // Mapear los datos de la API
-    if (data.oficial) {
-      rates.oficial.compra = data.oficial.value_buy
-      rates.oficial.venta = data.oficial.value_sell
-    }
-    
-    if (data.blue) {
-      rates.blue.compra = data.blue.value_buy
-      rates.blue.venta = data.blue.value_sell
-    }
-    
-    if (data.mep) {
-      rates.mep = data.mep.value_sell
-    }
-    
-    if (data.ccl) {
-      rates.ccl.venta = data.ccl.value_sell
-    }
-    
-    if (data.crypto) {
-      rates.crypto.compra = data.crypto.value_buy
-      rates.crypto.venta = data.crypto.value_sell
-    }
+    // Mapear los datos de la API según el formato de dolarapi.com
+    data.forEach((item: any) => {
+      switch (item.casa) {
+        case 'oficial':
+          rates.oficial.compra = item.compra
+          rates.oficial.venta = item.venta
+          break
+        case 'blue':
+          rates.blue.compra = item.compra
+          rates.blue.venta = item.venta
+          break
+        case 'mep':
+          rates.mep = item.venta
+          break
+        case 'ccl':
+          rates.ccl.venta = item.venta
+          break
+        case 'crypto':
+          rates.crypto.compra = item.compra
+          rates.crypto.venta = item.venta
+          break
+        case 'tarjeta':
+          rates.tarjeta.venta = item.venta
+          break
+        case 'ahorro':
+          rates.ahorro.compra = item.compra
+          rates.ahorro.venta = item.venta
+          break
+      }
+    })
 
-    // Calcular tarjeta (oficial + impuestos)
-    if (rates.oficial.venta) {
+    // Si no hay tarjeta, calcular basado en oficial
+    if (!rates.tarjeta.venta && rates.oficial.venta) {
       rates.tarjeta.venta = rates.oficial.venta * 1.35 // 35% de impuestos
     }
 
-    // Dólar Ahorro (usar oficial como base)
-    rates.ahorro.compra = rates.oficial.compra
-    rates.ahorro.venta = rates.oficial.venta
+    // Si no hay ahorro, usar oficial
+    if (!rates.ahorro.compra && rates.oficial.compra) {
+      rates.ahorro.compra = rates.oficial.compra
+    }
+    if (!rates.ahorro.venta && rates.oficial.venta) {
+      rates.ahorro.venta = rates.oficial.venta
+    }
 
     console.log('📊 Cotizaciones extraídas:', JSON.stringify(rates, null, 2))
 
@@ -96,7 +107,7 @@ export async function GET() {
       ahorro: { compra: null, venta: null },
       oficial: { compra: null, venta: null },
       timestamp: new Date().toISOString(),
-      source: 'bluelytics.com.ar',
+      source: 'dolarapi.com',
       error: 'Error al obtener las cotizaciones del dólar'
     })
   }
