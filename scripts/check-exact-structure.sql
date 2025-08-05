@@ -1,5 +1,5 @@
 -- Script para verificar las estructuras exactas de todas las tablas
--- Ejecutar: mysql -u miconcesionaria -p miconcesionaria < check-exact-structure.sql
+-- Ejecutar: mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < check-exact-structure.sql
 
 SELECT 'ESTRUCTURA EXACTA DE TODAS LAS TABLAS:' as info;
 
@@ -28,4 +28,7 @@ SELECT '=== TABLA cashflow ===' as info;
 DESCRIBE cashflow;
 
 SELECT '=== TABLA vehicle_images ===' as info;
-DESCRIBE vehicle_images; 
+DESCRIBE vehicle_images;
+
+SELECT '=== TABLA User ===' as info;
+DESCRIBE User; 
