@@ -65,8 +65,8 @@ export async function POST(request: NextRequest) {
         description: description || null,
         vin: vin || null,
         licensePlate: licensePlate || null,
-        fuelType: fuelType as any,
-        transmission: transmission as any,
+        fuelType: fuelType || 'GASOLINE' as any,
+        transmission: transmission || 'MANUAL' as any,
         status: (status || 'AVAILABLE') as any,
         vehicleTypeId,
         isActive: true

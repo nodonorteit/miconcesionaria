@@ -38,6 +38,21 @@ export async function GET() {
     const html = await response.text()
     console.log('✅ HTML obtenido, longitud:', html.length)
     
+    // Debug: Buscar fragmentos específicos del HTML
+    const blueMatch = html.match(/Dólar blue[^>]*>[\s]*\$?([\d,]+\.?\d*)/i)
+    if (blueMatch) {
+      console.log('🔍 Encontrado Dólar Blue:', blueMatch[1])
+    } else {
+      console.log('❌ No se encontró Dólar Blue')
+    }
+    
+    const oficialMatch = html.match(/Dólar Oficial[^>]*>[\s]*\$?([\d,]+\.?\d*)/i)
+    if (oficialMatch) {
+      console.log('🔍 Encontrado Dólar Oficial:', oficialMatch[1])
+    } else {
+      console.log('❌ No se encontró Dólar Oficial')
+    }
+    
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
       mep: null,
@@ -76,14 +91,18 @@ export async function GET() {
       return null
     }
 
-    // Dólar Blue - Basado en la estructura de dolarhoy.com
+    // Dólar Blue - Patrones más simples
     const blueCompraPatterns = [
       /Dólar blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Dólar Blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
+      /Dólar Blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
+      /blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
+      /Blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
     ]
     const blueVentaPatterns = [
       /Dólar blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Dólar Blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
+      /Dólar Blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
+      /blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
+      /Blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
     ]
     rates.blue.compra = findValue(blueCompraPatterns)
     rates.blue.venta = findValue(blueVentaPatterns)
