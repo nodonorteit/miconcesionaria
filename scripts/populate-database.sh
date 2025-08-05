@@ -12,15 +12,51 @@ mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria << 'EOF'
 -- ========================================
 
 -- Limpiar datos existentes (mantener admin user)
-DELETE FROM vehicle_images;
-DELETE FROM Vehicle;
-DELETE FROM vehicle_types;
-DELETE FROM sales;
-DELETE FROM cashflow;
-DELETE FROM Client;
-DELETE FROM Provider;
-DELETE FROM Workshop;
-DELETE FROM Seller;
+-- Usar DELETE con verificación de existencia de tabla
+SET @sql = 'DELETE FROM vehicle_images';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM Vehicle';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM vehicle_types';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM sales';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM cashflow';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM Client';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM Provider';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM Workshop';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = 'DELETE FROM Seller';
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- ========================================
 -- 1. TIPOS DE VEHÍCULOS
