@@ -30,7 +30,8 @@ export default function CashFlowPage() {
     type: 'INCOME',
     amount: '',
     description: '',
-    category: ''
+    category: '',
+    date: new Date().toISOString().split('T')[0]
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -120,7 +121,8 @@ export default function CashFlowPage() {
       type: cashFlow.type,
       amount: cashFlow.amount.toString(),
       description: cashFlow.description,
-      category: cashFlow.category
+      category: cashFlow.category,
+      date: new Date(cashFlow.createdAt).toISOString().split('T')[0]
     })
     setSelectedFile(null)
     setShowForm(true)
@@ -150,7 +152,8 @@ export default function CashFlowPage() {
       type: 'INCOME',
       amount: '',
       description: '',
-      category: ''
+      category: '',
+      date: new Date().toISOString().split('T')[0]
     })
     setSelectedFile(null)
     if (fileInputRef.current) {
@@ -172,7 +175,8 @@ export default function CashFlowPage() {
 
   const calculateBalance = () => {
     return cashFlows.reduce((balance, flow) => {
-      return flow.type === 'INCOME' ? balance + flow.amount : balance - flow.amount
+      const amount = typeof flow.amount === 'number' ? flow.amount : parseFloat(flow.amount) || 0
+      return flow.type === 'INCOME' ? balance + amount : balance - amount
     }, 0)
   }
 
@@ -271,6 +275,16 @@ export default function CashFlowPage() {
                     required
                   />
                 </div>
+                <div>
+                  <Label htmlFor="date">Fecha</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
               
               <div>
@@ -354,9 +368,9 @@ export default function CashFlowPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p><strong>Monto:</strong> <span className={getTypeColor(cashFlow.type)}>${cashFlow.amount.toLocaleString()}</span></p>
+                <p><strong>Monto:</strong> <span className={getTypeColor(cashFlow.type)}>${(typeof cashFlow.amount === 'number' ? cashFlow.amount : parseFloat(cashFlow.amount) || 0).toLocaleString()}</span></p>
                 <p><strong>Descripción:</strong> {cashFlow.description}</p>
-                <p><strong>Fecha:</strong> {new Date(cashFlow.date).toLocaleDateString()}</p>
+                <p><strong>Fecha:</strong> {new Date(cashFlow.createdAt).toLocaleDateString()}</p>
                 {cashFlow.receiptUrl && (
                   <p><strong>Comprobante:</strong> <span className="text-green-600">✓ Cargado</span></p>
                 )}
