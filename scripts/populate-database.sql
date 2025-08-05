@@ -96,14 +96,14 @@ INSERT INTO providers (id, name, email, phone, address, taxId, isActive, created
 -- ========================================
 -- 4. TALLERES
 -- ========================================
-INSERT INTO workshops (id, name, email, phone, address, specialties, isActive, createdAt, updatedAt) VALUES
-('ws-001', 'Taller Mecánico Central', 'info@tallercentral.com', '+54 11 1111-0001', 'Av. Corrientes 2000, CABA', 'Mecánica general, Electricidad', 1, NOW(), NOW()),
-('ws-002', 'Auto Service Premium', 'contact@autoservice.com', '+54 11 2222-0002', 'Belgrano 1000, CABA', 'Diagnóstico computarizado, Suspensión', 1, NOW(), NOW()),
-('ws-003', 'Taller Especializado BMW', 'bmw@tallerbmw.com', '+54 11 3333-0003', 'Palermo 1500, CABA', 'BMW, Mercedes, Audi', 1, NOW(), NOW()),
-('ws-004', 'Moto Taller Express', 'info@mototaller.com', '+54 11 4444-0004', 'Villa Crespo 800, CABA', 'Motocicletas, Scooters', 1, NOW(), NOW()),
-('ws-005', 'Taller Naval Marina', 'naval@tallernaval.com', '+54 11 5555-0005', 'Puerto Madero 300, CABA', 'Embarcaciones, Motores marinos', 1, NOW(), NOW()),
-('ws-006', 'Taller Agrícola Campo', 'campo@talleragricola.com', '+54 11 6666-0006', 'Ruta 7 Km 100, Luján', 'Tractores, Cosechadoras', 1, NOW(), NOW()),
-('ws-007', 'Taller Maquinaria Pesada', 'pesada@tallermaquinaria.com', '+54 11 7777-0007', 'Av. Industrial 2000, Pilar', 'Excavadoras, Grúas, Retroexcavadoras', 1, NOW(), NOW());
+INSERT INTO workshops (id, name, email, phone, address, isActive, createdAt, updatedAt) VALUES
+('ws-001', 'Taller Mecánico Central', 'info@tallercentral.com', '+54 11 1111-0001', 'Av. Corrientes 2000, CABA', 1, NOW(), NOW()),
+('ws-002', 'Auto Service Premium', 'contact@autoservice.com', '+54 11 2222-0002', 'Belgrano 1000, CABA', 1, NOW(), NOW()),
+('ws-003', 'Taller Especializado BMW', 'bmw@tallerbmw.com', '+54 11 3333-0003', 'Palermo 1500, CABA', 1, NOW(), NOW()),
+('ws-004', 'Moto Taller Express', 'info@mototaller.com', '+54 11 4444-0004', 'Villa Crespo 800, CABA', 1, NOW(), NOW()),
+('ws-005', 'Taller Naval Marina', 'naval@tallernaval.com', '+54 11 5555-0005', 'Puerto Madero 300, CABA', 1, NOW(), NOW()),
+('ws-006', 'Taller Agrícola Campo', 'campo@talleragricola.com', '+54 11 6666-0006', 'Ruta 7 Km 100, Luján', 1, NOW(), NOW()),
+('ws-007', 'Taller Maquinaria Pesada', 'pesada@tallermaquinaria.com', '+54 11 7777-0007', 'Av. Industrial 2000, Pilar', 1, NOW(), NOW());
 
 -- ========================================
 -- 5. VENDEDORES
