@@ -139,7 +139,7 @@ export default function Dashboard() {
                   Ver Vehículos
                 </Button>
               </Link>
-              <Link href="/vehicles/new">
+              <Link href="/vehicles">
                 <Button className="w-full">
                   Agregar Vehículo
                 </Button>
@@ -161,7 +161,7 @@ export default function Dashboard() {
                   Ver Clientes
                 </Button>
               </Link>
-              <Link href="/customers/new">
+              <Link href="/customers">
                 <Button className="w-full">
                   Agregar Cliente
                 </Button>
@@ -252,6 +252,23 @@ export default function Dashboard() {
               <Link href="/reports/inventory">
                 <Button className="w-full" variant="outline">
                   Reporte de Inventario
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Administración
+              </CardTitle>
+              <CardDescription>Gestiona usuarios del sistema</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link href="/admin/users">
+                <Button className="w-full" variant="outline">
+                  Gestión de Usuarios
                 </Button>
               </Link>
             </CardContent>

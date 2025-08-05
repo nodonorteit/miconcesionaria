@@ -249,12 +249,16 @@ export default function VehiclesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="vin">VIN</Label>
+                  <Label htmlFor="vin">VIN (Número de Serie)</Label>
                   <Input
                     id="vin"
                     value={formData.vin}
                     onChange={(e) => setFormData({...formData, vin: e.target.value})}
+                    placeholder="17 caracteres alfanuméricos"
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Número de identificación único del vehículo (Vehicle Identification Number)
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="licensePlate">Patente</Label>
