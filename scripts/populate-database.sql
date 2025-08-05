@@ -83,27 +83,27 @@ INSERT INTO Client (id, firstName, lastName, email, phone, address, city, state,
 -- ========================================
 -- 3. PROVEEDORES
 -- ========================================
-INSERT INTO providers (id, name, email, phone, address, taxId, contactPerson, isActive, createdAt, updatedAt) VALUES
-('prov-001', 'AutoParts S.A.', 'info@autoparts.com', '+54 11 1111-1111', 'Av. Industrial 1000, Pilar', '30-11111111-1', 'Roberto García', 1, NOW(), NOW()),
-('prov-002', 'MotorSport Import', 'ventas@motorsport.com', '+54 11 2222-2222', 'Ruta 9 Km 50, Escobar', '30-22222222-2', 'María López', 1, NOW(), NOW()),
-('prov-003', 'CarDealer Group', 'contact@cardealer.com', '+54 11 3333-3333', 'Av. Libertador 2000, San Isidro', '30-33333333-3', 'Carlos Ruiz', 1, NOW(), NOW()),
-('prov-004', 'Vehicle Solutions', 'info@vehiclesolutions.com', '+54 11 4444-4444', 'Ruta 8 Km 30, Moreno', '30-44444444-4', 'Ana Martínez', 1, NOW(), NOW()),
-('prov-005', 'Premium Motors', 'sales@premiummotors.com', '+54 11 5555-5555', 'Av. San Martín 1500, Vicente López', '30-55555555-5', 'Luis Fernández', 1, NOW(), NOW()),
-('prov-006', 'Marine Equipment', 'info@marineequipment.com', '+54 11 6666-6666', 'Puerto Madero 500, CABA', '30-66666666-6', 'Sofía Torres', 1, NOW(), NOW()),
-('prov-007', 'Agricultural Machinery', 'ventas@agmachinery.com', '+54 11 7777-7777', 'Ruta 7 Km 80, Luján', '30-77777777-7', 'Roberto Silva', 1, NOW(), NOW()),
-('prov-008', 'Construction Equipment', 'contact@constequipment.com', '+54 11 8888-8888', 'Av. General Paz 3000, San Miguel', '30-88888888-8', 'Carmen Morales', 1, NOW(), NOW());
+INSERT INTO providers (id, name, email, phone, address, taxId, isActive, createdAt, updatedAt) VALUES
+('prov-001', 'AutoParts S.A.', 'info@autoparts.com', '+54 11 1111-1111', 'Av. Industrial 1000, Pilar', '30-11111111-1', 1, NOW(), NOW()),
+('prov-002', 'MotorSport Import', 'ventas@motorsport.com', '+54 11 2222-2222', 'Ruta 9 Km 50, Escobar', '30-22222222-2', 1, NOW(), NOW()),
+('prov-003', 'CarDealer Group', 'contact@cardealer.com', '+54 11 3333-3333', 'Av. Libertador 2000, San Isidro', '30-33333333-3', 1, NOW(), NOW()),
+('prov-004', 'Vehicle Solutions', 'info@vehiclesolutions.com', '+54 11 4444-4444', 'Ruta 8 Km 30, Moreno', '30-44444444-4', 1, NOW(), NOW()),
+('prov-005', 'Premium Motors', 'sales@premiummotors.com', '+54 11 5555-5555', 'Av. San Martín 1500, Vicente López', '30-55555555-5', 1, NOW(), NOW()),
+('prov-006', 'Marine Equipment', 'info@marineequipment.com', '+54 11 6666-6666', 'Puerto Madero 500, CABA', '30-66666666-6', 1, NOW(), NOW()),
+('prov-007', 'Agricultural Machinery', 'ventas@agmachinery.com', '+54 11 7777-7777', 'Ruta 7 Km 80, Luján', '30-77777777-7', 1, NOW(), NOW()),
+('prov-008', 'Construction Equipment', 'contact@constequipment.com', '+54 11 8888-8888', 'Av. General Paz 3000, San Miguel', '30-88888888-8', 1, NOW(), NOW());
 
 -- ========================================
 -- 4. TALLERES
 -- ========================================
-INSERT INTO workshops (id, name, email, phone, address, taxId, contactPerson, specialties, isActive, createdAt, updatedAt) VALUES
-('ws-001', 'Taller Mecánico Central', 'info@tallercentral.com', '+54 11 1111-0001', 'Av. Corrientes 2000, CABA', '30-11111111-1', 'Miguel Ángel', 'Mecánica general, Electricidad', 1, NOW(), NOW()),
-('ws-002', 'Auto Service Premium', 'contact@autoservice.com', '+54 11 2222-0002', 'Belgrano 1000, CABA', '30-22222222-2', 'Roberto Carlos', 'Diagnóstico computarizado, Suspensión', 1, NOW(), NOW()),
-('ws-003', 'Taller Especializado BMW', 'bmw@tallerbmw.com', '+54 11 3333-0003', 'Palermo 1500, CABA', '30-33333333-3', 'Juan Pablo', 'BMW, Mercedes, Audi', 1, NOW(), NOW()),
-('ws-004', 'Moto Taller Express', 'info@mototaller.com', '+54 11 4444-0004', 'Villa Crespo 800, CABA', '30-44444444-4', 'Carlos Moto', 'Motocicletas, Scooters', 1, NOW(), NOW()),
-('ws-005', 'Taller Naval Marina', 'naval@tallernaval.com', '+54 11 5555-0005', 'Puerto Madero 300, CABA', '30-55555555-5', 'Marino López', 'Embarcaciones, Motores marinos', 1, NOW(), NOW()),
-('ws-006', 'Taller Agrícola Campo', 'campo@talleragricola.com', '+54 11 6666-0006', 'Ruta 7 Km 100, Luján', '30-66666666-6', 'Campo Verde', 'Tractores, Cosechadoras', 1, NOW(), NOW()),
-('ws-007', 'Taller Maquinaria Pesada', 'pesada@tallermaquinaria.com', '+54 11 7777-0007', 'Av. Industrial 2000, Pilar', '30-77777777-7', 'Peso Pesado', 'Excavadoras, Grúas, Retroexcavadoras', 1, NOW(), NOW());
+INSERT INTO workshops (id, name, email, phone, address, taxId, specialties, isActive, createdAt, updatedAt) VALUES
+('ws-001', 'Taller Mecánico Central', 'info@tallercentral.com', '+54 11 1111-0001', 'Av. Corrientes 2000, CABA', '30-11111111-1', 'Mecánica general, Electricidad', 1, NOW(), NOW()),
+('ws-002', 'Auto Service Premium', 'contact@autoservice.com', '+54 11 2222-0002', 'Belgrano 1000, CABA', '30-22222222-2', 'Diagnóstico computarizado, Suspensión', 1, NOW(), NOW()),
+('ws-003', 'Taller Especializado BMW', 'bmw@tallerbmw.com', '+54 11 3333-0003', 'Palermo 1500, CABA', '30-33333333-3', 'BMW, Mercedes, Audi', 1, NOW(), NOW()),
+('ws-004', 'Moto Taller Express', 'info@mototaller.com', '+54 11 4444-0004', 'Villa Crespo 800, CABA', '30-44444444-4', 'Motocicletas, Scooters', 1, NOW(), NOW()),
+('ws-005', 'Taller Naval Marina', 'naval@tallernaval.com', '+54 11 5555-0005', 'Puerto Madero 300, CABA', '30-55555555-5', 'Embarcaciones, Motores marinos', 1, NOW(), NOW()),
+('ws-006', 'Taller Agrícola Campo', 'campo@talleragricola.com', '+54 11 6666-0006', 'Ruta 7 Km 100, Luján', '30-66666666-6', 'Tractores, Cosechadoras', 1, NOW(), NOW()),
+('ws-007', 'Taller Maquinaria Pesada', 'pesada@tallermaquinaria.com', '+54 11 7777-0007', 'Av. Industrial 2000, Pilar', '30-77777777-7', 'Excavadoras, Grúas, Retroexcavadoras', 1, NOW(), NOW());
 
 -- ========================================
 -- 5. VENDEDORES
