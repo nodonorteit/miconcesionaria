@@ -5,50 +5,54 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, UserCheck } from 'lucide-react'
+import { Plus, Edit, Trash2, Wrench } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
-interface Seller {
+interface Workshop {
   id: string
-  firstName: string
-  lastName: string
-  email: string
+  name: string
+  email?: string
   phone?: string
-  commissionRate: number
+  address?: string
+  city?: string
+  state?: string
+  zipCode?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
 }
 
-export default function SellersPage() {
-  const [sellers, setSellers] = useState<Seller[]>([])
+export default function WorkshopsPage() {
+  const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingSeller, setEditingSeller] = useState<Seller | null>(null)
+  const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null)
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
-    commissionRate: '5'
+    address: '',
+    city: '',
+    state: '',
+    zipCode: ''
   })
 
   useEffect(() => {
-    fetchSellers()
+    fetchWorkshops()
   }, [])
 
-  const fetchSellers = async () => {
+  const fetchWorkshops = async () => {
     try {
-      const response = await fetch('/api/sellers')
+      const response = await fetch('/api/workshops')
       if (response.ok) {
         const data = await response.json()
-        setSellers(data)
+        setWorkshops(data)
       } else {
-        toast.error('Error al cargar vendedores')
+        toast.error('Error al cargar talleres')
       }
     } catch (error) {
-      toast.error('Error al cargar vendedores')
+      toast.error('Error al cargar talleres')
     } finally {
       setLoading(false)
     }
@@ -58,82 +62,83 @@ export default function SellersPage() {
     e.preventDefault()
     
     try {
-      const url = editingSeller 
-        ? `/api/sellers/${editingSeller.id}`
-        : '/api/sellers'
+      const url = editingWorkshop 
+        ? `/api/workshops/${editingWorkshop.id}`
+        : '/api/workshops'
       
-      const method = editingSeller ? 'PUT' : 'POST'
+      const method = editingWorkshop ? 'PUT' : 'POST'
       
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          commissionRate: parseFloat(formData.commissionRate)
-        }),
+        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
-        toast.success(editingSeller ? 'Vendedor actualizado' : 'Vendedor creado')
+        toast.success(editingWorkshop ? 'Taller actualizado' : 'Taller creado')
         setShowForm(false)
-        setEditingSeller(null)
+        setEditingWorkshop(null)
         resetForm()
-        fetchSellers()
+        fetchWorkshops()
       } else {
-        toast.error('Error al guardar vendedor')
+        toast.error('Error al guardar taller')
       }
     } catch (error) {
-      toast.error('Error al guardar vendedor')
+      toast.error('Error al guardar taller')
     }
   }
 
-  const handleEdit = (seller: Seller) => {
-    setEditingSeller(seller)
+  const handleEdit = (workshop: Workshop) => {
+    setEditingWorkshop(workshop)
     setFormData({
-      firstName: seller.firstName,
-      lastName: seller.lastName,
-      email: seller.email,
-      phone: seller.phone || '',
-      commissionRate: seller.commissionRate.toString()
+      name: workshop.name,
+      email: workshop.email || '',
+      phone: workshop.phone || '',
+      address: workshop.address || '',
+      city: workshop.city || '',
+      state: workshop.state || '',
+      zipCode: workshop.zipCode || ''
     })
     setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este vendedor?')) return
+    if (!confirm('¿Estás seguro de que quieres eliminar este taller?')) return
     
     try {
-      const response = await fetch(`/api/sellers/${id}`, {
+      const response = await fetch(`/api/workshops/${id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        toast.success('Vendedor eliminado')
-        fetchSellers()
+        toast.success('Taller eliminado')
+        fetchWorkshops()
       } else {
-        toast.error('Error al eliminar vendedor')
+        toast.error('Error al eliminar taller')
       }
     } catch (error) {
-      toast.error('Error al eliminar vendedor')
+      toast.error('Error al eliminar taller')
     }
   }
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
+      name: '',
       email: '',
       phone: '',
-      commissionRate: '5'
+      address: '',
+      city: '',
+      state: '',
+      zipCode: ''
     })
   }
 
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Cargando vendedores...</div>
+        <div className="text-center">Cargando talleres...</div>
       </div>
     )
   }
@@ -141,13 +146,13 @@ export default function SellersPage() {
   return (
     <div className="container mx-auto p-6">
       <Navigation 
-        title="Gestión de Vendedores" 
-        breadcrumbs={[{ label: 'Vendedores' }]}
+        title="Gestión de Talleres" 
+        breadcrumbs={[{ label: 'Talleres' }]}
       />
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Vendedor
+          Agregar Taller
         </Button>
       </div>
 
@@ -155,27 +160,18 @@ export default function SellersPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              {editingSeller ? 'Editar Vendedor' : 'Nuevo Vendedor'}
+              {editingWorkshop ? 'Editar Taller' : 'Nuevo Taller'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">Nombre</Label>
+                  <Label htmlFor="name">Nombre</Label>
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Apellido</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                     required
                   />
                 </div>
@@ -186,7 +182,6 @@ export default function SellersPage() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    required
                   />
                 </div>
                 <div>
@@ -198,32 +193,48 @@ export default function SellersPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="commissionRate">Porcentaje de Comisión (%)</Label>
+                  <Label htmlFor="address">Dirección</Label>
                   <Input
-                    id="commissionRate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                    value={formData.commissionRate}
-                    onChange={(e) => setFormData({...formData, commissionRate: e.target.value})}
-                    required
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Porcentaje que se lleva el vendedor por cada venta
-                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="city">Ciudad</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="state">Provincia</Label>
+                  <Input
+                    id="state"
+                    value={formData.state}
+                    onChange={(e) => setFormData({...formData, state: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="zipCode">Código Postal</Label>
+                  <Input
+                    id="zipCode"
+                    value={formData.zipCode}
+                    onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
+                  />
                 </div>
               </div>
               <div className="flex gap-2">
                 <Button type="submit">
-                  {editingSeller ? 'Actualizar' : 'Crear'} Vendedor
+                  {editingWorkshop ? 'Actualizar' : 'Crear'} Taller
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline"
                   onClick={() => {
                     setShowForm(false)
-                    setEditingSeller(null)
+                    setEditingWorkshop(null)
                     resetForm()
                   }}
                 >
@@ -236,23 +247,23 @@ export default function SellersPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sellers.map((seller) => (
-          <Card key={seller.id}>
+        {workshops.map((workshop) => (
+          <Card key={workshop.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
-                <span>{seller.firstName} {seller.lastName}</span>
+                <span>{workshop.name}</span>
                 <div className="flex gap-1">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleEdit(seller)}
+                    onClick={() => handleEdit(workshop)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDelete(seller.id)}
+                    onClick={() => handleDelete(workshop.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -261,21 +272,27 @@ export default function SellersPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p><strong>Email:</strong> {seller.email}</p>
-                {seller.phone && (
-                  <p><strong>Teléfono:</strong> {seller.phone}</p>
+                {workshop.email && (
+                  <p><strong>Email:</strong> {workshop.email}</p>
                 )}
-                <p><strong>Comisión:</strong> {seller.commissionRate}%</p>
-                <p><strong>Estado:</strong> {seller.isActive ? 'Activo' : 'Inactivo'}</p>
+                {workshop.phone && (
+                  <p><strong>Teléfono:</strong> {workshop.phone}</p>
+                )}
+                {workshop.address && (
+                  <p><strong>Dirección:</strong> {workshop.address}</p>
+                )}
+                {(workshop.city || workshop.state) && (
+                  <p><strong>Ubicación:</strong> {workshop.city}, {workshop.state}</p>
+                )}
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {sellers.length === 0 && !loading && (
+      {workshops.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay vendedores registrados</p>
+          <p className="text-gray-500">No hay talleres registrados</p>
         </div>
       )}
     </div>

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Edit, Trash2, Users, Lock } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Navigation } from '@/components/ui/navigation'
 
 interface User {
   id: string
@@ -191,11 +192,14 @@ export default function AdminUsersPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Users className="h-8 w-8" />
-          Administración de Usuarios
-        </h1>
+      <Navigation 
+        title="Administración de Usuarios" 
+        breadcrumbs={[
+          { label: 'Administración', href: '/admin' },
+          { label: 'Usuarios' }
+        ]}
+      />
+      <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Usuario

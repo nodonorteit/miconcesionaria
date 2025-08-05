@@ -5,58 +5,56 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Users } from 'lucide-react'
+import { Plus, Edit, Trash2, Building } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
-interface Customer {
+interface Provider {
   id: string
-  firstName: string
-  lastName: string
+  name: string
   email?: string
   phone?: string
   address?: string
   city?: string
   state?: string
   zipCode?: string
-  documentNumber?: string
+  taxId?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
 }
 
-export default function CustomersPage() {
-  const [customers, setCustomers] = useState<Customer[]>([])
+export default function ProvidersPage() {
+  const [providers, setProviders] = useState<Provider[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
     phone: '',
     address: '',
     city: '',
     state: '',
     zipCode: '',
-    documentNumber: ''
+    taxId: ''
   })
 
   useEffect(() => {
-    fetchCustomers()
+    fetchProviders()
   }, [])
 
-  const fetchCustomers = async () => {
+  const fetchProviders = async () => {
     try {
-      const response = await fetch('/api/customers')
+      const response = await fetch('/api/providers')
       if (response.ok) {
         const data = await response.json()
-        setCustomers(data)
+        setProviders(data)
       } else {
-        toast.error('Error al cargar clientes')
+        toast.error('Error al cargar proveedores')
       }
     } catch (error) {
-      toast.error('Error al cargar clientes')
+      toast.error('Error al cargar proveedores')
     } finally {
       setLoading(false)
     }
@@ -66,11 +64,11 @@ export default function CustomersPage() {
     e.preventDefault()
     
     try {
-      const url = editingCustomer 
-        ? `/api/customers/${editingCustomer.id}`
-        : '/api/customers'
+      const url = editingProvider 
+        ? `/api/providers/${editingProvider.id}`
+        : '/api/providers'
       
-      const method = editingCustomer ? 'PUT' : 'POST'
+      const method = editingProvider ? 'PUT' : 'POST'
       
       const response = await fetch(url, {
         method,
@@ -81,72 +79,70 @@ export default function CustomersPage() {
       })
 
       if (response.ok) {
-        toast.success(editingCustomer ? 'Cliente actualizado' : 'Cliente creado')
+        toast.success(editingProvider ? 'Proveedor actualizado' : 'Proveedor creado')
         setShowForm(false)
-        setEditingCustomer(null)
+        setEditingProvider(null)
         resetForm()
-        fetchCustomers()
+        fetchProviders()
       } else {
-        toast.error('Error al guardar cliente')
+        toast.error('Error al guardar proveedor')
       }
     } catch (error) {
-      toast.error('Error al guardar cliente')
+      toast.error('Error al guardar proveedor')
     }
   }
 
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer)
+  const handleEdit = (provider: Provider) => {
+    setEditingProvider(provider)
     setFormData({
-      firstName: customer.firstName,
-      lastName: customer.lastName,
-      email: customer.email || '',
-      phone: customer.phone || '',
-      address: customer.address || '',
-      city: customer.city || '',
-      state: customer.state || '',
-      zipCode: customer.zipCode || '',
-      documentNumber: customer.documentNumber || ''
+      name: provider.name,
+      email: provider.email || '',
+      phone: provider.phone || '',
+      address: provider.address || '',
+      city: provider.city || '',
+      state: provider.state || '',
+      zipCode: provider.zipCode || '',
+      taxId: provider.taxId || ''
     })
     setShowForm(true)
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este cliente?')) return
+    if (!confirm('¿Estás seguro de que quieres eliminar este proveedor?')) return
     
     try {
-      const response = await fetch(`/api/customers/${id}`, {
+      const response = await fetch(`/api/providers/${id}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
-        toast.success('Cliente eliminado')
-        fetchCustomers()
+        toast.success('Proveedor eliminado')
+        fetchProviders()
       } else {
-        toast.error('Error al eliminar cliente')
+        toast.error('Error al eliminar proveedor')
       }
     } catch (error) {
-      toast.error('Error al eliminar cliente')
+      toast.error('Error al eliminar proveedor')
     }
   }
 
   const resetForm = () => {
     setFormData({
-      firstName: '',
-      lastName: '',
+      name: '',
       email: '',
       phone: '',
       address: '',
       city: '',
       state: '',
       zipCode: '',
-      documentNumber: ''
+      taxId: ''
     })
   }
 
   if (loading) {
     return (
       <div className="container mx-auto p-6">
-        <div className="text-center">Cargando clientes...</div>
+        <div className="text-center">Cargando proveedores...</div>
       </div>
     )
   }
@@ -154,13 +150,13 @@ export default function CustomersPage() {
   return (
     <div className="container mx-auto p-6">
       <Navigation 
-        title="Gestión de Clientes" 
-        breadcrumbs={[{ label: 'Clientes' }]}
+        title="Gestión de Proveedores" 
+        breadcrumbs={[{ label: 'Proveedores' }]}
       />
       <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Agregar Cliente
+          Agregar Proveedor
         </Button>
       </div>
 
@@ -168,27 +164,18 @@ export default function CustomersPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              {editingCustomer ? 'Editar Cliente' : 'Nuevo Cliente'}
+              {editingProvider ? 'Editar Proveedor' : 'Nuevo Proveedor'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">Nombre</Label>
+                  <Label htmlFor="name">Nombre</Label>
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Apellido</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                     required
                   />
                 </div>
@@ -210,11 +197,11 @@ export default function CustomersPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="documentNumber">DNI/CUIL</Label>
+                  <Label htmlFor="taxId">CUIT/CUIL</Label>
                   <Input
-                    id="documentNumber"
-                    value={formData.documentNumber}
-                    onChange={(e) => setFormData({...formData, documentNumber: e.target.value})}
+                    id="taxId"
+                    value={formData.taxId}
+                    onChange={(e) => setFormData({...formData, taxId: e.target.value})}
                   />
                 </div>
                 <div>
@@ -252,14 +239,14 @@ export default function CustomersPage() {
               </div>
               <div className="flex gap-2">
                 <Button type="submit">
-                  {editingCustomer ? 'Actualizar' : 'Crear'} Cliente
+                  {editingProvider ? 'Actualizar' : 'Crear'} Proveedor
                 </Button>
                 <Button 
                   type="button" 
                   variant="outline"
                   onClick={() => {
                     setShowForm(false)
-                    setEditingCustomer(null)
+                    setEditingProvider(null)
                     resetForm()
                   }}
                 >
@@ -272,23 +259,23 @@ export default function CustomersPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {customers.map((customer) => (
-          <Card key={customer.id}>
+        {providers.map((provider) => (
+          <Card key={provider.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
-                <span>{customer.firstName} {customer.lastName}</span>
+                <span>{provider.name}</span>
                 <div className="flex gap-1">
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleEdit(customer)}
+                    onClick={() => handleEdit(provider)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDelete(customer.id)}
+                    onClick={() => handleDelete(provider.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -297,20 +284,20 @@ export default function CustomersPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {customer.email && (
-                  <p><strong>Email:</strong> {customer.email}</p>
+                {provider.email && (
+                  <p><strong>Email:</strong> {provider.email}</p>
                 )}
-                {customer.phone && (
-                  <p><strong>Teléfono:</strong> {customer.phone}</p>
+                {provider.phone && (
+                  <p><strong>Teléfono:</strong> {provider.phone}</p>
                 )}
-                {customer.documentNumber && (
-                  <p><strong>DNI/CUIL:</strong> {customer.documentNumber}</p>
+                {provider.taxId && (
+                  <p><strong>CUIT/CUIL:</strong> {provider.taxId}</p>
                 )}
-                {customer.address && (
-                  <p><strong>Dirección:</strong> {customer.address}</p>
+                {provider.address && (
+                  <p><strong>Dirección:</strong> {provider.address}</p>
                 )}
-                {(customer.city || customer.state) && (
-                  <p><strong>Ubicación:</strong> {customer.city}, {customer.state}</p>
+                {(provider.city || provider.state) && (
+                  <p><strong>Ubicación:</strong> {provider.city}, {provider.state}</p>
                 )}
               </div>
             </CardContent>
@@ -318,9 +305,9 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      {customers.length === 0 && !loading && (
+      {providers.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay clientes registrados</p>
+          <p className="text-gray-500">No hay proveedores registrados</p>
         </div>
       )}
     </div>

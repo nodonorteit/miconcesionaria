@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Plus, Edit, Trash2, Car } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { Navigation } from '@/components/ui/navigation'
 
 interface Vehicle {
   id: string
@@ -169,11 +170,11 @@ export default function VehiclesPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Car className="h-8 w-8" />
-          Gestión de Vehículos
-        </h1>
+      <Navigation 
+        title="Gestión de Vehículos" 
+        breadcrumbs={[{ label: 'Vehículos' }]}
+      />
+      <div className="flex justify-end mb-6">
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Vehículo
