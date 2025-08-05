@@ -32,14 +32,19 @@ interface DashboardStats {
   totalWorkshops: number
 }
 
+interface DollarRate {
+  casa: string
+  nombre: string
+  compra: number | null
+  venta: number | null
+  agencia: string
+  variacion: number | null
+  ventaCero: boolean
+  decimales: number
+}
+
 interface DollarRates {
-  mep: number | null
-  blue: { compra: number | null; venta: number | null }
-  ccl: { venta: number | null }
-  crypto: { compra: number | null; venta: number | null }
-  tarjeta: { venta: number | null }
-  ahorro: { compra: number | null; venta: number | null }
-  oficial: { compra: number | null; venta: number | null }
+  rates: DollarRate[]
   timestamp: string
   source: string
 }
@@ -195,47 +200,41 @@ export default function Dashboard() {
             ) : dollarRates ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Dólar MEP */}
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <div className="text-sm font-medium text-green-800">Dólar MEP</div>
-                    <div className="text-2xl font-bold text-green-600">
-                      {dollarRates.mep ? `$${dollarRates.mep.toLocaleString('es-AR')}` : 'N/A'}
-                    </div>
-                  </div>
-
-                  {/* Dólar Blue */}
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <div className="text-sm font-medium text-blue-800">Dólar Blue</div>
-                    <div className="space-y-1">
-                      <div className="text-lg font-bold text-blue-600">
-                        {dollarRates.blue.venta ? `$${dollarRates.blue.venta.toLocaleString('es-AR')}` : 'N/A'}
+                  {dollarRates.rates.slice(0, 4).map((rate, index) => (
+                    <div key={rate.casa} className={`p-4 rounded-lg border ${
+                      index === 0 ? 'bg-green-50 border-green-200' :
+                      index === 1 ? 'bg-blue-50 border-blue-200' :
+                      index === 2 ? 'bg-purple-50 border-purple-200' :
+                      'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className={`text-sm font-medium ${
+                        index === 0 ? 'text-green-800' :
+                        index === 1 ? 'text-blue-800' :
+                        index === 2 ? 'text-purple-800' :
+                        'text-gray-800'
+                      }`}>
+                        {rate.nombre}
                       </div>
-                      <div className="text-xs text-blue-600">
-                        Compra: {dollarRates.blue.compra ? `$${dollarRates.blue.compra.toLocaleString('es-AR')}` : 'N/A'}
+                      <div className={`text-2xl font-bold ${
+                        index === 0 ? 'text-green-600' :
+                        index === 1 ? 'text-blue-600' :
+                        index === 2 ? 'text-purple-600' :
+                        'text-gray-600'
+                      }`}>
+                        {rate.venta ? `$${rate.venta.toLocaleString('es-AR')}` : 'N/A'}
                       </div>
+                      {rate.compra && (
+                        <div className={`text-xs ${
+                          index === 0 ? 'text-green-600' :
+                          index === 1 ? 'text-blue-600' :
+                          index === 2 ? 'text-purple-600' :
+                          'text-gray-600'
+                        }`}>
+                          Compra: ${rate.compra.toLocaleString('es-AR')}
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Dólar CCL */}
-                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                    <div className="text-sm font-medium text-purple-800">Dólar CCL</div>
-                    <div className="text-2xl font-bold text-purple-600">
-                      {dollarRates.ccl.venta ? `$${dollarRates.ccl.venta.toLocaleString('es-AR')}` : 'N/A'}
-                    </div>
-                  </div>
-
-                  {/* Dólar Oficial */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="text-sm font-medium text-gray-800">Dólar Oficial</div>
-                    <div className="space-y-1">
-                      <div className="text-lg font-bold text-gray-600">
-                        {dollarRates.oficial.venta ? `$${dollarRates.oficial.venta.toLocaleString('es-AR')}` : 'N/A'}
-                      </div>
-                      <div className="text-xs text-gray-600">
-                        Compra: {dollarRates.oficial.compra ? `$${dollarRates.oficial.compra.toLocaleString('es-AR')}` : 'N/A'}
-                      </div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
 
                 {/* Tabla completa */}
@@ -246,66 +245,31 @@ export default function Dashboard() {
                         <th className="text-left py-2 font-medium">Tipo</th>
                         <th className="text-right py-2 font-medium">Compra</th>
                         <th className="text-right py-2 font-medium">Venta</th>
+                        <th className="text-right py-2 font-medium">Agencia</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">MEP</td>
-                        <td className="text-right py-2">-</td>
-                        <td className="text-right py-2 font-bold text-green-600">
-                          {dollarRates.mep ? `$${dollarRates.mep.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">Blue</td>
-                        <td className="text-right py-2">
-                          {dollarRates.blue.compra ? `$${dollarRates.blue.compra.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                        <td className="text-right py-2 font-bold text-blue-600">
-                          {dollarRates.blue.venta ? `$${dollarRates.blue.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">CCL</td>
-                        <td className="text-right py-2">-</td>
-                        <td className="text-right py-2 font-bold text-purple-600">
-                          {dollarRates.ccl.venta ? `$${dollarRates.ccl.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">Cripto</td>
-                        <td className="text-right py-2">
-                          {dollarRates.crypto.compra ? `$${dollarRates.crypto.compra.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                        <td className="text-right py-2 font-bold text-orange-600">
-                          {dollarRates.crypto.venta ? `$${dollarRates.crypto.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">Tarjeta</td>
-                        <td className="text-right py-2">-</td>
-                        <td className="text-right py-2 font-bold text-red-600">
-                          {dollarRates.tarjeta.venta ? `$${dollarRates.tarjeta.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-2 font-medium">Ahorro</td>
-                        <td className="text-right py-2">
-                          {dollarRates.ahorro.compra ? `$${dollarRates.ahorro.compra.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                        <td className="text-right py-2 font-bold text-indigo-600">
-                          {dollarRates.ahorro.venta ? `$${dollarRates.ahorro.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="py-2 font-medium">Oficial</td>
-                        <td className="text-right py-2">
-                          {dollarRates.oficial.compra ? `$${dollarRates.oficial.compra.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                        <td className="text-right py-2 font-bold text-gray-600">
-                          {dollarRates.oficial.venta ? `$${dollarRates.oficial.venta.toLocaleString('es-AR')}` : 'N/A'}
-                        </td>
-                      </tr>
+                      {dollarRates.rates.map((rate, index) => (
+                        <tr key={rate.casa} className="border-b">
+                          <td className="py-2 font-medium">{rate.nombre}</td>
+                          <td className="text-right py-2">
+                            {rate.compra ? `$${rate.compra.toLocaleString('es-AR')}` : '-'}
+                          </td>
+                          <td className={`text-right py-2 font-bold ${
+                            index === 0 ? 'text-green-600' :
+                            index === 1 ? 'text-blue-600' :
+                            index === 2 ? 'text-purple-600' :
+                            index === 3 ? 'text-orange-600' :
+                            index === 4 ? 'text-red-600' :
+                            'text-gray-600'
+                          }`}>
+                            {rate.venta ? `$${rate.venta.toLocaleString('es-AR')}` : 'N/A'}
+                          </td>
+                          <td className="text-right py-2 text-xs text-gray-500">
+                            {rate.agencia}
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

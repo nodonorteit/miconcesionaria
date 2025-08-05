@@ -6,16 +6,27 @@ import { join } from 'path'
 // GET - Obtener todos los vehículos
 export async function GET() {
   try {
-    const vehicles = await prisma.vehicle.findMany({
-      where: { isActive: true },
-      include: {
-        vehicleType: true,
-        images: true
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    // Usar SQL directo para manejar valores vacíos en enums
+    const vehicles = await prisma.$queryRaw`
+      SELECT 
+        v.*,
+        vt.name as vehicleTypeName,
+        vt.description as vehicleTypeDescription
+      FROM Vehicle v
+      LEFT JOIN VehicleType vt ON v.vehicleTypeId = vt.id
+      WHERE v.isActive = 1
+      ORDER BY v.createdAt DESC
+    `
 
-    return NextResponse.json(vehicles)
+    // Procesar los resultados para manejar valores vacíos
+    const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
+      ...vehicle,
+      fuelType: vehicle.fuelType || 'GASOLINE',
+      transmission: vehicle.transmission || 'MANUAL',
+      status: vehicle.status || 'AVAILABLE'
+    }))
+
+    return NextResponse.json(processedVehicles)
   } catch (error) {
     console.error('Error fetching vehicles:', error)
     return NextResponse.json(

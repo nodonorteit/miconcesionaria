@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server'
 
+interface DollarRate {
+  casa: string
+  nombre: string
+  compra: number | null
+  venta: number | null
+  agencia: string
+  variacion: number | null
+  ventaCero: boolean
+  decimales: number
+}
+
 interface DollarRates {
-  mep: number | null
-  blue: { compra: number | null; venta: number | null }
-  ccl: { venta: number | null }
-  crypto: { compra: number | null; venta: number | null }
-  tarjeta: { venta: number | null }
-  ahorro: { compra: number | null; venta: number | null }
-  oficial: { compra: number | null; venta: number | null }
+  rates: DollarRate[]
   timestamp: string
   source: string
 }
@@ -33,61 +38,11 @@ export async function GET() {
     const data = await response.json()
     console.log('✅ Datos obtenidos de dolarapi.com')
     
-    // Extraer todas las cotizaciones
+    // Devolver directamente los datos de dolarapi.com
     const rates: DollarRates = {
-      mep: null,
-      blue: { compra: null, venta: null },
-      ccl: { venta: null },
-      crypto: { compra: null, venta: null },
-      tarjeta: { venta: null },
-      ahorro: { compra: null, venta: null },
-      oficial: { compra: null, venta: null },
+      rates: data,
       timestamp: new Date().toISOString(),
       source: 'dolarapi.com'
-    }
-
-    // Mapear los datos de la API según el formato de dolarapi.com
-    data.forEach((item: any) => {
-      switch (item.casa) {
-        case 'oficial':
-          rates.oficial.compra = item.compra
-          rates.oficial.venta = item.venta
-          break
-        case 'blue':
-          rates.blue.compra = item.compra
-          rates.blue.venta = item.venta
-          break
-        case 'mep':
-          rates.mep = item.venta
-          break
-        case 'ccl':
-          rates.ccl.venta = item.venta
-          break
-        case 'crypto':
-          rates.crypto.compra = item.compra
-          rates.crypto.venta = item.venta
-          break
-        case 'tarjeta':
-          rates.tarjeta.venta = item.venta
-          break
-        case 'ahorro':
-          rates.ahorro.compra = item.compra
-          rates.ahorro.venta = item.venta
-          break
-      }
-    })
-
-    // Si no hay tarjeta, calcular basado en oficial
-    if (!rates.tarjeta.venta && rates.oficial.venta) {
-      rates.tarjeta.venta = rates.oficial.venta * 1.35 // 35% de impuestos
-    }
-
-    // Si no hay ahorro, usar oficial
-    if (!rates.ahorro.compra && rates.oficial.compra) {
-      rates.ahorro.compra = rates.oficial.compra
-    }
-    if (!rates.ahorro.venta && rates.oficial.venta) {
-      rates.ahorro.venta = rates.oficial.venta
     }
 
     console.log('📊 Cotizaciones extraídas:', JSON.stringify(rates, null, 2))
@@ -99,13 +54,7 @@ export async function GET() {
     
     // Devolver valores null en caso de error
     return NextResponse.json({
-      mep: null,
-      blue: { compra: null, venta: null },
-      ccl: { venta: null },
-      crypto: { compra: null, venta: null },
-      tarjeta: { venta: null },
-      ahorro: { compra: null, venta: null },
-      oficial: { compra: null, venta: null },
+      rates: [],
       timestamp: new Date().toISOString(),
       source: 'dolarapi.com',
       error: 'Error al obtener las cotizaciones del dólar'
