@@ -45,7 +45,8 @@ export default function VehiclesPage() {
     licensePlate: '',
     fuelType: 'GASOLINE',
     transmission: 'MANUAL',
-    status: 'AVAILABLE'
+    status: 'AVAILABLE',
+    images: [] as File[]
   })
 
   useEffect(() => {
@@ -72,6 +73,25 @@ export default function VehiclesPage() {
     e.preventDefault()
     
     try {
+      const formDataToSend = new FormData()
+      formDataToSend.append('brand', formData.brand)
+      formDataToSend.append('model', formData.model)
+      formDataToSend.append('year', formData.year)
+      formDataToSend.append('color', formData.color)
+      formDataToSend.append('mileage', formData.mileage)
+      formDataToSend.append('price', formData.price)
+      formDataToSend.append('description', formData.description)
+      formDataToSend.append('vin', formData.vin)
+      formDataToSend.append('licensePlate', formData.licensePlate)
+      formDataToSend.append('fuelType', formData.fuelType)
+      formDataToSend.append('transmission', formData.transmission)
+      formDataToSend.append('status', formData.status)
+      
+      // Agregar imágenes
+      formData.images.forEach((image, index) => {
+        formDataToSend.append(`images`, image)
+      })
+
       const url = editingVehicle 
         ? `/api/vehicles/${editingVehicle.id}`
         : '/api/vehicles'
@@ -80,15 +100,7 @@ export default function VehiclesPage() {
       
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          year: parseInt(formData.year),
-          mileage: parseInt(formData.mileage),
-          price: parseFloat(formData.price)
-        }),
+        body: formDataToSend,
       })
 
       if (response.ok) {
@@ -119,7 +131,8 @@ export default function VehiclesPage() {
       licensePlate: vehicle.licensePlate || '',
       fuelType: vehicle.fuelType,
       transmission: vehicle.transmission,
-      status: vehicle.status
+      status: vehicle.status,
+      images: []
     })
     setShowForm(true)
   }
@@ -156,7 +169,8 @@ export default function VehiclesPage() {
       licensePlate: '',
       fuelType: 'GASOLINE',
       transmission: 'MANUAL',
-      status: 'AVAILABLE'
+      status: 'AVAILABLE',
+      images: []
     })
   }
 
@@ -259,6 +273,39 @@ export default function VehiclesPage() {
                   />
                   <p className="text-sm text-gray-500 mt-1">
                     Número de identificación único del vehículo (Vehicle Identification Number)
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="images">Fotos del Vehículo (máximo 10)</Label>
+                  <Input
+                    id="images"
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.gif"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || [])
+                      if (files.length > 10) {
+                        toast.error('Máximo 10 fotos permitidas')
+                        return
+                      }
+                      // Validar tipos de archivo
+                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+                      const invalidFiles = files.filter(file => !validTypes.includes(file.type))
+                      if (invalidFiles.length > 0) {
+                        toast.error('Solo se permiten archivos JPG, PNG o GIF')
+                        return
+                      }
+                      // Validar tamaño (máximo 5MB por archivo)
+                      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024)
+                      if (oversizedFiles.length > 0) {
+                        toast.error('Cada archivo no puede ser mayor a 5MB')
+                        return
+                      }
+                      setFormData({...formData, images: files})
+                    }}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Máximo 10 fotos. Formatos: JPG, PNG, GIF. Máximo 5MB por archivo.
                   </p>
                 </div>
                 <div>
