@@ -15,17 +15,12 @@ interface DollarRates {
 // GET - Obtener todas las cotizaciones del dólar
 export async function GET() {
   try {
-    console.log('🔄 Iniciando fetch de cotizaciones desde ámbito.com...')
+    console.log('🔄 Iniciando fetch de cotizaciones desde API simple...')
     
-    // Usar ámbito.com - fuente confiable para Argentina
-    const response = await fetch('https://www.ambito.com/contenidos/dolar.html', {
+    // Usar una API más simple y confiable
+    const response = await fetch('https://api.bluelytics.com.ar/v2/latest', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'es-AR,es;q=0.8,en-US;q=0.5,en;q=0.3',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
       },
       next: { revalidate: 300 } // Cache por 5 minutos
     })
@@ -35,8 +30,8 @@ export async function GET() {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const html = await response.text()
-    console.log('✅ HTML obtenido de ámbito.com, longitud:', html.length)
+    const data = await response.json()
+    console.log('✅ Datos obtenidos de Bluelytics')
     
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
@@ -48,68 +43,37 @@ export async function GET() {
       ahorro: { compra: null, venta: null },
       oficial: { compra: null, venta: null },
       timestamp: new Date().toISOString(),
-      source: 'ambito.com'
+      source: 'bluelytics.com.ar'
     }
 
-    // Función helper para extraer números
-    const extractNumber = (text: string): number | null => {
-      const match = text.match(/[\d,]+\.?\d*/)
-      if (match) {
-        const num = parseFloat(match[0].replace(/[$,]/g, ''))
-        return isNaN(num) ? null : num
-      }
-      return null
+    // Mapear los datos de la API
+    if (data.oficial) {
+      rates.oficial.compra = data.oficial.value_buy
+      rates.oficial.venta = data.oficial.value_sell
+    }
+    
+    if (data.blue) {
+      rates.blue.compra = data.blue.value_buy
+      rates.blue.venta = data.blue.value_sell
+    }
+    
+    if (data.mep) {
+      rates.mep = data.mep.value_sell
+    }
+    
+    if (data.ccl) {
+      rates.ccl.venta = data.ccl.value_sell
+    }
+    
+    if (data.crypto) {
+      rates.crypto.compra = data.crypto.value_buy
+      rates.crypto.venta = data.crypto.value_sell
     }
 
-    // Función helper para buscar valores en el HTML de ámbito.com
-    const findValueBySection = (sectionTitle: string, type: 'compra' | 'venta'): number | null => {
-      // Debug: mostrar fragmento del HTML donde buscar
-      const sectionMatch = html.match(new RegExp(`${sectionTitle}[^>]*>.*?${type}[^>]*>.*?`, 'i'))
-      if (sectionMatch) {
-        console.log(`🔍 Fragmento encontrado para ${sectionTitle} ${type}:`, sectionMatch[0].substring(0, 200))
-      }
-      
-      const patterns = [
-        new RegExp(`${sectionTitle}[^>]*>.*?${type}[^>]*>.*?\\$?([\\d,]+\\.?\\d*)`, 'i'),
-        new RegExp(`${sectionTitle}[^>]*>.*?\\$?([\\d,]+\\.?\\d*)`, 'i'),
-        new RegExp(`${sectionTitle}.*?${type}.*?\\$?([\\d,]+\\.?\\d*)`, 'i')
-      ]
-      
-      for (const pattern of patterns) {
-        const match = html.match(pattern)
-        if (match && match[1]) {
-          const value = extractNumber(match[1])
-          if (value && value > 10) { // Filtrar valores muy bajos
-            console.log(`✅ Encontrado ${sectionTitle} ${type}: ${value}`)
-            return value
-          }
-        }
-      }
-      
-      console.log(`❌ No se encontró valor para ${sectionTitle} ${type}`)
-      return null
+    // Calcular tarjeta (oficial + impuestos)
+    if (rates.oficial.venta) {
+      rates.tarjeta.venta = rates.oficial.venta * 1.35 // 35% de impuestos
     }
-
-    // Dólar Blue
-    rates.blue.compra = findValueBySection('Dólar Blue', 'compra')
-    rates.blue.venta = findValueBySection('Dólar Blue', 'venta')
-
-    // Dólar Oficial
-    rates.oficial.compra = findValueBySection('Dólar Oficial', 'compra')
-    rates.oficial.venta = findValueBySection('Dólar Oficial', 'venta')
-
-    // Dólar MEP
-    rates.mep = findValueBySection('Dólar MEP', 'venta')
-
-    // Dólar CCL
-    rates.ccl.venta = findValueBySection('Dólar CCL', 'venta')
-
-    // Dólar Cripto
-    rates.crypto.compra = findValueBySection('Dólar Cripto', 'compra')
-    rates.crypto.venta = findValueBySection('Dólar Cripto', 'venta')
-
-    // Dólar Turista (usar como tarjeta)
-    rates.tarjeta.venta = findValueBySection('Dólar Turista', 'venta')
 
     // Dólar Ahorro (usar oficial como base)
     rates.ahorro.compra = rates.oficial.compra
@@ -132,7 +96,7 @@ export async function GET() {
       ahorro: { compra: null, venta: null },
       oficial: { compra: null, venta: null },
       timestamp: new Date().toISOString(),
-      source: 'ambito.com',
+      source: 'bluelytics.com.ar',
       error: 'Error al obtener las cotizaciones del dólar'
     })
   }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, DollarSign, Upload, Download, Eye } from 'lucide-react'
+import { Plus, DollarSign, Upload, Download, Eye, BarChart3 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
@@ -35,6 +35,11 @@ export default function CashFlowPage() {
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showChart, setShowChart] = useState(false)
+  const [dateRange, setDateRange] = useState({
+    start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días atrás
+    end: new Date().toISOString().split('T')[0]
+  })
 
   useEffect(() => {
     fetchCashFlows()
@@ -181,6 +186,24 @@ export default function CashFlowPage() {
     }, 0)
   }
 
+  const getFilteredCashFlows = () => {
+    return cashFlows.filter(flow => {
+      const flowDate = new Date(flow.createdAt).toISOString().split('T')[0]
+      return flowDate >= dateRange.start && flowDate <= dateRange.end
+    })
+  }
+
+  const getChartData = () => {
+    const filtered = getFilteredCashFlows()
+    const income = filtered.filter(f => f.type === 'INCOME').reduce((sum, f) => sum + (typeof f.amount === 'number' ? f.amount : parseFloat(f.amount) || 0), 0)
+    const expenses = filtered.filter(f => f.type === 'EXPENSE').reduce((sum, f) => sum + Math.abs(typeof f.amount === 'number' ? f.amount : parseFloat(f.amount) || 0), 0)
+    
+    return [
+      { name: 'Ingresos', value: income, color: '#10b981' },
+      { name: 'Egresos', value: expenses, color: '#ef4444' }
+    ]
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -216,12 +239,80 @@ export default function CashFlowPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-between mb-6">
+        <div className="flex gap-2">
+          <Button onClick={() => setShowChart(!showChart)}>
+            <BarChart3 className="h-4 w-4 mr-2" />
+            {showChart ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}
+          </Button>
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Movimiento
         </Button>
       </div>
+
+      {/* Filtro de fechas */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Filtro de Fechas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4">
+            <div>
+              <Label htmlFor="startDate">Desde</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="endDate">Hasta</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico */}
+      {showChart && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Gráfico de Ingresos vs Egresos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {getChartData().map((item) => (
+                <div key={item.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded" 
+                      style={{ backgroundColor: item.color }}
+                    ></div>
+                    <span>{item.name}</span>
+                  </div>
+                  <span className="font-bold">${item.value.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="border-t pt-4">
+                <div className="flex justify-between font-bold">
+                  <span>Balance del período:</span>
+                  <span className={getChartData()[0].value - getChartData()[1].value >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    ${(getChartData()[0].value - getChartData()[1].value).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {showForm && (
         <Card className="mb-6">
@@ -330,7 +421,7 @@ export default function CashFlowPage() {
       )}
 
       <div className="space-y-4">
-        {cashFlows.map((cashFlow) => (
+        {getFilteredCashFlows().map((cashFlow) => (
           <Card key={cashFlow.id}>
             <CardHeader>
               <CardTitle className="flex justify-between items-start">
@@ -350,20 +441,6 @@ export default function CashFlowPage() {
                       <Eye className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(cashFlow)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(cashFlow.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
                 </div>
               </CardTitle>
             </CardHeader>
@@ -381,9 +458,9 @@ export default function CashFlowPage() {
         ))}
       </div>
 
-      {cashFlows.length === 0 && !loading && (
+      {getFilteredCashFlows().length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay movimientos registrados</p>
+          <p className="text-gray-500">No hay movimientos en el período seleccionado</p>
         </div>
       )}
     </div>
