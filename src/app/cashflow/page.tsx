@@ -176,7 +176,8 @@ export default function CashFlowPage() {
   const calculateBalance = () => {
     return cashFlows.reduce((balance, flow) => {
       const amount = typeof flow.amount === 'number' ? flow.amount : parseFloat(flow.amount) || 0
-      return flow.type === 'INCOME' ? balance + amount : balance - amount
+      console.log(`Calculando: ${flow.type} - ${amount} - Balance actual: ${balance}`)
+      return flow.type === 'INCOME' ? balance + amount : balance - Math.abs(amount)
     }, 0)
   }
 
