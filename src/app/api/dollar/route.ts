@@ -38,21 +38,6 @@ export async function GET() {
     const html = await response.text()
     console.log('✅ HTML obtenido, longitud:', html.length)
     
-    // Debug: Buscar fragmentos específicos del HTML
-    const blueMatch = html.match(/Dólar blue[^>]*>[\s]*\$?([\d,]+\.?\d*)/i)
-    if (blueMatch) {
-      console.log('🔍 Encontrado Dólar Blue:', blueMatch[1])
-    } else {
-      console.log('❌ No se encontró Dólar Blue')
-    }
-    
-    const oficialMatch = html.match(/Dólar Oficial[^>]*>[\s]*\$?([\d,]+\.?\d*)/i)
-    if (oficialMatch) {
-      console.log('🔍 Encontrado Dólar Oficial:', oficialMatch[1])
-    } else {
-      console.log('❌ No se encontró Dólar Oficial')
-    }
-    
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
       mep: null,
@@ -76,85 +61,50 @@ export async function GET() {
       return null
     }
 
-    // Función helper para buscar valores en el HTML
-    const findValue = (patterns: RegExp[]): number | null => {
+    // Función helper para buscar valores en el HTML usando la estructura real
+    const findValueByStructure = (title: string, type: 'compra' | 'venta'): number | null => {
+      // Buscar el contenedor que contiene el título y luego el valor correspondiente
+      const patterns = [
+        new RegExp(`${title}[^>]*>.*?<div class="compra">[^>]*<div class="val">\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`${title}[^>]*>.*?<div class="venta">[^>]*<div class="val">\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`${title}[^>]*>.*?class="val">\\$?([\\d,]+\\.?\\d*)`, 'i')
+      ]
+      
       for (const pattern of patterns) {
         const match = html.match(pattern)
         if (match && match[1]) {
           const value = extractNumber(match[1])
           if (value) {
-            console.log(`✅ Encontrado valor con patrón: ${pattern.source} = ${value}`)
+            console.log(`✅ Encontrado ${title} ${type}: ${value}`)
             return value
           }
         }
       }
+      
+      console.log(`❌ No se encontró valor para ${title} ${type}`)
       return null
     }
 
-    // Dólar Blue - Patrones más simples
-    const blueCompraPatterns = [
-      /Dólar blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Dólar Blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Blue[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    const blueVentaPatterns = [
-      /Dólar blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Dólar Blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Blue[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.blue.compra = findValue(blueCompraPatterns)
-    rates.blue.venta = findValue(blueVentaPatterns)
-
-    // Dólar MEP
-    const mepCompraPatterns = [
-      /Dólar MEP[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /MEP[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    const mepVentaPatterns = [
-      /Dólar MEP[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /MEP[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.mep = findValue(mepVentaPatterns) // Usar venta como valor principal
-
-    // Dólar CCL (Contado con liqui)
-    const cclPatterns = [
-      /Contado con liqui[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /CCL[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.ccl.venta = findValue(cclPatterns)
-
-    // Dólar Cripto
-    const cryptoCompraPatterns = [
-      /Dólar cripto[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /cripto[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    const cryptoVentaPatterns = [
-      /Dólar cripto[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /cripto[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.crypto.compra = findValue(cryptoCompraPatterns)
-    rates.crypto.venta = findValue(cryptoVentaPatterns)
-
-    // Dólar Tarjeta
-    const tarjetaPatterns = [
-      /Dólar Tarjeta[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Tarjeta[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.tarjeta.venta = findValue(tarjetaPatterns)
+    // Dólar Blue
+    rates.blue.compra = findValueByStructure('Dólar blue', 'compra')
+    rates.blue.venta = findValueByStructure('Dólar blue', 'venta')
 
     // Dólar Oficial
-    const oficialCompraPatterns = [
-      /Dólar Oficial[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Oficial[^>]*Compra[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    const oficialVentaPatterns = [
-      /Dólar Oficial[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi,
-      /Oficial[^>]*Venta[^>]*>[\s]*\$?([\d,]+\.?\d*)/gi
-    ]
-    rates.oficial.compra = findValue(oficialCompraPatterns)
-    rates.oficial.venta = findValue(oficialVentaPatterns)
+    rates.oficial.compra = findValueByStructure('Dólar Oficial', 'compra')
+    rates.oficial.venta = findValueByStructure('Dólar Oficial', 'venta')
+
+    // Dólar MEP
+    rates.mep = findValueByStructure('Dólar MEP', 'venta')
+
+    // Dólar CCL (Contado con liqui)
+    rates.ccl.venta = findValueByStructure('Contado con liqui', 'venta')
+
+    // Dólar Cripto
+    rates.crypto.compra = findValueByStructure('Dólar cripto', 'compra')
+    rates.crypto.venta = findValueByStructure('Dólar cripto', 'venta')
+
+    // Dólar Tarjeta
+    rates.tarjeta.venta = findValueByStructure('Dólar Tarjeta', 'venta')
 
     // Dólar Ahorro (usar oficial como base)
     rates.ahorro.compra = rates.oficial.compra
