@@ -16,7 +16,7 @@ SELECT '=== DATOS DE TALLERES ===' as info;
 SELECT id, name FROM workshops LIMIT 5;
 
 SELECT '=== DATOS DE VENDEDORES ===' as info;
-SELECT id, name FROM sellers LIMIT 5;
+SELECT id, firstName, lastName FROM sellers LIMIT 5;
 
 SELECT '=== VERIFICANDO SI EXPENSES YA EXISTE ===' as info;
 SHOW TABLES LIKE 'expenses'; 
