@@ -6,7 +6,10 @@ export async function GET() {
   try {
     const vehicleTypes = await prisma.vehicleType.findMany({
       where: { isActive: true },
-      orderBy: { name: 'asc' }
+      orderBy: [
+        { category: 'asc' },
+        { name: 'asc' }
+      ]
     })
 
     return NextResponse.json(vehicleTypes)
@@ -23,11 +26,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description } = body
+    const { name, category, description } = body
 
-    if (!name) {
+    if (!name || !category) {
       return NextResponse.json(
-        { error: 'Nombre es requerido' },
+        { error: 'Nombre y categoría son requeridos' },
         { status: 400 }
       )
     }
@@ -47,6 +50,7 @@ export async function POST(request: NextRequest) {
     const vehicleType = await prisma.vehicleType.create({
       data: {
         name,
+        category,
         description: description || null
       }
     })

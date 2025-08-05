@@ -5,17 +5,40 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Car } from 'lucide-react'
+import { Plus, Edit, Trash2, Car, Bike, Truck, Tractor, Anchor, Wrench, Home, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
 interface VehicleType {
   id: string
   name: string
+  category: string
   description?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
+}
+
+const categoryIcons = {
+  AUTOMOTIVE: Car,
+  MOTORCYCLE: Bike,
+  COMMERCIAL: Truck,
+  AGRICULTURAL: Tractor,
+  MARINE: Anchor,
+  CONSTRUCTION: Wrench,
+  RECREATIONAL: Home,
+  SPECIALTY: Star
+}
+
+const categoryLabels = {
+  AUTOMOTIVE: 'Automotriz',
+  MOTORCYCLE: 'Motocicletas',
+  COMMERCIAL: 'Comercial',
+  AGRICULTURAL: 'Agrícola',
+  MARINE: 'Marítimo',
+  CONSTRUCTION: 'Construcción',
+  RECREATIONAL: 'Recreativo',
+  SPECIALTY: 'Especializado'
 }
 
 export default function VehicleTypesPage() {
@@ -25,6 +48,7 @@ export default function VehicleTypesPage() {
   const [editingType, setEditingType] = useState<VehicleType | null>(null)
   const [formData, setFormData] = useState({
     name: '',
+    category: 'AUTOMOTIVE',
     description: ''
   })
 
@@ -84,6 +108,7 @@ export default function VehicleTypesPage() {
     setEditingType(vehicleType)
     setFormData({
       name: vehicleType.name,
+      category: vehicleType.category,
       description: vehicleType.description || ''
     })
     setShowForm(true)
@@ -111,8 +136,14 @@ export default function VehicleTypesPage() {
   const resetForm = () => {
     setFormData({
       name: '',
+      category: 'AUTOMOTIVE',
       description: ''
     })
+  }
+
+  const getCategoryIcon = (category: string) => {
+    const IconComponent = categoryIcons[category as keyof typeof categoryIcons] || Car
+    return <IconComponent className="h-5 w-5" />
   }
 
   if (loading) {
@@ -157,14 +188,33 @@ export default function VehicleTypesPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="description">Descripción</Label>
-                  <Input
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    placeholder="Descripción opcional del tipo de vehículo"
-                  />
+                  <Label htmlFor="category">Categoría</Label>
+                  <select
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="AUTOMOTIVE">🚗 Automotriz (Autos, camionetas, SUVs)</option>
+                    <option value="MOTORCYCLE">🏍️ Motocicletas (Motos, scooters, cuatriciclos)</option>
+                    <option value="COMMERCIAL">🚛 Comercial (Camiones, furgones, vans)</option>
+                    <option value="AGRICULTURAL">🚜 Agrícola (Tractores, cosechadoras)</option>
+                    <option value="MARINE">⛵ Marítimo (Barcos, lanchas, yates)</option>
+                    <option value="CONSTRUCTION">🏗️ Construcción (Excavadoras, grúas)</option>
+                    <option value="RECREATIONAL">🏕️ Recreativo (Caravanas, motorhomes)</option>
+                    <option value="SPECIALTY">⭐ Especializado (Vehículos especiales)</option>
+                  </select>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="description">Descripción</Label>
+                <Input
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Descripción opcional del tipo de vehículo"
+                />
               </div>
               <div className="flex gap-2">
                 <Button type="submit">
@@ -187,51 +237,66 @@ export default function VehicleTypesPage() {
         </Card>
       )}
 
-      {/* Lista de tipos de vehículos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {vehicleTypes.map((vehicleType) => (
-          <Card key={vehicleType.id} className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg flex justify-between items-start">
-                <div className="flex items-center gap-2">
-                  <Car className="h-5 w-5" />
-                  <span>{vehicleType.name}</span>
-                </div>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(vehicleType)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(vehicleType.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+      {/* Categorías organizadas */}
+      {Object.entries(categoryLabels).map(([categoryKey, categoryLabel]) => {
+        const typesInCategory = vehicleTypes.filter(type => type.category === categoryKey)
+        if (typesInCategory.length === 0) return null
+
+        return (
+          <Card key={categoryKey} className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {getCategoryIcon(categoryKey)}
+                {categoryLabel}
+                <span className="text-sm text-gray-500">({typesInCategory.length})</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              {vehicleType.description && (
-                <p className="text-sm text-gray-600 mb-2">{vehicleType.description}</p>
-              )}
-              <div className="mt-2">
-                <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                  vehicleType.isActive 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {vehicleType.isActive ? 'Activo' : 'Inactivo'}
-                </span>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {typesInCategory.map((vehicleType) => (
+                  <Card key={vehicleType.id} className="border-l-4 border-l-blue-500">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-lg flex justify-between items-start">
+                        <span>{vehicleType.name}</span>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(vehicleType)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDelete(vehicleType.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      {vehicleType.description && (
+                        <p className="text-sm text-gray-600">{vehicleType.description}</p>
+                      )}
+                      <div className="mt-2">
+                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                          vehicleType.isActive 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {vehicleType.isActive ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        )
+      })}
 
       {vehicleTypes.length === 0 && !loading && (
         <div className="text-center py-8">
