@@ -136,13 +136,13 @@ INSERT INTO Vehicle (id, brand, model, year, color, mileage, price, description,
 -- 8. VENTAS
 -- ========================================
 INSERT INTO sales (id, saleNumber, vehicleId, customerId, sellerId, userId, saleDate, totalAmount, commission, status, notes, createdAt, updatedAt) VALUES
-('sale-001', 'V-2024-001', 'vh-001', 'cl-001', 'sel-001', 'admin-2', DATE_SUB(NOW(), INTERVAL 30 DAY), 25000.00, 1250.00, 'COMPLETED', 'Venta Toyota Corolla', NOW(), NOW()),
-('sale-002', 'V-2024-002', 'vh-006', 'cl-002', 'sel-002', 'admin-2', DATE_SUB(NOW(), INTERVAL 25 DAY), 8500.00, 382.50, 'COMPLETED', 'Venta Honda CBR 600RR', NOW(), NOW()),
-('sale-003', 'V-2024-003', 'vh-013', 'cl-003', 'sel-003', 'admin-2', DATE_SUB(NOW(), INTERVAL 20 DAY), 25000.00, 1375.00, 'COMPLETED', 'Venta Bayliner Element 7', NOW(), NOW()),
-('sale-004', 'V-2024-004', 'vh-011', 'cl-004', 'sel-005', 'admin-2', DATE_SUB(NOW(), INTERVAL 15 DAY), 45000.00, 1800.00, 'COMPLETED', 'Venta John Deere 5075E', NOW(), NOW()),
-('sale-005', 'V-2024-005', 'vh-017', 'cl-005', 'sel-005', 'admin-2', DATE_SUB(NOW(), INTERVAL 10 DAY), 75000.00, 4500.00, 'COMPLETED', 'Venta Winnebago Travato', NOW(), NOW()),
-('sale-006', 'V-2024-006', 'vh-019', 'cl-006', 'sel-006', 'admin-2', DATE_SUB(NOW(), INTERVAL 5 DAY), 85000.00, 4080.00, 'COMPLETED', 'Venta Mercedes Sprinter Ambulancia', NOW(), NOW()),
-('sale-007', 'V-2024-007', 'vh-003', 'cl-007', 'sel-007', 'admin-2', DATE_SUB(NOW(), INTERVAL 2 DAY), 28000.00, 1456.00, 'COMPLETED', 'Venta Ford Ranger', NOW(), NOW());
+('sale-001', 'V-2024-001', 'vh-001', 'cl-001', 'sel-001', 'admin-1', DATE_SUB(NOW(), INTERVAL 30 DAY), 25000.00, 1250.00, 'COMPLETED', 'Venta Toyota Corolla', NOW(), NOW()),
+('sale-002', 'V-2024-002', 'vh-006', 'cl-002', 'sel-002', 'admin-1', DATE_SUB(NOW(), INTERVAL 25 DAY), 8500.00, 382.50, 'COMPLETED', 'Venta Honda CBR 600RR', NOW(), NOW()),
+('sale-003', 'V-2024-003', 'vh-013', 'cl-003', 'sel-003', 'admin-1', DATE_SUB(NOW(), INTERVAL 20 DAY), 25000.00, 1375.00, 'COMPLETED', 'Venta Bayliner Element 7', NOW(), NOW()),
+('sale-004', 'V-2024-004', 'vh-011', 'cl-004', 'sel-005', 'admin-1', DATE_SUB(NOW(), INTERVAL 15 DAY), 45000.00, 1800.00, 'COMPLETED', 'Venta John Deere 5075E', NOW(), NOW()),
+('sale-005', 'V-2024-005', 'vh-017', 'cl-005', 'sel-005', 'admin-1', DATE_SUB(NOW(), INTERVAL 10 DAY), 75000.00, 4500.00, 'COMPLETED', 'Venta Winnebago Travato', NOW(), NOW()),
+('sale-006', 'V-2024-006', 'vh-019', 'cl-006', 'sel-006', 'admin-1', DATE_SUB(NOW(), INTERVAL 5 DAY), 85000.00, 4080.00, 'COMPLETED', 'Venta Mercedes Sprinter Ambulancia', NOW(), NOW()),
+('sale-007', 'V-2024-007', 'vh-003', 'cl-007', 'sel-007', 'admin-1', DATE_SUB(NOW(), INTERVAL 2 DAY), 28000.00, 1456.00, 'COMPLETED', 'Venta Ford Ranger', NOW(), NOW());
 
 -- Actualizar estado de vehículos vendidos
 UPDATE Vehicle SET status = 'SOLD' WHERE id IN ('vh-001', 'vh-006', 'vh-013', 'vh-011', 'vh-017', 'vh-019', 'vh-003');
