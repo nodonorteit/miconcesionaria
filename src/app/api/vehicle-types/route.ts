@@ -23,11 +23,11 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, category, description } = body
+    const { name, description } = body
 
-    if (!name || !category) {
+    if (!name) {
       return NextResponse.json(
-        { error: 'Nombre y categoría son requeridos' },
+        { error: 'Nombre es requerido' },
         { status: 400 }
       )
     }
