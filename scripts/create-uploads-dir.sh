@@ -30,7 +30,7 @@ print_error() {
 
 # Configuración
 APP_DIR="/var/www/vhosts/nodonorte.com/miconcesionaria"
-UPLOADS_DIR="$APP_DIR/public/uploads"
+UPLOADS_DIR="$APP_DIR/uploads"
 
 print_status "Creando directorio de uploads..."
 

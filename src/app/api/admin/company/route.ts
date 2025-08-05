@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
       try {
-        // Crear directorio de uploads si no existe
-        const uploadsDir = join(process.cwd(), 'public', 'uploads')
+        // Usar el directorio uploads que ya existe en el contenedor
+        const uploadsDir = join(process.cwd(), 'uploads')
         await mkdir(uploadsDir, { recursive: true })
 
         const bytes = await logo.arrayBuffer()
