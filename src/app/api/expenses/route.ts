@@ -99,17 +99,13 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Crear entrada en cashflow
-    await prisma.cashflow.create({
-      data: {
-        type: 'EXPENSE',
-        amount: -parseFloat(amount),
-        description: `Egreso: ${description}`,
-        category: type === 'WORKSHOP' ? 'MAINTENANCE' : type === 'PARTS' ? 'PURCHASE' : 'COMMISSION',
-        receiptPath,
-        isActive: true
-      }
-    })
+    // Crear entrada en cashflow (usando la tabla correcta)
+    await prisma.$executeRaw`
+      INSERT INTO cashflow (id, type, amount, description, category, receiptPath, isActive, createdAt, updatedAt)
+      VALUES (UUID(), 'EXPENSE', ${-parseFloat(amount)}, ${`Egreso: ${description}`}, 
+              ${type === 'WORKSHOP' ? 'MAINTENANCE' : type === 'PARTS' ? 'PURCHASE' : 'COMMISSION'}, 
+              ${receiptPath}, 1, NOW(), NOW())
+    `
 
     return NextResponse.json(expense)
   } catch (error) {

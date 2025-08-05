@@ -118,18 +118,16 @@ export async function PUT(
       }
     })
 
-    // Actualizar entrada en cashflow
-    await prisma.cashflow.updateMany({
-      where: {
-        description: `Egreso: ${existingExpense.description}`,
-        amount: -existingExpense.amount
-      },
-      data: {
-        amount: -parseFloat(amount),
-        description: `Egreso: ${description}`,
-        receiptPath
-      }
-    })
+    // Actualizar entrada en cashflow (usando SQL directo)
+    await prisma.$executeRaw`
+      UPDATE cashflow 
+      SET amount = ${-parseFloat(amount)}, 
+          description = ${`Egreso: ${description}`}, 
+          receiptPath = ${receiptPath},
+          updatedAt = NOW()
+      WHERE description = ${`Egreso: ${existingExpense.description}`} 
+        AND amount = ${-existingExpense.amount}
+    `
 
     return NextResponse.json(expense)
   } catch (error) {
