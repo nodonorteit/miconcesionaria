@@ -10,10 +10,10 @@ export async function GET() {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(s.firstName, ' ', s.lastName) as sellerName
+        CONCAT(s.firstName, ' ', s.lastName) COLLATE utf8mb4_unicode_ci as sellerName
       FROM expenses e
-      LEFT JOIN workshops w ON e.workshopId = w.id
-      LEFT JOIN sellers s ON e.sellerId = s.id
+      LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
+      LEFT JOIN sellers s ON e.sellerId = s.id COLLATE utf8mb4_unicode_ci
       WHERE e.isActive = 1
       ORDER BY e.createdAt DESC
     `
@@ -107,10 +107,10 @@ export async function POST(request: NextRequest) {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(s.firstName, ' ', s.lastName) as sellerName
+        CONCAT(s.firstName, ' ', s.lastName) COLLATE utf8mb4_unicode_ci as sellerName
       FROM expenses e
-      LEFT JOIN workshops w ON e.workshopId = w.id
-      LEFT JOIN sellers s ON e.sellerId = s.id
+      LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
+      LEFT JOIN sellers s ON e.sellerId = s.id COLLATE utf8mb4_unicode_ci
       WHERE e.id = ${expenseId}
     `
     const expense = Array.isArray(expenses) ? expenses[0] : expenses

@@ -38,6 +38,14 @@ export async function GET() {
     const html = await response.text()
     console.log('✅ HTML obtenido, longitud:', html.length)
     
+    // Debug: Buscar fragmentos específicos del HTML
+    const dollarContainerMatch = html.match(/<div class="dollar-prices-container">([\s\S]*?)<\/div>/i)
+    if (dollarContainerMatch) {
+      console.log('🔍 Fragmento encontrado:', dollarContainerMatch[1].substring(0, 500))
+    } else {
+      console.log('❌ No se encontró el contenedor de precios')
+    }
+    
     // Extraer todas las cotizaciones
     const rates: DollarRates = {
       mep: null,
@@ -67,7 +75,9 @@ export async function GET() {
       const patterns = [
         new RegExp(`id="${id}">\\$?([\\d,]+\\.?\\d*)`, 'i'),
         new RegExp(`id="${id}"[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
-        new RegExp(`id="${id}">([^<]+)`, 'i')
+        new RegExp(`id="${id}">([^<]+)`, 'i'),
+        new RegExp(`id="${id}"[^>]*>([^<]+)`, 'i'),
+        new RegExp(`"${id}"[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i')
       ]
       
       for (const pattern of patterns) {
@@ -76,6 +86,28 @@ export async function GET() {
           const value = extractNumber(match[1])
           if (value) {
             console.log(`✅ Encontrado valor para ${id}: ${value}`)
+            return value
+          }
+        }
+      }
+      
+      // Buscar por texto cercano si no se encuentra por ID
+      const fallbackPatterns = [
+        new RegExp(`Dólar Blue[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`Blue[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`CCL[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`Cripto[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`Tarjeta[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`Ahorro[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i'),
+        new RegExp(`Oficial[^>]*>\\$?([\\d,]+\\.?\\d*)`, 'i')
+      ]
+      
+      for (const pattern of fallbackPatterns) {
+        const match = html.match(pattern)
+        if (match && match[1]) {
+          const value = extractNumber(match[1])
+          if (value) {
+            console.log(`✅ Encontrado valor por fallback para ${id}: ${value}`)
             return value
           }
         }
