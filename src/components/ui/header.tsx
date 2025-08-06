@@ -72,11 +72,7 @@ export function Header() {
               console.log('✅ Logo cargado correctamente:', companyConfig.logoUrl)
             }}
           />
-          {configLoaded && (
-            <div className="text-xs text-gray-500">
-              Logo: {companyConfig.logoUrl}
-            </div>
-          )}
+
         </div>
         
         <div className="flex items-center space-x-4">
