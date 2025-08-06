@@ -26,6 +26,7 @@ export default function SellersPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSeller, setEditingSeller] = useState<Seller | null>(null)
+  const [deletingSeller, setDeletingSeller] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -102,7 +103,16 @@ export default function SellersPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este vendedor?')) return
+    const seller = sellers.find(s => s.id === id)
+    if (!seller) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar al vendedor "${seller.firstName} ${seller.lastName}"?\n\nEmail: ${seller.email}\nComisión: ${seller.commissionRate}%\n\nEsta acción no se puede deshacer.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeletingSeller(id)
     
     try {
       const response = await fetch(`/api/sellers/${id}`, {
@@ -110,13 +120,15 @@ export default function SellersPage() {
       })
 
       if (response.ok) {
-        toast.success('Vendedor eliminado')
+        toast.success('Vendedor eliminado correctamente')
         fetchSellers()
       } else {
         toast.error('Error al eliminar vendedor')
       }
     } catch (error) {
       toast.error('Error al eliminar vendedor')
+    } finally {
+      setDeletingSeller(null)
     }
   }
 
@@ -235,41 +247,78 @@ export default function SellersPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {sellers.map((seller) => (
-          <Card key={seller.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{seller.firstName} {seller.lastName}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(seller)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(seller.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div key={seller.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <UserCheck className="h-6 w-6 text-purple-600" />
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p><strong>Email:</strong> {seller.email}</p>
-                {seller.phone && (
-                  <p><strong>Teléfono:</strong> {seller.phone}</p>
-                )}
-                <p><strong>Comisión:</strong> {seller.commissionRate}%</p>
-                <p><strong>Estado:</strong> {seller.isActive ? 'Activo' : 'Inactivo'}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {seller.firstName} {seller.lastName}
+                    </h3>
+                    {seller.isActive ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Inactivo
+                      </span>
+                    )}
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      {seller.commissionRate}% Comisión
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    <span className="flex items-center">
+                      <span className="font-medium">Email:</span> {seller.email}
+                    </span>
+                    {seller.phone && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Tel:</span> {seller.phone}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-center space-x-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(seller)}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDelete(seller.id)}
+                disabled={deletingSeller === seller.id}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingSeller === seller.id ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                    <span className="hidden sm:inline">Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 

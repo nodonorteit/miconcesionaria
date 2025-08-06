@@ -67,6 +67,7 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
+  const [deletingSale, setDeletingSale] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     vehicleId: '',
     customerId: '',
@@ -188,7 +189,16 @@ export default function SalesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta venta?')) return
+    const sale = sales.find(s => s.id === id)
+    if (!sale) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar la venta #${sale.saleNumber}?\n\nVehículo: ${sale.vehicle.brand} ${sale.vehicle.model}\nCliente: ${sale.customer.firstName} ${sale.customer.lastName}\n\nEsta acción no se puede deshacer.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeletingSale(id)
     
     try {
       const response = await fetch(`/api/sales/${id}`, {
@@ -196,7 +206,7 @@ export default function SalesPage() {
       })
 
       if (response.ok) {
-        toast.success('Venta eliminada')
+        toast.success('Venta eliminada correctamente')
         fetchSales()
         fetchVehicles() // Refresh available vehicles
       } else {
@@ -204,6 +214,8 @@ export default function SalesPage() {
       }
     } catch (error) {
       toast.error('Error al eliminar venta')
+    } finally {
+      setDeletingSale(null)
     }
   }
 
@@ -399,42 +411,83 @@ export default function SalesPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {sales.map((sale) => (
-          <Card key={sale.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>Venta #{sale.saleNumber}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(sale)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(sale.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div key={sale.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Receipt className="h-6 w-6 text-green-600" />
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p><strong>Vehículo:</strong> {sale.vehicle.brand} {sale.vehicle.model}</p>
-                <p><strong>Cliente:</strong> {sale.customer.firstName} {sale.customer.lastName}</p>
-                <p><strong>Vendedor:</strong> {sale.seller.firstName} {sale.seller.lastName}</p>
-                <p><strong>Monto:</strong> ${sale.totalAmount.toLocaleString()}</p>
-                <p><strong>Comisión:</strong> ${sale.commission.toLocaleString()}</p>
-                <p><strong>Estado:</strong> {getStatusLabel(sale.status)}</p>
-                <p><strong>Fecha:</strong> {new Date(sale.saleDate).toLocaleDateString()}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Venta #{sale.saleNumber}
+                    </h3>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      sale.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                      sale.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {getStatusLabel(sale.status)}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    <span className="flex items-center">
+                      <span className="font-medium">Vehículo:</span> {sale.vehicle.brand} {sale.vehicle.model} ({sale.vehicle.year})
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Cliente:</span> {sale.customer.firstName} {sale.customer.lastName}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Vendedor:</span> {sale.seller.firstName} {sale.seller.lastName}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Monto:</span> ${sale.totalAmount.toLocaleString()}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Comisión:</span> ${sale.commission.toLocaleString()}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Fecha:</span> {new Date(sale.saleDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-center space-x-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(sale)}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDelete(sale.id)}
+                disabled={deletingSale === sale.id}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingSale === sale.id ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                    <span className="hidden sm:inline">Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 

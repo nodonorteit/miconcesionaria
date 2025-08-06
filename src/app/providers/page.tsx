@@ -29,6 +29,7 @@ export default function ProvidersPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
+  const [deletingProvider, setDeletingProvider] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -108,7 +109,16 @@ export default function ProvidersPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este proveedor?')) return
+    const provider = providers.find(p => p.id === id)
+    if (!provider) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar al proveedor "${provider.name}"?\n\n${provider.email ? `Email: ${provider.email}\n` : ''}${provider.phone ? `Teléfono: ${provider.phone}\n` : ''}${provider.taxId ? `CUIT/CUIL: ${provider.taxId}\n` : ''}\nEsta acción no se puede deshacer.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeletingProvider(id)
     
     try {
       const response = await fetch(`/api/providers/${id}`, {
@@ -116,13 +126,15 @@ export default function ProvidersPage() {
       })
 
       if (response.ok) {
-        toast.success('Proveedor eliminado')
+        toast.success('Proveedor eliminado correctamente')
         fetchProviders()
       } else {
         toast.error('Error al eliminar proveedor')
       }
     } catch (error) {
       toast.error('Error al eliminar proveedor')
+    } finally {
+      setDeletingProvider(null)
     }
   }
 
@@ -258,50 +270,87 @@ export default function ProvidersPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {providers.map((provider) => (
-          <Card key={provider.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{provider.name}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(provider)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(provider.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div key={provider.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Building className="h-6 w-6 text-orange-600" />
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {provider.email && (
-                  <p><strong>Email:</strong> {provider.email}</p>
-                )}
-                {provider.phone && (
-                  <p><strong>Teléfono:</strong> {provider.phone}</p>
-                )}
-                {provider.taxId && (
-                  <p><strong>CUIT/CUIL:</strong> {provider.taxId}</p>
-                )}
-                {provider.address && (
-                  <p><strong>Dirección:</strong> {provider.address}</p>
-                )}
-                {(provider.city || provider.state) && (
-                  <p><strong>Ubicación:</strong> {provider.city}, {provider.state}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {provider.name}
+                    </h3>
+                    {provider.isActive ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Inactivo
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    {provider.email && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Email:</span> {provider.email}
+                      </span>
+                    )}
+                    {provider.phone && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Tel:</span> {provider.phone}
+                      </span>
+                    )}
+                    {provider.taxId && (
+                      <span className="flex items-center">
+                        <span className="font-medium">CUIT/CUIL:</span> {provider.taxId}
+                      </span>
+                    )}
+                    {(provider.city || provider.state) && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Ubicación:</span> {provider.city}, {provider.state}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-center space-x-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(provider)}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDelete(provider.id)}
+                disabled={deletingProvider === provider.id}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingProvider === provider.id ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                    <span className="hidden sm:inline">Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 
