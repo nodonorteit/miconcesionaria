@@ -52,10 +52,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy Prisma files for database operations
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
-# Copy uploads directory and set permissions
-COPY --from=builder --chown=nextjs:nodejs /app/uploads ./uploads
-
-# Ensure uploads directory has correct permissions
+# Create uploads directory and set permissions
+RUN mkdir -p ./uploads
+RUN chown nextjs:nodejs ./uploads
 RUN chmod 755 ./uploads
 
 USER nextjs
