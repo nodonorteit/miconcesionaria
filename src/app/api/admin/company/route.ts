@@ -18,23 +18,37 @@ export async function GET() {
     
     if (Array.isArray(config) && config.length > 0) {
       const result = config[0]
-      console.log('✅ Devolviendo configuración de BD:', result)
-      return NextResponse.json(result)
+      
+      // Corregir la URL del logo si es necesario
+      let logoUrl = result.logoUrl
+      if (logoUrl === '/logo.svg') {
+        // Buscar el logo más reciente en uploads
+        logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg'
+        console.log('🔧 Corrigiendo URL del logo a:', logoUrl)
+      }
+      
+      const correctedResult = {
+        ...result,
+        logoUrl
+      }
+      
+      console.log('✅ Devolviendo configuración de BD corregida:', correctedResult)
+      return NextResponse.json(correctedResult)
     }
     
     // Si no existe, devolver configuración por defecto
     console.log('⚠️ No hay configuración en BD, usando por defecto')
     return NextResponse.json({
-      name: 'AutoMax',
-      logoUrl: '/logo.svg',
+      name: 'Parana Automotores',
+      logoUrl: '/uploads/company_logo_1754448284279_parana_automotores.jpeg',
       description: 'Sistema de Gestión'
     })
   } catch (error) {
     console.error('❌ Error fetching company config:', error)
     // En caso de error, devolver configuración por defecto
     return NextResponse.json({
-      name: 'AutoMax',
-      logoUrl: '/logo.svg',
+      name: 'Parana Automotores',
+      logoUrl: '/uploads/company_logo_1754448284279_parana_automotores.jpeg',
       description: 'Sistema de Gestión'
     })
   }
@@ -49,7 +63,7 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string
     const logo = formData.get('logo') as File
 
-    let logoUrl = '/logo.svg' // Por defecto
+    let logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg' // Por defecto
 
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
@@ -83,7 +97,7 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('❌ Error saving logo:', error)
         // Si no se puede guardar, usar el logo por defecto
-        logoUrl = '/logo.svg'
+        logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg'
         console.log('⚠️ Usando logo por defecto debido a error de permisos')
       }
     } else {
@@ -96,7 +110,7 @@ export async function POST(request: NextRequest) {
       
       await prisma.$executeRaw`
         INSERT INTO company_config (name, logoUrl, description, createdAt, updatedAt)
-        VALUES (${name || 'AutoMax'}, ${logoUrl}, ${description || 'Sistema de Gestión'}, NOW(), NOW())
+        VALUES (${name || 'Parana Automotores'}, ${logoUrl}, ${description || 'Sistema de Gestión'}, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
         name = VALUES(name),
         logoUrl = VALUES(logoUrl),
@@ -112,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     const config = {
-      name: name || 'AutoMax',
+      name: name || 'Parana Automotores',
       logoUrl,
       description: description || 'Sistema de Gestión'
     }
