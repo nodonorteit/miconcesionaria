@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, DollarSign, Upload, Download, Eye, BarChart3 } from 'lucide-react'
+import { Plus, DollarSign, Upload, Download, Eye, BarChart3, Calendar } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
+import CashFlowChart from '@/components/ui/cashflow-chart'
 
 interface CashFlow {
   id: string
@@ -40,6 +41,7 @@ export default function CashFlowPage() {
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 días atrás
     end: new Date().toISOString().split('T')[0]
   })
+  const [timeGrouping, setTimeGrouping] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily')
 
   useEffect(() => {
     fetchCashFlows()
@@ -252,13 +254,16 @@ export default function CashFlowPage() {
         </Button>
       </div>
 
-      {/* Filtro de fechas */}
+      {/* Filtro de fechas y agrupamiento */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Filtro de Fechas</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Filtros y Configuración
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="startDate">Desde</Label>
               <Input
@@ -277,41 +282,31 @@ export default function CashFlowPage() {
                 onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
               />
             </div>
+            <div>
+              <Label htmlFor="timeGrouping">Agrupamiento</Label>
+              <select
+                id="timeGrouping"
+                value={timeGrouping}
+                onChange={(e) => setTimeGrouping(e.target.value as 'daily' | 'weekly' | 'monthly' | 'yearly')}
+                className="w-full p-2 border rounded"
+              >
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensual</option>
+                <option value="yearly">Anual</option>
+              </select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Gráfico */}
+      {/* Gráfico Avanzado */}
       {showChart && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Gráfico de Ingresos vs Egresos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {getChartData().map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-4 h-4 rounded" 
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span>{item.name}</span>
-                  </div>
-                  <span className="font-bold">${item.value.toLocaleString()}</span>
-                </div>
-              ))}
-              <div className="border-t pt-4">
-                <div className="flex justify-between font-bold">
-                  <span>Balance del período:</span>
-                  <span className={getChartData()[0].value - getChartData()[1].value >= 0 ? 'text-green-600' : 'text-red-600'}>
-                    ${(getChartData()[0].value - getChartData()[1].value).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <CashFlowChart 
+          data={cashFlows}
+          dateRange={dateRange}
+          timeGrouping={timeGrouping}
+        />
       )}
 
       {showForm && (
