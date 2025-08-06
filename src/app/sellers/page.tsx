@@ -28,6 +28,7 @@ export default function SellersPage() {
   const [editingSeller, setEditingSeller] = useState<Seller | null>(null)
   const [deletingSeller, setDeletingSeller] = useState<string | null>(null)
   const [viewingSeller, setViewingSeller] = useState<Seller | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -143,6 +144,18 @@ export default function SellersPage() {
     })
   }
 
+  // Filtrar vendedores basado en el término de búsqueda
+  const filteredSellers = sellers.filter(seller => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      seller.firstName.toLowerCase().includes(searchLower) ||
+      seller.lastName.toLowerCase().includes(searchLower) ||
+      seller.email.toLowerCase().includes(searchLower) ||
+      seller.phone?.toLowerCase().includes(searchLower) ||
+      seller.commissionRate.toString().includes(searchLower)
+    )
+  })
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -157,7 +170,17 @@ export default function SellersPage() {
         title="Gestión de Vendedores" 
         breadcrumbs={[{ label: 'Vendedores' }]}
       />
-      <div className="flex justify-end mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar vendedores por nombre, email, teléfono..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Vendedor
@@ -249,7 +272,7 @@ export default function SellersPage() {
       )}
 
       <div className="space-y-2">
-        {sellers.map((seller) => (
+        {filteredSellers.map((seller) => (
           <div key={seller.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
@@ -332,9 +355,11 @@ export default function SellersPage() {
         ))}
       </div>
 
-      {sellers.length === 0 && !loading && (
+      {filteredSellers.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay vendedores registrados</p>
+          <p className="text-gray-500">
+            {searchTerm ? `No se encontraron vendedores que coincidan con "${searchTerm}"` : 'No hay vendedores registrados'}
+          </p>
         </div>
       )}
 

@@ -49,6 +49,7 @@ export default function VehiclesPage() {
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null)
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -217,6 +218,21 @@ export default function VehiclesPage() {
     })
   }
 
+  // Filtrar vehículos basado en el término de búsqueda
+  const filteredVehicles = vehicles.filter(vehicle => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      vehicle.brand.toLowerCase().includes(searchLower) ||
+      vehicle.model.toLowerCase().includes(searchLower) ||
+      vehicle.color.toLowerCase().includes(searchLower) ||
+      vehicle.licensePlate?.toLowerCase().includes(searchLower) ||
+      vehicle.vin?.toLowerCase().includes(searchLower) ||
+      vehicle.vehicleType?.name.toLowerCase().includes(searchLower) ||
+      vehicle.year.toString().includes(searchLower) ||
+      vehicle.price.toString().includes(searchLower)
+    )
+  })
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -231,7 +247,17 @@ export default function VehiclesPage() {
         title="Gestión de Vehículos" 
         breadcrumbs={[{ label: 'Vehículos' }]}
       />
-      <div className="flex justify-end mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar vehículos por marca, modelo, color, patente, VIN..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Vehículo
@@ -469,7 +495,7 @@ export default function VehiclesPage() {
       )}
 
       <div className="space-y-2">
-        {vehicles.map((vehicle) => (
+        {filteredVehicles.map((vehicle) => (
           <div key={vehicle.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
@@ -564,9 +590,11 @@ export default function VehiclesPage() {
         ))}
       </div>
 
-      {vehicles.length === 0 && !loading && (
+      {filteredVehicles.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay vehículos registrados</p>
+          <p className="text-gray-500">
+            {searchTerm ? `No se encontraron vehículos que coincidan con "${searchTerm}"` : 'No hay vehículos registrados'}
+          </p>
         </div>
       )}
 

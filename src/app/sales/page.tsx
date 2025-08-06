@@ -69,6 +69,7 @@ export default function SalesPage() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
   const [deletingSale, setDeletingSale] = useState<string | null>(null)
   const [viewingSale, setViewingSale] = useState<Sale | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     vehicleId: '',
     customerId: '',
@@ -265,6 +266,23 @@ export default function SalesPage() {
     }
   }
 
+  // Filtrar ventas basado en el término de búsqueda
+  const filteredSales = sales.filter(sale => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      sale.saleNumber.toLowerCase().includes(searchLower) ||
+      sale.vehicle.brand.toLowerCase().includes(searchLower) ||
+      sale.vehicle.model.toLowerCase().includes(searchLower) ||
+      sale.customer.firstName.toLowerCase().includes(searchLower) ||
+      sale.customer.lastName.toLowerCase().includes(searchLower) ||
+      sale.seller.firstName.toLowerCase().includes(searchLower) ||
+      sale.seller.lastName.toLowerCase().includes(searchLower) ||
+      sale.totalAmount.toString().includes(searchLower) ||
+      sale.commission.toString().includes(searchLower) ||
+      getStatusLabel(sale.status).toLowerCase().includes(searchLower)
+    )
+  })
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -279,7 +297,17 @@ export default function SalesPage() {
         title="Gestión de Ventas" 
         breadcrumbs={[{ label: 'Ventas' }]}
       />
-      <div className="flex justify-end mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar ventas por número, vehículo, cliente, vendedor..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <Receipt className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Nueva Venta
@@ -413,7 +441,7 @@ export default function SalesPage() {
       )}
 
       <div className="space-y-2">
-        {sales.map((sale) => (
+        {filteredSales.map((sale) => (
           <div key={sale.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
@@ -501,9 +529,11 @@ export default function SalesPage() {
         ))}
       </div>
 
-      {sales.length === 0 && !loading && (
+      {filteredSales.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay ventas registradas</p>
+          <p className="text-gray-500">
+            {searchTerm ? `No se encontraron ventas que coincidan con "${searchTerm}"` : 'No hay ventas registradas'}
+          </p>
         </div>
       )}
 

@@ -31,6 +31,7 @@ export default function ProvidersPage() {
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
   const [deletingProvider, setDeletingProvider] = useState<string | null>(null)
   const [viewingProvider, setViewingProvider] = useState<Provider | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -152,6 +153,19 @@ export default function ProvidersPage() {
     })
   }
 
+  // Filtrar proveedores basado en el término de búsqueda
+  const filteredProviders = providers.filter(provider => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      provider.name.toLowerCase().includes(searchLower) ||
+      provider.email?.toLowerCase().includes(searchLower) ||
+      provider.phone?.toLowerCase().includes(searchLower) ||
+      provider.taxId?.toLowerCase().includes(searchLower) ||
+      provider.city?.toLowerCase().includes(searchLower) ||
+      provider.state?.toLowerCase().includes(searchLower)
+    )
+  })
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -166,7 +180,17 @@ export default function ProvidersPage() {
         title="Gestión de Proveedores" 
         breadcrumbs={[{ label: 'Proveedores' }]}
       />
-      <div className="flex justify-end mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar proveedores por nombre, email, teléfono, CUIT/CUIL..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Proveedor
@@ -272,7 +296,7 @@ export default function ProvidersPage() {
       )}
 
       <div className="space-y-2">
-        {providers.map((provider) => (
+        {filteredProviders.map((provider) => (
           <div key={provider.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
@@ -364,9 +388,11 @@ export default function ProvidersPage() {
         ))}
       </div>
 
-      {providers.length === 0 && !loading && (
+      {filteredProviders.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay proveedores registrados</p>
+          <p className="text-gray-500">
+            {searchTerm ? `No se encontraron proveedores que coincidan con "${searchTerm}"` : 'No hay proveedores registrados'}
+          </p>
         </div>
       )}
 

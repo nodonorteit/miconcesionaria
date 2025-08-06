@@ -31,6 +31,7 @@ export default function CustomersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
   const [deletingCustomer, setDeletingCustomer] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -155,6 +156,20 @@ export default function CustomersPage() {
     })
   }
 
+  // Filtrar clientes basado en el término de búsqueda
+  const filteredCustomers = customers.filter(customer => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      customer.firstName.toLowerCase().includes(searchLower) ||
+      customer.lastName.toLowerCase().includes(searchLower) ||
+      customer.email?.toLowerCase().includes(searchLower) ||
+      customer.phone?.toLowerCase().includes(searchLower) ||
+      customer.documentNumber?.toLowerCase().includes(searchLower) ||
+      customer.city?.toLowerCase().includes(searchLower) ||
+      customer.state?.toLowerCase().includes(searchLower)
+    )
+  })
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -169,7 +184,17 @@ export default function CustomersPage() {
         title="Gestión de Clientes" 
         breadcrumbs={[{ label: 'Clientes' }]}
       />
-      <div className="flex justify-end mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="relative w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar clientes por nombre, email, teléfono, DNI/CUIL..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+          <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Cliente
@@ -284,7 +309,7 @@ export default function CustomersPage() {
       )}
 
       <div className="space-y-2">
-        {customers.map((customer) => (
+        {filteredCustomers.map((customer) => (
           <div key={customer.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
@@ -369,9 +394,11 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      {customers.length === 0 && !loading && (
+      {filteredCustomers.length === 0 && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay clientes registrados</p>
+          <p className="text-gray-500">
+            {searchTerm ? `No se encontraron clientes que coincidan con "${searchTerm}"` : 'No hay clientes registrados'}
+          </p>
         </div>
       )}
     </div>
