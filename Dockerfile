@@ -55,6 +55,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Copy uploads directory and set permissions
 COPY --from=builder --chown=nextjs:nodejs /app/uploads ./uploads
 
+# Ensure uploads directory has correct permissions
+RUN chmod 755 ./uploads
+
 USER nextjs
 
 EXPOSE 3000

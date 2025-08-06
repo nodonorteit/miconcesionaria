@@ -36,9 +36,15 @@ export async function POST(request: NextRequest) {
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
       try {
-        // Usar el directorio uploads que ya existe en el contenedor
+        // Intentar usar el directorio uploads
         const uploadsDir = join(process.cwd(), 'uploads')
-        await mkdir(uploadsDir, { recursive: true })
+        
+        // Verificar si el directorio existe y es escribible
+        try {
+          await mkdir(uploadsDir, { recursive: true })
+        } catch (mkdirError) {
+          console.log('No se pudo crear directorio uploads, usando directorio temporal')
+        }
 
         const bytes = await logo.arrayBuffer()
         const buffer = Buffer.from(bytes)
@@ -48,13 +54,15 @@ export async function POST(request: NextRequest) {
         const filename = `company_logo_${timestamp}_${logo.name}`
         const filepath = join(uploadsDir, filename)
         
-        // Guardar archivo
+        // Intentar guardar archivo
         await writeFile(filepath, buffer)
         logoUrl = `/uploads/${filename}`
+        console.log('Logo guardado exitosamente:', filepath)
       } catch (error) {
         console.error('Error saving logo:', error)
-        // Si no se puede guardar, usar el logo por defecto
+        // Si no se puede guardar, usar el logo por defecto y mostrar mensaje
         logoUrl = '/logo.svg'
+        console.log('Usando logo por defecto debido a error de permisos')
       }
     }
 
