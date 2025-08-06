@@ -60,11 +60,6 @@ export async function POST(request: NextRequest) {
         // Crear directorio si no existe
         await mkdir(uploadsDir, { recursive: true })
         
-        // Verificar permisos de escritura
-        const testFile = join(uploadsDir, 'test.txt')
-        await writeFile(testFile, 'test')
-        await writeFile(testFile, '') // Limpiar archivo de prueba
-        
         const bytes = await logo.arrayBuffer()
         const buffer = Buffer.from(bytes)
         
@@ -73,7 +68,7 @@ export async function POST(request: NextRequest) {
         const filename = `company_logo_${timestamp}_${logo.name}`
         const filepath = join(uploadsDir, filename)
         
-        // Guardar archivo
+        // Guardar archivo directamente
         await writeFile(filepath, buffer)
         
         // Devolver la URL correcta
