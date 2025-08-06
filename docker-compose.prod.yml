@@ -17,7 +17,7 @@ services:
       - SMTP_PASS=7FOtsP0qKvNF
       - NODE_ENV=production
     volumes:
-      - uploads_data:/app/uploads:rw
+      - ./uploads:/app/uploads
     restart: unless-stopped
     # healthcheck:
     #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
@@ -29,5 +29,4 @@ services:
   # MariaDB service removed - using native MariaDB on server
   # Database connection will be configured via environment variables
 
-volumes:
-  uploads_data:
+# No volumes needed - using native MariaDB
