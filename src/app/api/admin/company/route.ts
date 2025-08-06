@@ -7,23 +7,30 @@ import { tmpdir } from 'os'
 // GET - Obtener configuración de empresa
 export async function GET() {
   try {
+    console.log('🔍 Buscando configuración de empresa en base de datos...')
+    
     // Intentar obtener configuración de la base de datos
     const config = await prisma.$queryRaw`
-      SELECT * FROM company_config LIMIT 1
+      SELECT * FROM company_config ORDER BY updatedAt DESC LIMIT 1
     `
     
+    console.log('📊 Configuración encontrada:', config)
+    
     if (Array.isArray(config) && config.length > 0) {
-      return NextResponse.json(config[0])
+      const result = config[0]
+      console.log('✅ Devolviendo configuración de BD:', result)
+      return NextResponse.json(result)
     }
     
     // Si no existe, devolver configuración por defecto
+    console.log('⚠️ No hay configuración en BD, usando por defecto')
     return NextResponse.json({
       name: 'AutoMax',
       logoUrl: '/logo.svg',
       description: 'Sistema de Gestión'
     })
   } catch (error) {
-    console.error('Error fetching company config:', error)
+    console.error('❌ Error fetching company config:', error)
     // En caso de error, devolver configuración por defecto
     return NextResponse.json({
       name: 'AutoMax',

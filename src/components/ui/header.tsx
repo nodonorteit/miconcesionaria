@@ -27,13 +27,17 @@ export function Header() {
     // Cargar configuración de empresa
     const loadCompanyConfig = async () => {
       try {
+        console.log('🔄 Cargando configuración de empresa...')
         const response = await fetch('/api/admin/company')
         if (response.ok) {
           const data = await response.json()
+          console.log('📋 Configuración cargada:', data)
           setCompanyConfig(data)
+        } else {
+          console.error('❌ Error en respuesta:', response.status)
         }
       } catch (error) {
-        console.error('Error loading company config:', error)
+        console.error('❌ Error loading company config:', error)
       }
     }
 

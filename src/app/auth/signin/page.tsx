@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,7 +15,29 @@ export default function SignIn() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [companyConfig, setCompanyConfig] = useState({
+    name: 'AutoMax',
+    logoUrl: '/logo.svg',
+    description: 'Sistema de Gestión'
+  })
   const router = useRouter()
+
+  useEffect(() => {
+    // Cargar configuración de empresa
+    const loadCompanyConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/company')
+        if (response.ok) {
+          const data = await response.json()
+          setCompanyConfig(data)
+        }
+      } catch (error) {
+        console.error('Error loading company config:', error)
+      }
+    }
+
+    loadCompanyConfig()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,8 +72,8 @@ export default function SignIn() {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Image 
-              src="/logo.svg" 
-              alt="AutoMax Logo" 
+              src={companyConfig.logoUrl} 
+              alt={`${companyConfig.name} Logo`}
               width={160} 
               height={48} 
               className="h-12 w-auto"
