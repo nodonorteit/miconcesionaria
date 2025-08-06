@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Car } from 'lucide-react'
+import { Plus, Edit, Trash2, Car, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
@@ -31,6 +31,7 @@ interface Vehicle {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  images?: string[]
 }
 
 interface VehicleType {
@@ -47,6 +48,7 @@ export default function VehiclesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null)
+  const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null)
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -523,6 +525,15 @@ export default function VehiclesPage() {
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => setViewingVehicle(vehicle)}
+                className="flex items-center space-x-1"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => handleEdit(vehicle)}
                 className="flex items-center space-x-1"
               >
@@ -556,6 +567,134 @@ export default function VehiclesPage() {
       {vehicles.length === 0 && !loading && (
         <div className="text-center py-8">
           <p className="text-gray-500">No hay vehículos registrados</p>
+        </div>
+      )}
+
+      {/* Modal de Vista Detallada */}
+      {viewingVehicle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {viewingVehicle.brand} {viewingVehicle.model}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewingVehicle(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Información del Vehículo */}
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Información General</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Marca:</span>
+                        <p className="text-gray-900">{viewingVehicle.brand}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Modelo:</span>
+                        <p className="text-gray-900">{viewingVehicle.model}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Año:</span>
+                        <p className="text-gray-900">{viewingVehicle.year}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Color:</span>
+                        <p className="text-gray-900">{viewingVehicle.color}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Kilometraje:</span>
+                        <p className="text-gray-900">{viewingVehicle.mileage.toLocaleString()} km</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Precio:</span>
+                        <p className="text-gray-900 font-semibold">${viewingVehicle.price.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Estado:</span>
+                        <p className="text-gray-900">{viewingVehicle.status}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Tipo:</span>
+                        <p className="text-gray-900">{viewingVehicle.vehicleType?.name || 'Sin tipo'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Especificaciones Técnicas</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Combustible:</span>
+                        <p className="text-gray-900">{viewingVehicle.fuelType}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Transmisión:</span>
+                        <p className="text-gray-900">{viewingVehicle.transmission}</p>
+                      </div>
+                      {viewingVehicle.vin && (
+                        <div>
+                          <span className="font-medium text-gray-600">VIN:</span>
+                          <p className="text-gray-900">{viewingVehicle.vin}</p>
+                        </div>
+                      )}
+                      {viewingVehicle.licensePlate && (
+                        <div>
+                          <span className="font-medium text-gray-600">Patente:</span>
+                          <p className="text-gray-900">{viewingVehicle.licensePlate}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {viewingVehicle.description && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4">Descripción</h3>
+                      <p className="text-gray-700">{viewingVehicle.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Galería de Fotos */}
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Galería de Fotos</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Placeholder para fotos - aquí se mostrarían las imágenes reales */}
+                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Car className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Car className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Car className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Car className="h-12 w-12 text-gray-400" />
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      {viewingVehicle.images && viewingVehicle.images.length > 0 
+                        ? `${viewingVehicle.images.length} foto(s) cargada(s)`
+                        : 'No hay fotos cargadas para este vehículo'
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

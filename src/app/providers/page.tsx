@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Building } from 'lucide-react'
+import { Plus, Edit, Trash2, Building, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
@@ -30,6 +30,7 @@ export default function ProvidersPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingProvider, setEditingProvider] = useState<Provider | null>(null)
   const [deletingProvider, setDeletingProvider] = useState<string | null>(null)
+  const [viewingProvider, setViewingProvider] = useState<Provider | null>(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -324,6 +325,15 @@ export default function ProvidersPage() {
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => setViewingProvider(provider)}
+                className="flex items-center space-x-1"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => handleEdit(provider)}
                 className="flex items-center space-x-1"
               >
@@ -357,6 +367,108 @@ export default function ProvidersPage() {
       {providers.length === 0 && !loading && (
         <div className="text-center py-8">
           <p className="text-gray-500">No hay proveedores registrados</p>
+        </div>
+      )}
+
+      {/* Modal de Vista Detallada */}
+      {viewingProvider && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {viewingProvider.name}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewingProvider(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Información General</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">Nombre:</span>
+                      <p className="text-gray-900">{viewingProvider.name}</p>
+                    </div>
+                    {viewingProvider.email && (
+                      <div>
+                        <span className="font-medium text-gray-600">Email:</span>
+                        <p className="text-gray-900">{viewingProvider.email}</p>
+                      </div>
+                    )}
+                    {viewingProvider.phone && (
+                      <div>
+                        <span className="font-medium text-gray-600">Teléfono:</span>
+                        <p className="text-gray-900">{viewingProvider.phone}</p>
+                      </div>
+                    )}
+                    {viewingProvider.taxId && (
+                      <div>
+                        <span className="font-medium text-gray-600">CUIT/CUIL:</span>
+                        <p className="text-gray-900">{viewingProvider.taxId}</p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-gray-600">Estado:</span>
+                      <p className="text-gray-900">{viewingProvider.isActive ? 'Activo' : 'Inactivo'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {(viewingProvider.address || viewingProvider.city || viewingProvider.state) && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Dirección</h3>
+                    <div className="space-y-2 text-sm">
+                      {viewingProvider.address && (
+                        <div>
+                          <span className="font-medium text-gray-600">Dirección:</span>
+                          <p className="text-gray-900">{viewingProvider.address}</p>
+                        </div>
+                      )}
+                      {(viewingProvider.city || viewingProvider.state) && (
+                        <div>
+                          <span className="font-medium text-gray-600">Ubicación:</span>
+                          <p className="text-gray-900">{viewingProvider.city}, {viewingProvider.state}</p>
+                        </div>
+                      )}
+                      {viewingProvider.zipCode && (
+                        <div>
+                          <span className="font-medium text-gray-600">Código Postal:</span>
+                          <p className="text-gray-900">{viewingProvider.zipCode}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Información del Sistema</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">ID:</span>
+                      <p className="text-gray-900">{viewingProvider.id}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Fecha de Creación:</span>
+                      <p className="text-gray-900">{new Date(viewingProvider.createdAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Última Actualización:</span>
+                      <p className="text-gray-900">{new Date(viewingProvider.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

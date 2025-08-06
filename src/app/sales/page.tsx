@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, ShoppingCart, Receipt } from 'lucide-react'
+import { Plus, Edit, Trash2, ShoppingCart, Receipt, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
@@ -68,6 +68,7 @@ export default function SalesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
   const [deletingSale, setDeletingSale] = useState<string | null>(null)
+  const [viewingSale, setViewingSale] = useState<Sale | null>(null)
   const [formData, setFormData] = useState({
     vehicleId: '',
     customerId: '',
@@ -461,6 +462,15 @@ export default function SalesPage() {
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => setViewingSale(sale)}
+                className="flex items-center space-x-1"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Ver</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => handleEdit(sale)}
                 className="flex items-center space-x-1"
               >
@@ -494,6 +504,124 @@ export default function SalesPage() {
       {sales.length === 0 && !loading && (
         <div className="text-center py-8">
           <p className="text-gray-500">No hay ventas registradas</p>
+        </div>
+      )}
+
+      {/* Modal de Vista Detallada */}
+      {viewingSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Venta #{viewingSale.saleNumber}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewingSale(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Información de la Venta */}
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Información de la Venta</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Número de Venta:</span>
+                        <p className="text-gray-900">#{viewingSale.saleNumber}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Fecha:</span>
+                        <p className="text-gray-900">{new Date(viewingSale.saleDate).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Estado:</span>
+                        <p className="text-gray-900">{getStatusLabel(viewingSale.status)}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Monto Total:</span>
+                        <p className="text-gray-900 font-semibold">${viewingSale.totalAmount.toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Comisión:</span>
+                        <p className="text-gray-900">${viewingSale.commission.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Vehículo</h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Marca y Modelo:</span>
+                        <p className="text-gray-900">{viewingSale.vehicle.brand} {viewingSale.vehicle.model}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-600">Año:</span>
+                        <p className="text-gray-900">{viewingSale.vehicle.year}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Cliente</h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Nombre:</span>
+                        <p className="text-gray-900">{viewingSale.customer.firstName} {viewingSale.customer.lastName}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-4">Vendedor</h3>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-600">Nombre:</span>
+                        <p className="text-gray-900">{viewingSale.seller.firstName} {viewingSale.seller.lastName}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {viewingSale.notes && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="text-lg font-semibold mb-4">Notas</h3>
+                      <p className="text-gray-700">{viewingSale.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Resumen */}
+                <div className="space-y-4">
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 className="text-lg font-semibold mb-4 text-green-800">Resumen de la Venta</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-green-700">Precio del Vehículo:</span>
+                        <span className="font-semibold text-green-800">${viewingSale.totalAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-green-700">Comisión del Vendedor:</span>
+                        <span className="font-semibold text-green-800">${viewingSale.commission.toLocaleString()}</span>
+                      </div>
+                      <hr className="border-green-200" />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span className="text-green-800">Total:</span>
+                        <span className="text-green-800">${viewingSale.totalAmount.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
