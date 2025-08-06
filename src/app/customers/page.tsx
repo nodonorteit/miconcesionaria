@@ -30,6 +30,7 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+  const [deletingCustomer, setDeletingCustomer] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -111,7 +112,16 @@ export default function CustomersPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este cliente?')) return
+    const customer = customers.find(c => c.id === id)
+    if (!customer) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar al cliente "${customer.firstName} ${customer.lastName}"?\n\nEsta acción no se puede deshacer.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeletingCustomer(id)
     
     try {
       const response = await fetch(`/api/customers/${id}`, {
@@ -119,13 +129,15 @@ export default function CustomersPage() {
       })
 
       if (response.ok) {
-        toast.success('Cliente eliminado')
+        toast.success('Cliente eliminado correctamente')
         fetchCustomers()
       } else {
         toast.error('Error al eliminar cliente')
       }
     } catch (error) {
       toast.error('Error al eliminar cliente')
+    } finally {
+      setDeletingCustomer(null)
     }
   }
 
@@ -271,50 +283,89 @@ export default function CustomersPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {customers.map((customer) => (
-          <Card key={customer.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{customer.firstName} {customer.lastName}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(customer)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(customer.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div key={customer.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold">
+                      {customer.firstName.charAt(0)}{customer.lastName.charAt(0)}
+                    </span>
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {customer.email && (
-                  <p><strong>Email:</strong> {customer.email}</p>
-                )}
-                {customer.phone && (
-                  <p><strong>Teléfono:</strong> {customer.phone}</p>
-                )}
-                {customer.documentNumber && (
-                  <p><strong>DNI/CUIL:</strong> {customer.documentNumber}</p>
-                )}
-                {customer.address && (
-                  <p><strong>Dirección:</strong> {customer.address}</p>
-                )}
-                {(customer.city || customer.state) && (
-                  <p><strong>Ubicación:</strong> {customer.city}, {customer.state}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {customer.firstName} {customer.lastName}
+                    </h3>
+                    {customer.isActive ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Inactivo
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    {customer.email && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Email:</span> {customer.email}
+                      </span>
+                    )}
+                    {customer.phone && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Tel:</span> {customer.phone}
+                      </span>
+                    )}
+                    {customer.documentNumber && (
+                      <span className="flex items-center">
+                        <span className="font-medium">DNI/CUIL:</span> {customer.documentNumber}
+                      </span>
+                    )}
+                    {(customer.city || customer.state) && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Ubicación:</span> {customer.city}, {customer.state}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-center space-x-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(customer)}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDelete(customer.id)}
+                disabled={deletingCustomer === customer.id}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingCustomer === customer.id ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                    <span className="hidden sm:inline">Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 

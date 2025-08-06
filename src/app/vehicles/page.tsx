@@ -46,6 +46,7 @@ export default function VehiclesPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
+  const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -166,7 +167,16 @@ export default function VehiclesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este vehículo?')) return
+    const vehicle = vehicles.find(v => v.id === id)
+    if (!vehicle) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres eliminar el vehículo "${vehicle.brand} ${vehicle.model}" (${vehicle.year})?\n\nEsta acción no se puede deshacer.`
+    )
+    
+    if (!confirmed) return
+    
+    setDeletingVehicle(id)
     
     try {
       const response = await fetch(`/api/vehicles/${id}`, {
@@ -174,13 +184,15 @@ export default function VehiclesPage() {
       })
 
       if (response.ok) {
-        toast.success('Vehículo eliminado')
+        toast.success('Vehículo eliminado correctamente')
         fetchVehicles()
       } else {
         toast.error('Error al eliminar vehículo')
       }
     } catch (error) {
       toast.error('Error al eliminar vehículo')
+    } finally {
+      setDeletingVehicle(null)
     }
   }
 
@@ -454,44 +466,90 @@ export default function VehiclesPage() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-2">
         {vehicles.map((vehicle) => (
-          <Card key={vehicle.id}>
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>{vehicle.brand} {vehicle.model}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(vehicle)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(vehicle.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <div key={vehicle.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Car className="h-6 w-6 text-blue-600" />
+                  </div>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p><strong>Tipo:</strong> {vehicle.vehicleType?.name || 'Sin tipo'}</p>
-                <p><strong>Año:</strong> {vehicle.year}</p>
-                <p><strong>Color:</strong> {vehicle.color}</p>
-                <p><strong>Kilometraje:</strong> {vehicle.mileage.toLocaleString()} km</p>
-                <p><strong>Precio:</strong> ${vehicle.price.toLocaleString()}</p>
-                <p><strong>Estado:</strong> {vehicle.status}</p>
-                {vehicle.licensePlate && (
-                  <p><strong>Patente:</strong> {vehicle.licensePlate}</p>
-                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {vehicle.brand} {vehicle.model}
+                    </h3>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {vehicle.year}
+                    </span>
+                    {vehicle.isActive ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        Activo
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Inactivo
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    <span className="flex items-center">
+                      <span className="font-medium">Tipo:</span> {vehicle.vehicleType?.name || 'Sin tipo'}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Color:</span> {vehicle.color}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Km:</span> {vehicle.mileage.toLocaleString()}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Precio:</span> ${vehicle.price.toLocaleString()}
+                    </span>
+                    <span className="flex items-center">
+                      <span className="font-medium">Estado:</span> {vehicle.status}
+                    </span>
+                    {vehicle.licensePlate && (
+                      <span className="flex items-center">
+                        <span className="font-medium">Patente:</span> {vehicle.licensePlate}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-center space-x-2 ml-4">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleEdit(vehicle)}
+                className="flex items-center space-x-1"
+              >
+                <Edit className="h-4 w-4" />
+                <span className="hidden sm:inline">Editar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDelete(vehicle.id)}
+                disabled={deletingVehicle === vehicle.id}
+                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+              >
+                {deletingVehicle === vehicle.id ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                    <span className="hidden sm:inline">Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span className="hidden sm:inline">Eliminar</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
 
