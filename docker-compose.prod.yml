@@ -17,8 +17,7 @@ services:
       - SMTP_PASS=7FOtsP0qKvNF
       - NODE_ENV=production
     volumes:
-      - ./uploads:/app/uploads:rw
-    user: "root"
+      - ./uploads:/app/uploads
     restart: unless-stopped
     # healthcheck:
     #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]

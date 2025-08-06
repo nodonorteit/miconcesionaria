@@ -237,43 +237,6 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* Tabla completa */}
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-2 font-medium">Tipo</th>
-                        <th className="text-right py-2 font-medium">Compra</th>
-                        <th className="text-right py-2 font-medium">Venta</th>
-                        <th className="text-right py-2 font-medium">Agencia</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dollarRates.rates.map((rate, index) => (
-                        <tr key={rate.casa} className="border-b">
-                          <td className="py-2 font-medium">{rate.nombre}</td>
-                          <td className="text-right py-2">
-                            {rate.compra ? `$${rate.compra.toLocaleString('es-AR')}` : '-'}
-                          </td>
-                          <td className={`text-right py-2 font-bold ${
-                            index === 0 ? 'text-green-600' :
-                            index === 1 ? 'text-blue-600' :
-                            index === 2 ? 'text-purple-600' :
-                            index === 3 ? 'text-orange-600' :
-                            index === 4 ? 'text-red-600' :
-                            'text-gray-600'
-                          }`}>
-                            {rate.venta ? `$${rate.venta.toLocaleString('es-AR')}` : 'N/A'}
-                          </td>
-                          <td className="text-right py-2 text-xs text-gray-500">
-                            {rate.agencia}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
                 <div className="flex justify-between items-center text-xs text-gray-500">
                   <span>Última actualización: {new Date(dollarRates.timestamp).toLocaleString('es-AR')}</span>
                   <Button 
