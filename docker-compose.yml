@@ -14,7 +14,8 @@ services:
     depends_on:
       - db
     volumes:
-      - ./uploads:/app/uploads
+      - ./uploads:/app/uploads:rw
+    user: "1001:1001"
     restart: unless-stopped
 
   db:
