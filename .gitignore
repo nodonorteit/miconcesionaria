@@ -98,15 +98,19 @@ temp/
 ehthumbs.db
 Thumbs.db
 
+# Uploads directory - exclude everything except .gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Keep the uploads directory structure but ignore uploaded files
+uploads/**/*
+!uploads/.gitkeep
+
 # Docker
 .dockerignore
 
 # Prisma
 prisma/migrations/
-
-# Uploads (keep the directory but ignore contents)
-uploads/*
-!uploads/.gitkeep
 
 # Backup files
 *.backup

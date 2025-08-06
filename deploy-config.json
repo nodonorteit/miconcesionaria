@@ -1,0 +1,39 @@
+{
+  "deployment": {
+    "postDeployScripts": [
+      "scripts/post-deploy.sh"
+    ],
+    "permissions": {
+      "uploads": {
+        "directory": "755",
+        "files": "644",
+        "owner": "www-data:www-data"
+      },
+      "application": {
+        "directories": "755",
+        "files": "644"
+      }
+    },
+    "directories": {
+      "uploads": {
+        "path": "/var/www/vhosts/nodonorte.com/miconcesionaria/uploads",
+        "createIfNotExists": true,
+        "preserveGitkeep": true
+      }
+    },
+    "troubleshooting": {
+      "uploadsPermissionDenied": {
+        "description": "Error al eliminar uploads/.gitkeep durante el despliegue",
+        "solution": "Ejecutar scripts/fix-uploads-permissions.sh en el servidor",
+        "manualSteps": [
+          "Conectar al servidor via SSH",
+          "Navegar al directorio de la aplicación",
+          "Ejecutar: chmod 644 uploads/.gitkeep",
+          "Ejecutar: chown www-data:www-data uploads/.gitkeep",
+          "Ejecutar: chmod 755 uploads/",
+          "Ejecutar: chown www-data:www-data uploads/"
+        ]
+      }
+    }
+  }
+} 
