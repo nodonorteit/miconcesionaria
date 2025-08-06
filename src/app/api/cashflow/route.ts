@@ -37,7 +37,7 @@ export async function GET() {
     })
 
     // Obtener todos los gastos
-    const expenses = await prisma.Expense.findMany({
+    const expenses = await prisma.expense.findMany({
       where: {
         isActive: true
       },
