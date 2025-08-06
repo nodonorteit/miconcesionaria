@@ -43,6 +43,7 @@
     "recharts": "^2.8.0",
     "jspdf": "^2.5.1",
     "html2canvas": "^1.4.1",
+    "sharp": "^0.33.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^6.4.14"
   },
