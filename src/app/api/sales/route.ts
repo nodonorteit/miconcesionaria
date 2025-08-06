@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
 
 // GET - Obtener todas las ventas
 export async function GET() {
@@ -63,6 +64,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Obtener el primer usuario disponible o crear uno por defecto
+    let userId: string
+    const existingUser = await prisma.user.findFirst({
+      where: { isActive: true },
+      select: { id: true }
+    })
+
+    if (existingUser) {
+      userId = existingUser.id
+    } else {
+      // Crear un usuario por defecto si no existe ninguno
+      const hashedPassword = await bcrypt.hash('admin123', 12)
+      const defaultUser = await prisma.user.create({
+        data: {
+          email: 'admin@miconcesionaria.com',
+          name: 'Administrador',
+          password: hashedPassword,
+          role: 'ADMIN',
+          isActive: true
+        }
+      })
+      userId = defaultUser.id
+    }
+
     // Generar número de venta único
     const saleNumber = `V${Date.now()}`
 
@@ -77,7 +102,7 @@ export async function POST(request: NextRequest) {
         vehicleId,
         customerId,
         sellerId,
-        userId: 'admin-2' // TODO: Get from session
+        userId
       },
       include: {
         vehicle: {
