@@ -53,12 +53,15 @@ export async function POST(request: NextRequest) {
 
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
+      console.log('📁 Procesando logo:', logo.name, 'Tamaño:', logo.size)
       try {
         // Usar el directorio uploads mapeado
         const uploadsDir = join(process.cwd(), 'uploads')
+        console.log('📂 Directorio uploads:', uploadsDir)
         
         // Crear directorio si no existe
         await mkdir(uploadsDir, { recursive: true })
+        console.log('✅ Directorio creado/verificado')
         
         const bytes = await logo.arrayBuffer()
         const buffer = Buffer.from(bytes)
@@ -67,13 +70,15 @@ export async function POST(request: NextRequest) {
         const timestamp = Date.now()
         const filename = `company_logo_${timestamp}_${logo.name}`
         const filepath = join(uploadsDir, filename)
+        console.log('📄 Guardando archivo en:', filepath)
         
         // Guardar archivo directamente
         await writeFile(filepath, buffer)
+        console.log('✅ Archivo guardado exitosamente')
         
         // Devolver la URL correcta
         logoUrl = `/uploads/${filename}`
-        console.log('✅ Logo guardado exitosamente:', logoUrl)
+        console.log('🔗 URL del logo:', logoUrl)
         
       } catch (error) {
         console.error('❌ Error saving logo:', error)
@@ -81,6 +86,8 @@ export async function POST(request: NextRequest) {
         logoUrl = '/logo.svg'
         console.log('⚠️ Usando logo por defecto debido a error de permisos')
       }
+    } else {
+      console.log('📝 No se subió ningún logo nuevo')
     }
 
     // Guardar configuración en base de datos
@@ -98,6 +105,7 @@ export async function POST(request: NextRequest) {
       `
       
       console.log('✅ Configuración guardada en BD exitosamente')
+      console.log('🔗 URL final guardada en BD:', logoUrl)
     } catch (error) {
       console.error('❌ Error saving to database:', error)
       // Si falla la base de datos, continuar con la respuesta
