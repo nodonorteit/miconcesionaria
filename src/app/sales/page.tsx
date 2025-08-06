@@ -195,7 +195,7 @@ export default function SalesPage() {
     if (!sale) return
     
     const confirmed = window.confirm(
-      `¿Estás seguro de que quieres eliminar la venta #${sale.saleNumber}?\n\nVehículo: ${sale.vehicle.brand} ${sale.vehicle.model}\nCliente: ${sale.customer.firstName} ${sale.customer.lastName}\n\nEsta acción no se puede deshacer.`
+      `¿Estás seguro de que quieres eliminar la venta "${sale.saleNumber}"?\n\nEsta acción no se puede deshacer.`
     )
     
     if (!confirmed) return
@@ -218,6 +218,44 @@ export default function SalesPage() {
       toast.error('Error al eliminar venta')
     } finally {
       setDeletingSale(null)
+    }
+  }
+
+  const handleCompleteSale = async (id: string) => {
+    const sale = sales.find(s => s.id === id)
+    if (!sale) return
+    
+    const confirmed = window.confirm(
+      `¿Estás seguro de que quieres marcar como completada la venta "${sale.saleNumber}"?\n\nEsta acción confirmará que el pago ha sido recibido.`
+    )
+    
+    if (!confirmed) return
+    
+    try {
+      const response = await fetch(`/api/sales/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vehicleId: sale.vehicle.id,
+          customerId: sale.customer.id,
+          sellerId: sale.seller.id,
+          totalAmount: sale.totalAmount,
+          commission: sale.commission,
+          status: 'COMPLETED',
+          notes: sale.notes
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Venta marcada como completada')
+        fetchSales()
+      } else {
+        toast.error('Error al completar la venta')
+      }
+    } catch (error) {
+      toast.error('Error al completar la venta')
     }
   }
 
@@ -496,6 +534,17 @@ export default function SalesPage() {
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
               </Button>
+              {sale.status === 'PENDING' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleCompleteSale(sale.id)}
+                  className="flex items-center space-x-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Completar</span>
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"

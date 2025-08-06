@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Car, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, Car, Eye, ShoppingCart } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 
@@ -41,14 +41,38 @@ interface VehicleType {
   description?: string
 }
 
+interface Seller {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  commissionRate: number
+  isActive: boolean
+}
+
+interface Customer {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  documentNumber?: string
+  city?: string
+  state?: string
+}
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
+  const [sellers, setSellers] = useState<Seller[]>([])
+  const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
   const [deletingVehicle, setDeletingVehicle] = useState<string | null>(null)
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null)
+  const [sellingVehicle, setSellingVehicle] = useState<Vehicle | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     brand: '',
@@ -66,10 +90,19 @@ export default function VehiclesPage() {
     vehicleTypeId: '',
     images: [] as File[]
   })
+  const [saleFormData, setSaleFormData] = useState({
+    sellerId: '',
+    customerId: '',
+    totalAmount: '',
+    commission: '',
+    notes: ''
+  })
 
   useEffect(() => {
     fetchVehicles()
     fetchVehicleTypes()
+    fetchSellers()
+    fetchCustomers()
   }, [])
 
   const fetchVehicleTypes = async () => {
@@ -81,6 +114,30 @@ export default function VehiclesPage() {
       }
     } catch (error) {
       console.error('Error fetching vehicle types:', error)
+    }
+  }
+
+  const fetchSellers = async () => {
+    try {
+      const response = await fetch('/api/sellers')
+      if (response.ok) {
+        const data = await response.json()
+        setSellers(data.filter((seller: Seller) => seller.isActive))
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error)
+    }
+  }
+
+  const fetchCustomers = async () => {
+    try {
+      const response = await fetch('/api/customers')
+      if (response.ok) {
+        const data = await response.json()
+        setCustomers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error)
     }
   }
 
@@ -196,6 +253,82 @@ export default function VehiclesPage() {
       toast.error('Error al eliminar vehículo')
     } finally {
       setDeletingVehicle(null)
+    }
+  }
+
+  const handleSell = (vehicle: Vehicle) => {
+    if (vehicle.status === 'SOLD') {
+      toast.error('Este vehículo ya ha sido vendido')
+      return
+    }
+    
+    setSellingVehicle(vehicle)
+    setSaleFormData({
+      sellerId: '',
+      customerId: '',
+      totalAmount: vehicle.price.toString(),
+      commission: '',
+      notes: ''
+    })
+  }
+
+  const handleSellerChange = (sellerId: string) => {
+    const seller = sellers.find(s => s.id === sellerId)
+    if (seller && sellingVehicle) {
+      const commission = (sellingVehicle.price * seller.commissionRate / 100).toFixed(2)
+      setSaleFormData({
+        ...saleFormData,
+        sellerId,
+        commission
+      })
+    } else {
+      setSaleFormData({
+        ...saleFormData,
+        sellerId,
+        commission: ''
+      })
+    }
+  }
+
+  const handleSaleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!sellingVehicle) return
+    
+    try {
+      const response = await fetch('/api/sales', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vehicleId: sellingVehicle.id,
+          customerId: saleFormData.customerId,
+          sellerId: saleFormData.sellerId,
+          totalAmount: saleFormData.totalAmount,
+          commission: saleFormData.commission,
+          status: 'PENDING',
+          notes: saleFormData.notes
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Venta creada exitosamente')
+        setSellingVehicle(null)
+        setSaleFormData({
+          sellerId: '',
+          customerId: '',
+          totalAmount: '',
+          commission: '',
+          notes: ''
+        })
+        fetchVehicles() // Actualizar la lista para mostrar el nuevo estado
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Error al crear la venta')
+      }
+    } catch (error) {
+      toast.error('Error al crear la venta')
     }
   }
 
@@ -557,6 +690,17 @@ export default function VehiclesPage() {
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
               </Button>
+              {vehicle.status !== 'SOLD' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleSell(vehicle)}
+                  className="flex items-center space-x-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  <span className="hidden sm:inline">Vender</span>
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -721,6 +865,145 @@ export default function VehiclesPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Venta */}
+      {sellingVehicle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Vender Vehículo: {sellingVehicle.brand} {sellingVehicle.model}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSellingVehicle(null)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <form onSubmit={handleSaleSubmit} className="space-y-6">
+                {/* Información del Vehículo */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Información del Vehículo</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">Marca/Modelo:</span>
+                      <p className="text-gray-900">{sellingVehicle.brand} {sellingVehicle.model}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Año:</span>
+                      <p className="text-gray-900">{sellingVehicle.year}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Color:</span>
+                      <p className="text-gray-900">{sellingVehicle.color}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Precio:</span>
+                      <p className="text-gray-900 font-semibold">${sellingVehicle.price.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Formulario de Venta */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="sellerId">Vendedor *</Label>
+                    <select
+                      id="sellerId"
+                      value={saleFormData.sellerId}
+                      onChange={(e) => handleSellerChange(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Seleccionar vendedor...</option>
+                      {sellers.map((seller) => (
+                        <option key={seller.id} value={seller.id}>
+                          {seller.firstName} {seller.lastName} ({seller.commissionRate}% comisión)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="customerId">Cliente *</Label>
+                    <select
+                      id="customerId"
+                      value={saleFormData.customerId}
+                      onChange={(e) => setSaleFormData({...saleFormData, customerId: e.target.value})}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="">Seleccionar cliente...</option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.firstName} {customer.lastName}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="totalAmount">Monto Total *</Label>
+                    <Input
+                      id="totalAmount"
+                      type="number"
+                      step="0.01"
+                      value={saleFormData.totalAmount}
+                      onChange={(e) => setSaleFormData({...saleFormData, totalAmount: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="commission">Comisión</Label>
+                    <Input
+                      id="commission"
+                      type="number"
+                      step="0.01"
+                      value={saleFormData.commission}
+                      onChange={(e) => setSaleFormData({...saleFormData, commission: e.target.value})}
+                      placeholder="Se calcula automáticamente"
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="notes">Notas</Label>
+                  <textarea
+                    id="notes"
+                    value={saleFormData.notes}
+                    onChange={(e) => setSaleFormData({...saleFormData, notes: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    rows={3}
+                    placeholder="Notas adicionales sobre la venta..."
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1">
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Crear Venta
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setSellingVehicle(null)}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
