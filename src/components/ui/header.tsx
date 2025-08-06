@@ -61,9 +61,9 @@ export function Header() {
           <Image 
             src={companyConfig.logoUrl} 
             alt={`${companyConfig.name} Logo`}
-            width={120} 
-            height={36} 
-            className="h-9 w-auto"
+            width={200} 
+            height={60} 
+            className="h-12 w-auto"
             onError={(e) => {
               console.error('❌ Error cargando logo:', companyConfig.logoUrl)
               e.currentTarget.src = '/logo.svg'

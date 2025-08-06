@@ -74,9 +74,9 @@ export default function SignIn() {
             <Image 
               src={companyConfig.logoUrl} 
               alt={`${companyConfig.name} Logo`}
-              width={160} 
-              height={48} 
-              className="h-12 w-auto"
+              width={240} 
+              height={72} 
+              className="h-16 w-auto"
             />
           </div>
           <CardDescription>
