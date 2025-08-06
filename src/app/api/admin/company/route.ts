@@ -85,10 +85,11 @@ export async function POST(request: NextRequest) {
         
         if (canWrite) {
           logoUrl = `/uploads/${filename}`
+          console.log('✅ Logo guardado en uploads:', logoUrl)
         } else {
           // Si usamos directorio temporal, devolver el logo por defecto por ahora
           logoUrl = '/logo.svg'
-          console.log('Logo guardado en directorio temporal, usando logo por defecto')
+          console.log('⚠️ Logo guardado en directorio temporal, usando logo por defecto')
         }
         
         console.log('Logo guardado exitosamente:', filepath)
@@ -102,6 +103,8 @@ export async function POST(request: NextRequest) {
 
     // Guardar configuración en base de datos
     try {
+      console.log('💾 Guardando en BD:', { name, logoUrl, description })
+      
       await prisma.$executeRaw`
         INSERT INTO company_config (name, logoUrl, description, createdAt, updatedAt)
         VALUES (${name || 'AutoMax'}, ${logoUrl}, ${description || 'Sistema de Gestión'}, NOW(), NOW())
@@ -111,8 +114,10 @@ export async function POST(request: NextRequest) {
         description = VALUES(description),
         updatedAt = NOW()
       `
+      
+      console.log('✅ Configuración guardada en BD exitosamente')
     } catch (error) {
-      console.error('Error saving to database:', error)
+      console.error('❌ Error saving to database:', error)
       // Si falla la base de datos, continuar con la respuesta
     }
 
