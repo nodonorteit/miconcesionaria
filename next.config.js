@@ -12,6 +12,15 @@ const nextConfig = {
       },
     ],
   },
+  // Configurar archivos estáticos
+  async rewrites() {
+    return [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/uploads/:path*',
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig 

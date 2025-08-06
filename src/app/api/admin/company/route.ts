@@ -54,24 +54,17 @@ export async function POST(request: NextRequest) {
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
       try {
-        // Intentar usar el directorio uploads primero
-        let uploadsDir = join(process.cwd(), 'uploads')
-        let canWrite = false
+        // Usar el directorio uploads mapeado
+        const uploadsDir = join(process.cwd(), 'uploads')
         
-        try {
-          await mkdir(uploadsDir, { recursive: true })
-          // Probar si podemos escribir en el directorio
-          const testFile = join(uploadsDir, 'test.txt')
-          await writeFile(testFile, 'test')
-          await writeFile(testFile, '') // Limpiar archivo de prueba
-          canWrite = true
-        } catch (error) {
-          console.log('No se puede escribir en uploads, usando directorio temporal')
-          // Usar directorio temporal del sistema
-          uploadsDir = join(tmpdir(), 'miconcesionaria-uploads')
-          await mkdir(uploadsDir, { recursive: true })
-        }
-
+        // Crear directorio si no existe
+        await mkdir(uploadsDir, { recursive: true })
+        
+        // Verificar permisos de escritura
+        const testFile = join(uploadsDir, 'test.txt')
+        await writeFile(testFile, 'test')
+        await writeFile(testFile, '') // Limpiar archivo de prueba
+        
         const bytes = await logo.arrayBuffer()
         const buffer = Buffer.from(bytes)
         
@@ -83,21 +76,15 @@ export async function POST(request: NextRequest) {
         // Guardar archivo
         await writeFile(filepath, buffer)
         
-        if (canWrite) {
-          logoUrl = `/uploads/${filename}`
-          console.log('✅ Logo guardado en uploads:', logoUrl)
-        } else {
-          // Si usamos directorio temporal, devolver el logo por defecto por ahora
-          logoUrl = '/logo.svg'
-          console.log('⚠️ Logo guardado en directorio temporal, usando logo por defecto')
-        }
+        // Devolver la URL correcta
+        logoUrl = `/uploads/${filename}`
+        console.log('✅ Logo guardado exitosamente:', logoUrl)
         
-        console.log('Logo guardado exitosamente:', filepath)
       } catch (error) {
-        console.error('Error saving logo:', error)
+        console.error('❌ Error saving logo:', error)
         // Si no se puede guardar, usar el logo por defecto
         logoUrl = '/logo.svg'
-        console.log('Usando logo por defecto debido a error de permisos')
+        console.log('⚠️ Usando logo por defecto debido a error de permisos')
       }
     }
 
