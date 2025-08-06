@@ -1,16 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 
-// GET - Obtener todas las entradas de cashflow
+// GET - Obtener flujo de caja calculado dinámicamente
 export async function GET() {
   try {
-    const cashflow = await prisma.$queryRaw`
-      SELECT * FROM cashflow 
-      WHERE isActive = 1 
-      ORDER BY createdAt DESC
-    `
+    // Obtener todas las ventas
+    const sales = await prisma.sale.findMany({
+      where: {
+        status: 'COMPLETED' // Solo ventas completadas
+      },
+      select: {
+        id: true,
+        totalAmount: true,
+        commission: true,
+        saleDate: true,
+        status: true,
+        notes: true,
+        createdAt: true,
+        updatedAt: true,
+        vehicle: {
+          select: {
+            brand: true,
+            model: true
+          }
+        },
+        customer: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: {
+        saleDate: 'desc'
+      }
+    })
+
+    // Obtener todos los gastos
+    const expenses = await prisma.Expense.findMany({
+      where: {
+        isActive: true
+      },
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        description: true,
+        createdAt: true,
+        updatedAt: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    // Transformar ventas en ingresos de cashflow
+    const incomeEntries = sales.map(sale => ({
+      id: `income-${sale.id}`,
+      type: 'INCOME' as const,
+      amount: Number(sale.totalAmount),
+      description: `Venta de ${sale.vehicle.brand} ${sale.vehicle.model} - ${sale.customer.firstName} ${sale.customer.lastName}`,
+      category: 'Ventas',
+      date: sale.saleDate.toISOString().split('T')[0],
+      receiptUrl: null,
+      createdAt: sale.createdAt.toISOString(),
+      updatedAt: sale.updatedAt.toISOString()
+    }))
+
+    // Transformar gastos en egresos de cashflow
+    const expenseEntries = expenses.map(expense => ({
+      id: `expense-${expense.id}`,
+      type: 'EXPENSE' as const,
+      amount: Number(expense.amount),
+      description: expense.description,
+      category: expense.type,
+      date: expense.createdAt.toISOString().split('T')[0],
+      receiptUrl: null,
+      createdAt: expense.createdAt.toISOString(),
+      updatedAt: expense.updatedAt.toISOString()
+    }))
+
+    // Combinar y ordenar por fecha
+    const cashflow = [...incomeEntries, ...expenseEntries].sort((a, b) => 
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    )
 
     return NextResponse.json(cashflow)
   } catch (error) {
@@ -22,68 +95,10 @@ export async function GET() {
   }
 }
 
-// POST - Crear una nueva entrada de cashflow
+// POST - No implementado ya que el cashflow se calcula dinámicamente
 export async function POST(request: NextRequest) {
-  try {
-    const formData = await request.formData()
-    
-    // Extraer datos del formulario
-    const type = formData.get('type') as string
-    const amount = formData.get('amount') as string
-    const description = formData.get('description') as string
-    const category = formData.get('category') as string
-    const receipt = formData.get('receipt') as File
-
-    // Validar campos requeridos
-    if (!type || !amount || !description) {
-      return NextResponse.json(
-        { error: 'Todos los campos requeridos deben estar completos' },
-        { status: 400 }
-      )
-    }
-
-    let receiptPath = null
-
-    // Procesar comprobante si existe
-    if (receipt && receipt.size > 0) {
-      // Crear directorio de uploads si no existe
-      const uploadsDir = join(process.cwd(), 'uploads')
-      await mkdir(uploadsDir, { recursive: true })
-
-      const bytes = await receipt.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      
-      // Generar nombre único para el archivo
-      const timestamp = Date.now()
-      const filename = `cashflow_${timestamp}_${receipt.name}`
-      const filepath = join(uploadsDir, filename)
-      
-      // Guardar archivo
-      await writeFile(filepath, buffer)
-      receiptPath = `/uploads/${filename}`
-    }
-
-    // Crear entrada en cashflow
-    const cashflowId = `cf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    await prisma.$executeRaw`
-      INSERT INTO cashflow (id, type, amount, description, category, receiptPath, isActive, createdAt, updatedAt)
-      VALUES (${cashflowId}, ${type}, ${parseFloat(amount)}, ${description}, 
-              ${category || null}, ${receiptPath}, 1, NOW(), NOW())
-    `
-
-    // Obtener la entrada creada
-    const cashflowEntries = await prisma.$queryRaw`
-      SELECT * FROM cashflow WHERE id = ${cashflowId}
-    `
-    const cashflowEntry = Array.isArray(cashflowEntries) ? cashflowEntries[0] : cashflowEntries
-
-    return NextResponse.json(cashflowEntry)
-  } catch (error) {
-    console.error('Error creating cashflow entry:', error)
-    return NextResponse.json(
-      { error: 'Error creating cashflow entry' },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(
+    { error: 'Cashflow se calcula automáticamente desde ventas y gastos' },
+    { status: 405 }
+  )
 } 
