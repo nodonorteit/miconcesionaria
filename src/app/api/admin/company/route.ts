@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import { tmpdir } from 'os'
 
 // GET - Obtener configuración de empresa
 export async function GET() {
@@ -36,14 +37,22 @@ export async function POST(request: NextRequest) {
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
       try {
-        // Intentar usar el directorio uploads
-        const uploadsDir = join(process.cwd(), 'uploads')
+        // Intentar usar el directorio uploads primero
+        let uploadsDir = join(process.cwd(), 'uploads')
+        let canWrite = false
         
-        // Verificar si el directorio existe y es escribible
         try {
           await mkdir(uploadsDir, { recursive: true })
-        } catch (mkdirError) {
-          console.log('No se pudo crear directorio uploads, usando directorio temporal')
+          // Probar si podemos escribir en el directorio
+          const testFile = join(uploadsDir, 'test.txt')
+          await writeFile(testFile, 'test')
+          await writeFile(testFile, '') // Limpiar archivo de prueba
+          canWrite = true
+        } catch (error) {
+          console.log('No se puede escribir en uploads, usando directorio temporal')
+          // Usar directorio temporal del sistema
+          uploadsDir = join(tmpdir(), 'miconcesionaria-uploads')
+          await mkdir(uploadsDir, { recursive: true })
         }
 
         const bytes = await logo.arrayBuffer()
@@ -54,13 +63,21 @@ export async function POST(request: NextRequest) {
         const filename = `company_logo_${timestamp}_${logo.name}`
         const filepath = join(uploadsDir, filename)
         
-        // Intentar guardar archivo
+        // Guardar archivo
         await writeFile(filepath, buffer)
-        logoUrl = `/uploads/${filename}`
+        
+        if (canWrite) {
+          logoUrl = `/uploads/${filename}`
+        } else {
+          // Si usamos directorio temporal, devolver el logo por defecto por ahora
+          logoUrl = '/logo.svg'
+          console.log('Logo guardado en directorio temporal, usando logo por defecto')
+        }
+        
         console.log('Logo guardado exitosamente:', filepath)
       } catch (error) {
         console.error('Error saving logo:', error)
-        // Si no se puede guardar, usar el logo por defecto y mostrar mensaje
+        // Si no se puede guardar, usar el logo por defecto
         logoUrl = '/logo.svg'
         console.log('Usando logo por defecto debido a error de permisos')
       }
