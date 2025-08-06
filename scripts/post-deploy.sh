@@ -106,6 +106,17 @@ else
     print_warning "Servicio web no está funcionando o no se pudo verificar"
 fi
 
+# 6. Verificar usuarios
+print_status "6. Verificando usuarios..."
+
+# Verificar si existe algún usuario en la base de datos
+if [ -f "scripts/create-default-user.sh" ]; then
+    print_status "Ejecutando verificación de usuarios..."
+    ./scripts/create-default-user.sh || print_warning "No se pudo verificar usuarios"
+else
+    print_warning "Script de verificación de usuarios no encontrado"
+fi
+
 print_success "Post-deploy completado exitosamente"
 print_status "Ubicación de la aplicación: $APP_DIR"
 print_status "Directorio de uploads: $UPLOADS_DIR" 
