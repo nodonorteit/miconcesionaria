@@ -16,7 +16,6 @@ import {
   Wrench,
   TrendingUp,
   Calendar,
-  Search,
   MinusCircle
 } from 'lucide-react'
 import Link from 'next/link'
@@ -117,28 +116,6 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Bienvenido, {session?.user?.name}</p>
         </div>
-
-        {/* Search Bar */}
-        <Card className="mb-8">
-          <CardContent className="pt-6">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <input
-                    type="text"
-                    placeholder="Buscar vehículos por marca, modelo, año, color, precio..."
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <Button>
-                <Search className="h-4 w-4 mr-2" />
-                Buscar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
