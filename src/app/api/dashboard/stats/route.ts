@@ -11,7 +11,9 @@ export async function GET() {
       pendingSales,
       activeSellers,
       totalProviders,
-      totalWorkshops
+      totalWorkshops,
+      totalExpenses,
+      totalExpensesAmount
     ] = await Promise.all([
       prisma.vehicle.count({
         where: { isActive: true }
@@ -36,6 +38,15 @@ export async function GET() {
       }),
       prisma.workshop.count({
         where: { isActive: true }
+      }),
+      prisma.expense.count({
+        where: { isActive: true }
+      }),
+      prisma.expense.aggregate({
+        _sum: {
+          amount: true
+        },
+        where: { isActive: true }
       })
     ])
 
@@ -47,7 +58,9 @@ export async function GET() {
       pendingSales,
       activeSellers,
       totalProviders,
-      totalWorkshops
+      totalWorkshops,
+      totalExpenses,
+      totalExpensesAmount: totalExpensesAmount._sum.amount || 0
     })
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)

@@ -30,6 +30,8 @@ interface DashboardStats {
   activeSellers: number
   totalProviders: number
   totalWorkshops: number
+  totalExpenses: number
+  totalExpensesAmount: number
 }
 
 interface DollarRate {
@@ -59,7 +61,9 @@ export default function Dashboard() {
     pendingSales: 0,
     activeSellers: 0,
     totalProviders: 0,
-    totalWorkshops: 0
+    totalWorkshops: 0,
+    totalExpenses: 0,
+    totalExpensesAmount: 0
   })
   const [dollarRates, setDollarRates] = useState<DollarRates | null>(null)
   const [dollarLoading, setDollarLoading] = useState(true)
@@ -179,6 +183,53 @@ export default function Dashboard() {
             <CardContent>
               <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Ingresos totales</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Egresos</CardTitle>
+              <MinusCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${stats.totalExpensesAmount.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">{stats.totalExpenses} egresos registrados</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ventas Pendientes</CardTitle>
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingSales}</div>
+              <p className="text-xs text-muted-foreground">Pendientes de pago</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Vendedores</CardTitle>
+              <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.activeSellers}</div>
+              <p className="text-xs text-muted-foreground">Vendedores activos</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
+              <Building className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalProviders}</div>
+              <p className="text-xs text-muted-foreground">Proveedores registrados</p>
             </CardContent>
           </Card>
         </div>
@@ -334,6 +385,28 @@ export default function Dashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
+                <MinusCircle className="h-5 w-5" />
+                Egresos
+              </CardTitle>
+              <CardDescription>Gestiona los gastos y egresos</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Link href="/expenses">
+                <Button className="w-full" variant="outline">
+                  Ver Egresos
+                </Button>
+              </Link>
+              <Link href="/expenses">
+                <Button className="w-full">
+                  Agregar Egreso
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
                 <UserCheck className="h-5 w-5" />
                 Vendedores
               </CardTitle>
@@ -389,10 +462,9 @@ export default function Dashboard() {
                   Ver Flujo de Caja
                 </Button>
               </Link>
-              <Link href="/expenses">
-                <Button className="w-full" variant="outline">
-                  <MinusCircle className="h-4 w-4 mr-2" />
-                  Egresos
+              <Link href="/cashflow">
+                <Button className="w-full">
+                  Gráfico de Flujo
                 </Button>
               </Link>
             </CardContent>
