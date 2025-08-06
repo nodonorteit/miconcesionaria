@@ -1,151 +1,243 @@
-# Solución de Problemas de Despliegue
+# Guía de Solución de Problemas de Deployment
 
-## Error: Permission denied en uploads/.gitkeep
+Esta guía proporciona soluciones para problemas comunes durante el deployment de miconcesionaria.
 
-### Problema
-```
-error: unable to unlink old 'uploads/.gitkeep': Permission denied
-```
+## Problemas Comunes
 
-### Causa
-El archivo `uploads/.gitkeep` tiene permisos que no permiten que se elimine durante el despliegue automático.
+### 1. Error de Permisos en Directorio Uploads
 
-### Solución Automática
+**Problema**: El directorio `uploads` no tiene los permisos correctos o no existe.
 
-#### Opción 1: Script de Post-Deploy
-El script `scripts/post-deploy.sh` se ejecuta automáticamente después del despliegue y soluciona este problema.
+**Síntomas**:
+- Error 403 al acceder a imágenes
+- Mensajes de error sobre permisos en logs
+- Imágenes no se cargan correctamente
 
-#### Opción 2: Script Manual
-Si el script automático no funciona, ejecutar manualmente:
-
+**Solución Automática**:
 ```bash
-# Conectar al servidor via SSH
-ssh usuario@servidor
-
-# Navegar al directorio de la aplicación
-cd /var/www/vhosts/nodonorte.com/miconcesionaria
-
-# Ejecutar el script de solución
-./scripts/fix-uploads-permissions.sh
+# Ejecutar el script de configuración
+bash scripts/setup-uploads-external.sh
 ```
 
-### Solución Manual
-
-Si los scripts no funcionan, ejecutar estos comandos manualmente:
-
+**Solución Manual**:
 ```bash
-# 1. Cambiar permisos del archivo .gitkeep
-chmod 644 uploads/.gitkeep
+# Crear directorio si no existe
+mkdir -p ./uploads
 
-# 2. Cambiar propietario del archivo .gitkeep
-chown www-data:www-data uploads/.gitkeep
+# Crear archivo .gitkeep
+touch ./uploads/.gitkeep
 
-# 3. Cambiar permisos del directorio uploads
-chmod 755 uploads/
+# Configurar permisos
+chmod 755 ./uploads
+chmod 644 ./uploads/.gitkeep
 
-# 4. Cambiar propietario del directorio uploads
-chown www-data:www-data uploads/
+# Cambiar propietario (ajustar según tu servidor)
+sudo chown -R www-data:www-data ./uploads
+# O para Nginx:
+sudo chown -R nginx:nginx ./uploads
 ```
 
-### Verificación
+### 2. Error de Imagen No Válida
 
-Para verificar que los permisos están correctos:
+**Problema**: Las imágenes no se cargan y aparece el error "The requested resource isn't a valid image".
 
+**Síntomas**:
+- Error en consola: `received text/plain;charset=utf-8`
+- Imágenes no se muestran en la aplicación
+- Logo de empresa no aparece
+
+**Solución**:
 ```bash
+# Verificar que el archivo existe y es válido
+ls -la ./uploads/
+
+# Verificar tipo MIME del archivo
+file ./uploads/nombre_del_archivo.jpg
+
+# Si el archivo está corrupto, eliminarlo
+rm ./uploads/archivo_corrupto.jpg
+
 # Verificar permisos del directorio
-ls -la uploads/
-
-# Verificar permisos del archivo
-ls -la uploads/.gitkeep
+ls -la ./uploads/
 ```
 
-Los permisos correctos deben ser:
-- Directorio `uploads/`: `drwxr-xr-x` (755)
-- Archivo `uploads/.gitkeep`: `-rw-r--r--` (644)
-- Propietario: `www-data:www-data`
+### 3. Error de Usuario por Defecto
 
-## Manejo de Uploads con Docker
+**Problema**: No existe ningún usuario en la base de datos para crear ventas.
 
-### Problema
-El directorio `uploads` está fuera del contenedor Docker, lo que puede causar problemas de persistencia y permisos.
+**Síntomas**:
+- Error: `Foreign key constraint violated: userId`
+- No se pueden crear ventas
+- Error al iniciar sesión
 
-### Solución Implementada
-
-#### Volúmenes de Docker
-- **Desarrollo**: `uploads_data:/app/uploads:rw` (volumen nombrado)
-- **Producción**: `uploads_data:/app/uploads:rw` (volumen nombrado)
-
-#### Migración de Archivos
-Para migrar archivos existentes al volumen de Docker:
-
+**Solución**:
 ```bash
-# 1. Ejecutar el contenedor
+# Ejecutar script de creación de usuario
+bash scripts/create-default-user.sh
+```
+
+**Usuario por defecto creado**:
+- Email: `admin@miconcesionaria.com`
+- Password: `admin123`
+- Rol: `ADMIN`
+
+### 4. Problemas de Docker
+
+**Problema**: Los contenedores no se inician correctamente.
+
+**Síntomas**:
+- Error al ejecutar `docker-compose up -d`
+- Contenedores se detienen inmediatamente
+- Puertos ocupados
+
+**Solución**:
+```bash
+# Detener contenedores existentes
+docker-compose down
+
+# Limpiar contenedores y volúmenes
+docker-compose down -v
+docker system prune -f
+
+# Reconstruir imágenes
+docker-compose build --no-cache
+
+# Iniciar servicios
 docker-compose up -d
 
-# 2. Migrar archivos
-./scripts/migrate-uploads-to-docker.sh
+# Verificar logs
+docker-compose logs -f
 ```
 
-#### Verificación de Volúmenes
+### 5. Problemas de Base de Datos
+
+**Problema**: La base de datos no se conecta o no tiene las tablas correctas.
+
+**Síntomas**:
+- Error de conexión a base de datos
+- Tablas faltantes
+- Errores de Prisma
+
+**Solución**:
 ```bash
-# Verificar volúmenes existentes
-docker volume ls | grep uploads
+# Verificar estructura de base de datos
+bash scripts/check-database-structure.sh
 
-# Verificar archivos en el contenedor
-docker exec miconcesionaria-app-1 ls -la /app/uploads
+# Ejecutar migraciones si es necesario
+docker-compose exec app npx prisma migrate deploy
+
+# Regenerar cliente Prisma
+docker-compose exec app npx prisma generate
 ```
 
-### Configuración de Docker
+## Configuración del Directorio Uploads
 
-#### Docker Compose (Desarrollo)
+### Configuración Externa (Recomendada)
+
+El directorio `uploads` está configurado como un bind mount externo al contenedor para mejor persistencia y acceso directo desde el servidor.
+
+**Ventajas**:
+- Archivos persistentes entre reinicios de contenedores
+- Acceso directo desde el servidor
+- Fácil backup y mantenimiento
+- Mejor rendimiento
+
+**Configuración**:
 ```yaml
-services:
-  app:
-    volumes:
-      - uploads_data:/app/uploads:rw
-    user: "1001:1001"
-
+# docker-compose.yml
 volumes:
-  uploads_data:
+  - ./uploads:/app/uploads:rw
 ```
 
-#### Docker Compose (Producción)
-```yaml
-services:
-  app:
-    volumes:
-      - uploads_data:/app/uploads:rw
-
-volumes:
-  uploads_data:
+**Setup inicial**:
+```bash
+# Ejecutar script de configuración
+bash scripts/setup-uploads-external.sh
 ```
 
-### Scripts Disponibles
+### Verificación de Configuración
 
-- `scripts/migrate-uploads-to-docker.sh`: Migra archivos al volumen de Docker
-- `scripts/check-uploads.sh`: Verifica estado del directorio uploads
-- `scripts/repair-uploads.sh`: Repara archivos corruptos
+```bash
+# Verificar que el directorio existe
+ls -la ./uploads/
 
-### Prevención
+# Verificar permisos
+stat ./uploads
 
-Para evitar este problema en futuros despliegues:
+# Verificar que Docker puede acceder
+docker-compose exec app ls -la /app/uploads/
 
-1. **Usar volúmenes de Docker**: Siempre usar volúmenes nombrados para uploads
-2. **Migrar archivos**: Usar el script de migración cuando sea necesario
-3. **Verificar permisos**: Ejecutar scripts de verificación regularmente
-4. **Backup automático**: Crear backups antes de migraciones
+# Probar subida de archivo
+echo "test" > ./uploads/test.txt
+docker-compose exec app cat /app/uploads/test.txt
+```
 
-### Scripts Disponibles
+## Scripts de Utilidad
 
-- `scripts/fix-uploads-permissions.sh`: Soluciona problemas de permisos específicos
-- `scripts/post-deploy.sh`: Script completo de post-deploy
-- `scripts/create-uploads-dir.sh`: Crea el directorio uploads con permisos correctos
-- `scripts/migrate-uploads-to-docker.sh`: Migra archivos al volumen de Docker
+### setup-uploads-external.sh
+Configura el directorio `uploads` externo con permisos correctos.
 
-### Contacto
+### create-default-user.sh
+Crea un usuario administrador por defecto si no existe ninguno.
 
-Si el problema persiste, revisar:
-1. Logs del servidor web (nginx/apache)
-2. Permisos del usuario de despliegue
-3. Configuración del servidor
-4. Estado de los volúmenes de Docker 
+### post-deploy.sh
+Script completo de post-deployment que ejecuta todas las verificaciones necesarias.
+
+### check-uploads.sh
+Diagnostica problemas con el directorio `uploads` y archivos.
+
+### repair-uploads.sh
+Repara archivos corruptos en el directorio `uploads`.
+
+## Comandos de Verificación
+
+```bash
+# Verificar estado de contenedores
+docker ps
+
+# Verificar logs de la aplicación
+docker-compose logs -f app
+
+# Verificar logs de la base de datos
+docker-compose logs -f db
+
+# Verificar salud de la aplicación
+curl http://localhost:3000/api/health
+
+# Verificar directorio uploads
+ls -la ./uploads/
+
+# Verificar permisos
+namei -l ./uploads/
+```
+
+## Prevención de Problemas
+
+1. **Siempre ejecutar post-deploy**:
+   ```bash
+   bash scripts/post-deploy.sh
+   ```
+
+2. **Verificar permisos antes de iniciar**:
+   ```bash
+   bash scripts/setup-uploads-external.sh
+   ```
+
+3. **Hacer backup del directorio uploads**:
+   ```bash
+   tar -czf uploads-backup-$(date +%Y%m%d).tar.gz ./uploads/
+   ```
+
+4. **Monitorear logs regularmente**:
+   ```bash
+   docker-compose logs --tail=100 -f
+   ```
+
+## Contacto y Soporte
+
+Si los problemas persisten después de seguir esta guía:
+
+1. Revisar logs completos: `docker-compose logs`
+2. Verificar configuración del servidor
+3. Revisar permisos del sistema de archivos
+4. Verificar conectividad de red y puertos 

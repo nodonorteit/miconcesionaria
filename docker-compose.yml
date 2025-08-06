@@ -1,42 +1,32 @@
+version: '3.8'
+
 services:
   app:
     build: .
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/miconcesionaria
+      - DATABASE_URL=mysql://root:password@db:3306/miconcesionaria
+      - NEXTAUTH_SECRET=your-secret-key
       - NEXTAUTH_URL=http://localhost:3000
-      - NEXTAUTH_SECRET=your-secret-key-here
-      - SMTP_HOST=mailhog
-      - SMTP_PORT=1025
-      - SMTP_USER=
-      - SMTP_PASS=
     depends_on:
       - db
     volumes:
-      - uploads_data:/app/uploads:rw
-    user: "1001:1001"
+      - uploads:/app/uploads:rw
     restart: unless-stopped
 
   db:
-    image: postgres:15-alpine
+    image: mariadb:10.6
     environment:
-      - POSTGRES_DB=miconcesionaria
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=miconcesionaria
+    ports:
+      - "3306:3306"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    restart: unless-stopped
-
-  mailhog:
-    image: mailhog/mailhog:latest
-    ports:
-      - "1025:1025"  # SMTP
-      - "8025:8025"  # Web UI
+      - db_data:/var/lib/mysql
+      - ./docker/mariadb/my.cnf:/etc/mysql/conf.d/my.cnf
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  uploads_data: 
+  db_data:
+  uploads: 
