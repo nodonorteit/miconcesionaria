@@ -7,8 +7,16 @@ import { tmpdir } from 'os'
 // GET - Obtener configuración de empresa
 export async function GET() {
   try {
-    // Por ahora devolvemos configuración por defecto
-    // En el futuro se puede almacenar en base de datos
+    // Intentar obtener configuración de la base de datos
+    const config = await prisma.$queryRaw`
+      SELECT * FROM company_config LIMIT 1
+    `
+    
+    if (Array.isArray(config) && config.length > 0) {
+      return NextResponse.json(config[0])
+    }
+    
+    // Si no existe, devolver configuración por defecto
     return NextResponse.json({
       name: 'AutoMax',
       logoUrl: '/logo.svg',
@@ -16,10 +24,12 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching company config:', error)
-    return NextResponse.json(
-      { error: 'Error fetching company config' },
-      { status: 500 }
-    )
+    // En caso de error, devolver configuración por defecto
+    return NextResponse.json({
+      name: 'AutoMax',
+      logoUrl: '/logo.svg',
+      description: 'Sistema de Gestión'
+    })
   }
 }
 
@@ -83,8 +93,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Por ahora solo devolvemos la configuración actualizada
-    // En el futuro se puede guardar en base de datos
+    // Guardar configuración en base de datos
+    try {
+      await prisma.$executeRaw`
+        INSERT INTO company_config (name, logoUrl, description, createdAt, updatedAt)
+        VALUES (${name || 'AutoMax'}, ${logoUrl}, ${description || 'Sistema de Gestión'}, NOW(), NOW())
+        ON DUPLICATE KEY UPDATE
+        name = VALUES(name),
+        logoUrl = VALUES(logoUrl),
+        description = VALUES(description),
+        updatedAt = NOW()
+      `
+    } catch (error) {
+      console.error('Error saving to database:', error)
+      // Si falla la base de datos, continuar con la respuesta
+    }
+
     const config = {
       name: name || 'AutoMax',
       logoUrl,

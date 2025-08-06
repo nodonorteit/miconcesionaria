@@ -9,6 +9,11 @@ import { useState, useEffect } from 'react'
 export function Header() {
   const { data: session } = useSession()
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
+  const [companyConfig, setCompanyConfig] = useState({
+    name: 'AutoMax',
+    logoUrl: '/logo.svg',
+    description: 'Sistema de Gestión'
+  })
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -16,6 +21,23 @@ export function Header() {
     }, 1000)
 
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    // Cargar configuración de empresa
+    const loadCompanyConfig = async () => {
+      try {
+        const response = await fetch('/api/admin/company')
+        if (response.ok) {
+          const data = await response.json()
+          setCompanyConfig(data)
+        }
+      } catch (error) {
+        console.error('Error loading company config:', error)
+      }
+    }
+
+    loadCompanyConfig()
   }, [])
 
   const handleSignOut = () => {
@@ -27,8 +49,8 @@ export function Header() {
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <Image 
-            src="/logo.svg" 
-            alt="AutoMax Logo" 
+            src={companyConfig.logoUrl} 
+            alt={`${companyConfig.name} Logo`}
             width={120} 
             height={36} 
             className="h-9 w-auto"
