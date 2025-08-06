@@ -14,6 +14,7 @@ export function Header() {
     logoUrl: '/logo.svg',
     description: 'Sistema de Gestión'
   })
+  const [configLoaded, setConfigLoaded] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -33,8 +34,10 @@ export function Header() {
           const data = await response.json()
           console.log('📋 Configuración cargada:', data)
           setCompanyConfig(data)
+          setConfigLoaded(true)
         } else {
           console.error('❌ Error en respuesta:', response.status)
+          setConfigLoaded(true)
         }
       } catch (error) {
         console.error('❌ Error loading company config:', error)
@@ -52,13 +55,28 @@ export function Header() {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-4">
+          {!configLoaded && (
+            <div className="text-xs text-gray-500">Cargando...</div>
+          )}
           <Image 
             src={companyConfig.logoUrl} 
             alt={`${companyConfig.name} Logo`}
             width={120} 
             height={36} 
             className="h-9 w-auto"
+            onError={(e) => {
+              console.error('❌ Error cargando logo:', companyConfig.logoUrl)
+              e.currentTarget.src = '/logo.svg'
+            }}
+            onLoad={() => {
+              console.log('✅ Logo cargado correctamente:', companyConfig.logoUrl)
+            }}
           />
+          {configLoaded && (
+            <div className="text-xs text-gray-500">
+              Logo: {companyConfig.logoUrl}
+            </div>
+          )}
         </div>
         
         <div className="flex items-center space-x-4">
