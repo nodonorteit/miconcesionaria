@@ -2,28 +2,31 @@ version: '3.8'
 
 services:
   app:
-    build: .
-    ports:
-      - "3000:3000"
+    image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+    platform: linux/amd64
+    network_mode: host
+    # ports:
+    #   - "3000:3000"
     environment:
-      - DATABASE_URL=mysql://root:password@db:3306/miconcesionaria
-      - NEXTAUTH_SECRET=your-secret-key
-      - NEXTAUTH_URL=https://nodonorte.com
-    depends_on:
-      - db
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+      - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
+      - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
+      - SMTP_HOST=smtp1.s.ipzmarketing.com
+      - SMTP_PORT=587
+      - SMTP_USER=pzbkjxwenzkr
+      - SMTP_PASS=7FOtsP0qKvNF
+      - NODE_ENV=production
     volumes:
-      - ./uploads:/app/uploads:rw
+      - ./uploads:/app/uploads
     restart: unless-stopped
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    # No depends_on needed - using native MariaDB
 
-  db:
-    image: mariadb:10.6
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=miconcesionaria
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./docker/mariadb/my.cnf:/etc/mysql/conf.d/my.cnf
-    restart: unless-stopped
+  # MariaDB service removed - using native MariaDB on server
+  # Database connection will be configured via environment variables
 
-volumes:
-  db_data:
+# No volumes needed - using native MariaDB
