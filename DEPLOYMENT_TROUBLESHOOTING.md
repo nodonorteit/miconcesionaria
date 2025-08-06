@@ -64,23 +64,88 @@ Los permisos correctos deben ser:
 - Archivo `uploads/.gitkeep`: `-rw-r--r--` (644)
 - Propietario: `www-data:www-data`
 
+## Manejo de Uploads con Docker
+
+### Problema
+El directorio `uploads` está fuera del contenedor Docker, lo que puede causar problemas de persistencia y permisos.
+
+### Solución Implementada
+
+#### Volúmenes de Docker
+- **Desarrollo**: `uploads_data:/app/uploads:rw` (volumen nombrado)
+- **Producción**: `uploads_data:/app/uploads:rw` (volumen nombrado)
+
+#### Migración de Archivos
+Para migrar archivos existentes al volumen de Docker:
+
+```bash
+# 1. Ejecutar el contenedor
+docker-compose up -d
+
+# 2. Migrar archivos
+./scripts/migrate-uploads-to-docker.sh
+```
+
+#### Verificación de Volúmenes
+```bash
+# Verificar volúmenes existentes
+docker volume ls | grep uploads
+
+# Verificar archivos en el contenedor
+docker exec miconcesionaria-app-1 ls -la /app/uploads
+```
+
+### Configuración de Docker
+
+#### Docker Compose (Desarrollo)
+```yaml
+services:
+  app:
+    volumes:
+      - uploads_data:/app/uploads:rw
+    user: "1001:1001"
+
+volumes:
+  uploads_data:
+```
+
+#### Docker Compose (Producción)
+```yaml
+services:
+  app:
+    volumes:
+      - uploads_data:/app/uploads:rw
+
+volumes:
+  uploads_data:
+```
+
+### Scripts Disponibles
+
+- `scripts/migrate-uploads-to-docker.sh`: Migra archivos al volumen de Docker
+- `scripts/check-uploads.sh`: Verifica estado del directorio uploads
+- `scripts/repair-uploads.sh`: Repara archivos corruptos
+
 ### Prevención
 
 Para evitar este problema en futuros despliegues:
 
-1. **Configurar permisos correctos** en el servidor antes del despliegue
-2. **Usar el script de post-deploy** automáticamente
-3. **Verificar permisos** después de cada despliegue
+1. **Usar volúmenes de Docker**: Siempre usar volúmenes nombrados para uploads
+2. **Migrar archivos**: Usar el script de migración cuando sea necesario
+3. **Verificar permisos**: Ejecutar scripts de verificación regularmente
+4. **Backup automático**: Crear backups antes de migraciones
 
 ### Scripts Disponibles
 
 - `scripts/fix-uploads-permissions.sh`: Soluciona problemas de permisos específicos
 - `scripts/post-deploy.sh`: Script completo de post-deploy
 - `scripts/create-uploads-dir.sh`: Crea el directorio uploads con permisos correctos
+- `scripts/migrate-uploads-to-docker.sh`: Migra archivos al volumen de Docker
 
 ### Contacto
 
 Si el problema persiste, revisar:
 1. Logs del servidor web (nginx/apache)
 2. Permisos del usuario de despliegue
-3. Configuración del servidor 
+3. Configuración del servidor
+4. Estado de los volúmenes de Docker 

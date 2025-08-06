@@ -57,6 +57,15 @@ RUN mkdir -p ./uploads
 RUN chown nextjs:nodejs ./uploads
 RUN chmod 755 ./uploads
 
+# Create a script to initialize uploads directory
+RUN echo '#!/bin/bash\n\
+if [ ! -d "/app/uploads" ]; then\n\
+  mkdir -p /app/uploads\n\
+  chown nextjs:nodejs /app/uploads\n\
+  chmod 755 /app/uploads\n\
+fi\n\
+exec "$@"' > /app/init-uploads.sh && chmod +x /app/init-uploads.sh
+
 USER nextjs
 
 EXPOSE 3000
@@ -67,4 +76,4 @@ ENV HOSTNAME="0.0.0.0"
 
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
-CMD ["node", "server.js"] 
+CMD ["/app/init-uploads.sh", "node", "server.js"] 
