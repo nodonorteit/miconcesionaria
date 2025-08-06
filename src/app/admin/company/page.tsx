@@ -35,6 +35,7 @@ export default function CompanyConfigPage() {
       const response = await fetch('/api/admin/company')
       if (response.ok) {
         const data = await response.json()
+        console.log('📸 Logo URL cargada:', data.logoUrl)
         setConfig(data)
       }
     } catch (error) {
@@ -119,6 +120,11 @@ export default function CompanyConfigPage() {
                         width={120}
                         height={120}
                         className="max-w-full max-h-full object-contain"
+                        unoptimized={config.logoUrl.startsWith('/uploads/')}
+                        onError={(e) => {
+                          console.error('Error loading image:', config.logoUrl)
+                          e.currentTarget.style.display = 'none'
+                        }}
                       />
                     ) : (
                       <Upload className="h-8 w-8 text-gray-400" />
