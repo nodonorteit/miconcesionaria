@@ -3,18 +3,19 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
-import { 
-  Home, 
-  Car, 
-  Users, 
-  ShoppingCart, 
-  UserCheck, 
-  Building, 
-  Wrench, 
-  DollarSign, 
-  FileText, 
+import {
+  Home,
+  Car,
+  Users,
+  ShoppingCart,
+  UserCheck,
+  Building,
+  Wrench,
+  DollarSign,
+  FileText,
   Settings,
-  MinusCircle
+  MinusCircle,
+  Archive
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -39,6 +40,11 @@ export function MainNavigation() {
       label: 'Vehículos',
       href: '/vehicles',
       icon: Car
+    },
+    {
+      label: 'Vehículos Vendidos',
+      href: '/vehicles/sold',
+      icon: Archive
     },
     {
       label: 'Clientes',

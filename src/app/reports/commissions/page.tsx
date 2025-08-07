@@ -319,7 +319,6 @@ export default function CommissionsReportPage() {
                       Comisión Total {getSortIcon('commission')}
                     </Button>
                   </th>
-                  <th className="text-center py-3 px-4">Tasa</th>
                   <th className="text-center py-3 px-4">Detalle Mensual</th>
                 </tr>
               </thead>
@@ -338,11 +337,6 @@ export default function CommissionsReportPage() {
                     <td className="text-center py-3 px-4">
                       <span className="font-medium text-green-600">
                         ${seller.totalCommission.toLocaleString()}
-                      </span>
-                    </td>
-                    <td className="text-center py-3 px-4">
-                      <span className="text-sm text-gray-600">
-                        {(seller.commissionRate * 100).toFixed(1)}%
                       </span>
                     </td>
                     <td className="text-center py-3 px-4">

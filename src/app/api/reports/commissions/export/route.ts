@@ -103,12 +103,11 @@ async function generatePDF(sellers: any[], companyName: string, dateRange: any):
       `${seller.firstName} ${seller.lastName}`,
       seller.email,
       seller.totalSales.toString(),
-      `$${Number(seller.totalCommission).toLocaleString()}`,
-      `${(Number(seller.commissionRate) * 100).toFixed(1)}%`
+      `$${Number(seller.totalCommission).toLocaleString()}`
     ])
     
     autoTable(doc, {
-      head: [['Vendedor', 'Email', 'Ventas', 'Comisión Total', 'Tasa']],
+      head: [['Vendedor', 'Email', 'Ventas', 'Comisión Total']],
       body: tableData,
       startY: 120,
       styles: {

@@ -4,29 +4,85 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 
 // GET - Obtener todos los vehículos
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Usar SQL directo para manejar valores vacíos en enums
-    const vehicles = await prisma.$queryRaw`
-      SELECT 
-        v.*,
-        COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
-        COALESCE(vt.description, '') as vehicleTypeDescription
-      FROM Vehicle v
-      LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
-      WHERE v.isActive = 1
-      ORDER BY v.createdAt DESC
-    `
-
-    // Procesar los resultados para manejar valores vacíos
-    const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
-      ...vehicle,
-      fuelType: vehicle.fuelType || 'GASOLINE',
-      transmission: vehicle.transmission || 'MANUAL',
-      status: vehicle.status || 'AVAILABLE'
-    }))
-
-    return NextResponse.json(processedVehicles)
+    const { searchParams } = new URL(request.url)
+    const sold = searchParams.get('sold')
+    
+    let vehicles: any[]
+    
+    if (sold === 'true') {
+      // Obtener vehículos vendidos con información de venta
+      vehicles = await prisma.$queryRaw`
+        SELECT 
+          v.*,
+          COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
+          COALESCE(vt.description, '') as vehicleTypeDescription,
+          s.id as saleId,
+          s.saleNumber,
+          s.totalAmount,
+          s.commission,
+          s.createdAt as saleCreatedAt,
+          sel.firstName as sellerFirstName,
+          sel.lastName as sellerLastName,
+          c.firstName as customerFirstName,
+          c.lastName as customerLastName
+        FROM Vehicle v
+        LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
+        LEFT JOIN sales s ON v.id = s.vehicleId
+        LEFT JOIN sellers sel ON s.sellerId = sel.id
+        LEFT JOIN Client c ON s.customerId = c.id
+        WHERE v.isActive = 1 AND v.status = 'SOLD'
+        ORDER BY s.createdAt DESC
+      `
+      
+      // Procesar los resultados para incluir información de venta
+      const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
+        ...vehicle,
+        fuelType: vehicle.fuelType || 'GASOLINE',
+        transmission: vehicle.transmission || 'MANUAL',
+        status: vehicle.status || 'SOLD',
+        sale: vehicle.saleId ? {
+          id: vehicle.saleId,
+          saleNumber: vehicle.saleNumber,
+          totalAmount: Number(vehicle.totalAmount),
+          commission: Number(vehicle.commission),
+          createdAt: vehicle.saleCreatedAt,
+          seller: {
+            firstName: vehicle.sellerFirstName,
+            lastName: vehicle.sellerLastName
+          },
+          customer: {
+            firstName: vehicle.customerFirstName,
+            lastName: vehicle.customerLastName
+          }
+        } : null
+      }))
+      
+      return NextResponse.json(processedVehicles)
+    } else {
+      // Obtener vehículos disponibles (no vendidos)
+      vehicles = await prisma.$queryRaw`
+        SELECT 
+          v.*,
+          COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
+          COALESCE(vt.description, '') as vehicleTypeDescription
+        FROM Vehicle v
+        LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
+        WHERE v.isActive = 1 AND v.status != 'SOLD'
+        ORDER BY v.createdAt DESC
+      `
+      
+      // Procesar los resultados para manejar valores vacíos
+      const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
+        ...vehicle,
+        fuelType: vehicle.fuelType || 'GASOLINE',
+        transmission: vehicle.transmission || 'MANUAL',
+        status: vehicle.status || 'AVAILABLE'
+      }))
+      
+      return NextResponse.json(processedVehicles)
+    }
   } catch (error) {
     console.error('Error fetching vehicles:', error)
     return NextResponse.json(

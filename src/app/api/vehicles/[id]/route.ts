@@ -40,30 +40,38 @@ export async function PUT(
   try {
     console.log('🔄 Actualizando vehículo:', params.id)
     
-    // Verificar que el request tenga contenido
     const contentType = request.headers.get('content-type')
     console.log('📋 Content-Type:', contentType)
     
-    let body
-    try {
-      const text = await request.text()
-      console.log('📄 Request body (text):', text.substring(0, 200) + '...')
-      
-      if (!text || text.trim() === '') {
-        console.error('❌ Request body está vacío')
+    let body: any = {}
+    
+    // Solo intentar leer el body una vez
+    if (contentType?.includes('application/json')) {
+      try {
+        const text = await request.text()
+        console.log('📄 Request body (text):', text.substring(0, 200) + '...')
+        
+        if (!text || text.trim() === '') {
+          console.error('❌ Request body está vacío')
+          return NextResponse.json(
+            { error: 'Request body is empty' },
+            { status: 400 }
+          )
+        }
+        
+        body = JSON.parse(text)
+        console.log('✅ JSON parseado correctamente:', Object.keys(body))
+      } catch (parseError) {
+        console.error('❌ Error parsing JSON:', parseError)
         return NextResponse.json(
-          { error: 'Request body is empty' },
+          { error: 'Invalid JSON format', details: parseError instanceof Error ? parseError.message : 'Unknown error' },
           { status: 400 }
         )
       }
-      
-      body = JSON.parse(text)
-      console.log('✅ JSON parseado correctamente:', Object.keys(body))
-    } catch (parseError) {
-      console.error('❌ Error parsing JSON:', parseError)
-      console.error('📄 Raw body:', await request.text())
+    } else {
+      console.error('❌ Content-Type no soportado:', contentType)
       return NextResponse.json(
-        { error: 'Invalid JSON format' },
+        { error: 'Unsupported content type. Use application/json' },
         { status: 400 }
       )
     }
@@ -77,23 +85,28 @@ export async function PUT(
       )
     }
     
+    // Preparar datos para la actualización
+    const updateData: any = {
+      brand: body.brand,
+      model: body.model,
+      year: parseInt(body.year),
+      color: body.color || '',
+      mileage: parseInt(body.mileage) || 0,
+      price: parseFloat(body.price) || 0,
+      description: body.description || '',
+      vin: body.vin || null,
+      licensePlate: body.licensePlate || null,
+      fuelType: body.fuelType || 'GASOLINE',
+      transmission: body.transmission || 'MANUAL',
+      status: body.status || 'AVAILABLE',
+      vehicleTypeId: body.vehicleTypeId
+    }
+    
+    console.log('📋 Datos a actualizar:', updateData)
+    
     const vehicle = await prisma.vehicle.update({
       where: { id: params.id },
-      data: {
-        brand: body.brand,
-        model: body.model,
-        year: parseInt(body.year),
-        color: body.color,
-        mileage: parseInt(body.mileage) || 0,
-        price: parseFloat(body.price) || 0,
-        description: body.description || '',
-        vin: body.vin || null,
-        licensePlate: body.licensePlate || null,
-        fuelType: body.fuelType,
-        transmission: body.transmission,
-        status: body.status || 'AVAILABLE',
-        vehicleTypeId: body.vehicleTypeId
-      },
+      data: updateData,
       include: {
         vehicleType: true,
         images: true

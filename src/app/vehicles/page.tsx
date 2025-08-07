@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Car, Eye, ShoppingCart } from 'lucide-react'
+import { Plus, Edit, Trash2, Car, Eye, ShoppingCart, Archive } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
+import Link from 'next/link'
 
 interface Vehicle {
   id: string
@@ -393,12 +394,20 @@ export default function VehiclesPage() {
           />
           <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
-        {permissions.canCreateVehicles && (
-          <Button onClick={() => setShowForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar Vehículo
-          </Button>
-        )}
+        <div className="flex gap-2">
+          <Link href="/vehicles/sold">
+            <Button variant="outline">
+              <Archive className="h-4 w-4 mr-2" />
+              Vehículos Vendidos
+            </Button>
+          </Link>
+          {permissions.canCreateVehicles && (
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Vehículo
+            </Button>
+          )}
+        </div>
       </div>
 
       {showForm && (
