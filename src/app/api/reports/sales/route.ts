@@ -78,8 +78,8 @@ export async function GET(request: NextRequest) {
         CONCAT(c.firstName, ' ', c.lastName) as customer,
         CONCAT(v.brand, ' ', v.model, ' ', v.year) as vehicle
       FROM sales s
-      JOIN customers c ON s.customerId = c.id
-      JOIN vehicles v ON s.vehicleId = v.id
+      JOIN Client c ON s.customerId = c.id
+      JOIN Vehicle v ON s.vehicleId = v.id
       WHERE s.status = 'COMPLETED' ${dateCondition}
       ORDER BY s.createdAt DESC
       LIMIT 10

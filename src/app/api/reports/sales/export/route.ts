@@ -52,8 +52,8 @@ export async function POST(request: NextRequest) {
         CONCAT(sel.firstName, ' ', sel.lastName) as seller,
         s.commission
       FROM sales s
-      JOIN customers c ON s.customerId = c.id
-      JOIN vehicles v ON s.vehicleId = v.id
+      JOIN Client c ON s.customerId = c.id
+      JOIN Vehicle v ON s.vehicleId = v.id
       JOIN sellers sel ON s.sellerId = sel.id
       WHERE s.status = 'COMPLETED' ${dateCondition}
       ORDER BY s.createdAt DESC
