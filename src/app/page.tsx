@@ -19,6 +19,7 @@ import {
   MinusCircle
 } from 'lucide-react'
 import Link from 'next/link'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface DashboardStats {
   totalVehicles: number
@@ -52,6 +53,7 @@ interface DollarRates {
 
 export default function Dashboard() {
   const { data: session, status } = useSession()
+  const permissions = usePermissions()
   const [stats, setStats] = useState<DashboardStats>({
     totalVehicles: 0,
     totalCustomers: 0,
@@ -115,6 +117,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Bienvenido, {session?.user?.name}</p>
+          <p className="text-sm text-gray-500">Rol: {session?.user?.role || 'USER'}</p>
         </div>
 
         {/* Stats Cards */}
@@ -141,75 +144,87 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ventas</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalSales}</div>
-              <p className="text-xs text-muted-foreground">Ventas totales</p>
-            </CardContent>
-          </Card>
+          {permissions.canViewSales && (
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Ventas</CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalSales}</div>
+                  <p className="text-xs text-muted-foreground">Ventas totales</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Ingresos totales</p>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">Ingresos totales</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Additional Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Egresos</CardTitle>
-              <MinusCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${stats.totalExpensesAmount.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">{stats.totalExpenses} egresos registrados</p>
-            </CardContent>
-          </Card>
+        {permissions.canViewSales && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {permissions.canViewExpenses && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Egresos</CardTitle>
+                  <MinusCircle className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">${stats.totalExpensesAmount.toLocaleString()}</div>
+                  <p className="text-xs text-muted-foreground">{stats.totalExpenses} egresos registrados</p>
+                </CardContent>
+              </Card>
+            )}
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ventas Pendientes</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingSales}</div>
-              <p className="text-xs text-muted-foreground">Pendientes de pago</p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Ventas Pendientes</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingSales}</div>
+                <p className="text-xs text-muted-foreground">Pendientes de pago</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vendedores</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeSellers}</div>
-              <p className="text-xs text-muted-foreground">Vendedores activos</p>
-            </CardContent>
-          </Card>
+            {permissions.canViewSellers && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Vendedores</CardTitle>
+                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.activeSellers}</div>
+                  <p className="text-xs text-muted-foreground">Vendedores activos</p>
+                </CardContent>
+              </Card>
+            )}
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalProviders}</div>
-              <p className="text-xs text-muted-foreground">Proveedores registrados</p>
-            </CardContent>
-          </Card>
-        </div>
+            {permissions.canViewProviders && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
+                  <Building className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalProviders}</div>
+                  <p className="text-xs text-muted-foreground">Proveedores registrados</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         {/* Dólar MEP Widget */}
         <Card className="mb-8">
@@ -337,159 +352,173 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Ventas
-              </CardTitle>
-              <CardDescription>Gestiona las ventas y transacciones</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/sales">
-                <Button className="w-full" variant="outline">
-                  Ver Ventas
-                </Button>
-              </Link>
-              <Link href="/sales">
-                <Button className="w-full">
-                  Nueva Venta
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewSales && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Ventas
+                </CardTitle>
+                <CardDescription>Gestiona las ventas y transacciones</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/sales">
+                  <Button className="w-full" variant="outline">
+                    Ver Ventas
+                  </Button>
+                </Link>
+                <Link href="/sales">
+                  <Button className="w-full">
+                    Nueva Venta
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MinusCircle className="h-5 w-5" />
-                Egresos
-              </CardTitle>
-              <CardDescription>Gestiona los gastos y egresos</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/expenses">
-                <Button className="w-full" variant="outline">
-                  Ver Egresos
-                </Button>
-              </Link>
-              <Link href="/expenses">
-                <Button className="w-full">
-                  Agregar Egreso
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewExpenses && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MinusCircle className="h-5 w-5" />
+                  Egresos
+                </CardTitle>
+                <CardDescription>Gestiona los gastos y egresos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/expenses">
+                  <Button className="w-full" variant="outline">
+                    Ver Egresos
+                  </Button>
+                </Link>
+                <Link href="/expenses">
+                  <Button className="w-full">
+                    Agregar Egreso
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5" />
-                Vendedores
-              </CardTitle>
-              <CardDescription>Administra el equipo de ventas</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/sellers">
-                <Button className="w-full" variant="outline">
-                  Ver Vendedores
-                </Button>
-              </Link>
-              <Link href="/sellers/new">
-                <Button className="w-full">
-                  Agregar Vendedor
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewSellers && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="h-5 w-5" />
+                  Vendedores
+                </CardTitle>
+                <CardDescription>Administra el equipo de ventas</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/sellers">
+                  <Button className="w-full" variant="outline">
+                    Ver Vendedores
+                  </Button>
+                </Link>
+                <Link href="/sellers/new">
+                  <Button className="w-full">
+                    Agregar Vendedor
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Proveedores
-              </CardTitle>
-              <CardDescription>Gestiona proveedores y talleres</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/providers">
-                <Button className="w-full" variant="outline">
-                  Ver Proveedores
-                </Button>
-              </Link>
-              <Link href="/workshops">
-                <Button className="w-full" variant="outline">
-                  Ver Talleres
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewProviders && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Proveedores
+                </CardTitle>
+                <CardDescription>Gestiona proveedores y talleres</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/providers">
+                  <Button className="w-full" variant="outline">
+                    Ver Proveedores
+                  </Button>
+                </Link>
+                <Link href="/workshops">
+                  <Button className="w-full" variant="outline">
+                    Ver Talleres
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Flujo de Caja
-              </CardTitle>
-              <CardDescription>Gestiona ingresos y egresos</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/cashflow">
-                <Button className="w-full" variant="outline">
-                  Ver Flujo de Caja
-                </Button>
-              </Link>
-              <Link href="/cashflow">
-                <Button className="w-full">
-                  Gráfico de Flujo
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewCashflow && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Flujo de Caja
+                </CardTitle>
+                <CardDescription>Gestiona ingresos y egresos</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/cashflow">
+                  <Button className="w-full" variant="outline">
+                    Ver Flujo de Caja
+                  </Button>
+                </Link>
+                <Link href="/cashflow">
+                  <Button className="w-full">
+                    Gráfico de Flujo
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Reportes
-              </CardTitle>
-              <CardDescription>Genera reportes y análisis</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/reports/sales">
-                <Button className="w-full" variant="outline">
-                  Reporte de Ventas
-                </Button>
-              </Link>
-              <Link href="/reports/commissions">
-                <Button className="w-full" variant="outline">
-                  Reporte de Comisiones
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewReports && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Reportes
+                </CardTitle>
+                <CardDescription>Genera reportes y análisis</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/reports/sales">
+                  <Button className="w-full" variant="outline">
+                    Reporte de Ventas
+                  </Button>
+                </Link>
+                <Link href="/reports/commissions">
+                  <Button className="w-full" variant="outline">
+                    Reporte de Comisiones
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Administración
-              </CardTitle>
-              <CardDescription>Gestiona usuarios del sistema</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link href="/admin/users">
-                <Button className="w-full" variant="outline">
-                  Gestión de Usuarios
-                </Button>
-              </Link>
-              <Link href="/admin/company">
-                <Button className="w-full" variant="outline">
-                  Configuración de Empresa
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          {permissions.canViewAdmin && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Administración
+                </CardTitle>
+                <CardDescription>Gestiona usuarios del sistema</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Link href="/admin/users">
+                  <Button className="w-full" variant="outline">
+                    Gestión de Usuarios
+                  </Button>
+                </Link>
+                <Link href="/admin/company">
+                  <Button className="w-full" variant="outline">
+                    Configuración de Empresa
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Plus, Edit, Trash2, Car, Eye, ShoppingCart } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface Vehicle {
   id: string
@@ -63,6 +64,7 @@ interface Customer {
 }
 
 export default function VehiclesPage() {
+  const permissions = usePermissions()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
   const [sellers, setSellers] = useState<Seller[]>([])
@@ -391,10 +393,12 @@ export default function VehiclesPage() {
           />
           <Car className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Vehículo
-        </Button>
+        {permissions.canCreateVehicles && (
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar Vehículo
+          </Button>
+        )}
       </div>
 
       {showForm && (
@@ -690,7 +694,7 @@ export default function VehiclesPage() {
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
               </Button>
-              {vehicle.status !== 'SOLD' && (
+              {vehicle.status !== 'SOLD' && permissions.canCreateSales && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -701,34 +705,38 @@ export default function VehiclesPage() {
                   <span className="hidden sm:inline">Vender</span>
                 </Button>
               )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleEdit(vehicle)}
-                className="flex items-center space-x-1"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Editar</span>
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleDelete(vehicle.id)}
-                disabled={deletingVehicle === vehicle.id}
-                className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
-              >
-                {deletingVehicle === vehicle.id ? (
-                  <>
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
-                    <span className="hidden sm:inline">Eliminando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4" />
-                    <span className="hidden sm:inline">Eliminar</span>
-                  </>
-                )}
-              </Button>
+              {permissions.canCreateVehicles && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEdit(vehicle)}
+                  className="flex items-center space-x-1"
+                >
+                  <Edit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Editar</span>
+                </Button>
+              )}
+              {permissions.canDeleteVehicles && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDelete(vehicle.id)}
+                  disabled={deletingVehicle === vehicle.id}
+                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 hover:bg-red-50 disabled:opacity-50"
+                >
+                  {deletingVehicle === vehicle.id ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-600 border-t-transparent"></div>
+                      <span className="hidden sm:inline">Eliminando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      <span className="hidden sm:inline">Eliminar</span>
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         ))}

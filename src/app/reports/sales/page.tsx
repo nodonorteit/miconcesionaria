@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Navigation } from '@/components/ui/navigation'
-import { TrendingUp, DollarSign, ShoppingCart, Calendar, BarChart3 } from 'lucide-react'
+import { TrendingUp, DollarSign, ShoppingCart, Calendar, BarChart3, Download, Filter } from 'lucide-react'
 
 interface SalesReport {
   totalSales: number
@@ -31,17 +32,45 @@ interface SalesReport {
   }>
 }
 
+interface CompanyConfig {
+  name: string
+  logoUrl: string
+  description: string
+}
+
 export default function SalesReportPage() {
   const [report, setReport] = useState<SalesReport | null>(null)
   const [loading, setLoading] = useState(true)
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [companyConfig, setCompanyConfig] = useState<CompanyConfig | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
+    fetchCompanyConfig()
     fetchSalesReport()
   }, [])
 
+  const fetchCompanyConfig = async () => {
+    try {
+      const response = await fetch('/api/admin/company')
+      if (response.ok) {
+        const config = await response.json()
+        setCompanyConfig(config)
+      }
+    } catch (error) {
+      console.error('Error fetching company config:', error)
+    }
+  }
+
   const fetchSalesReport = async () => {
     try {
-      const response = await fetch('/api/reports/sales')
+      setLoading(true)
+      const params = new URLSearchParams()
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
+      
+      const response = await fetch(`/api/reports/sales?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
         setReport(data)
@@ -53,6 +82,56 @@ export default function SalesReportPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const exportToPDF = async () => {
+    try {
+      setExporting(true)
+      
+      const params = new URLSearchParams()
+      if (startDate) params.append('startDate', startDate)
+      if (endDate) params.append('endDate', endDate)
+      
+      const response = await fetch(`/api/reports/sales/export?${params.toString()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: companyConfig?.name || 'Parana Automotores',
+          logoUrl: companyConfig?.logoUrl || '/logo.svg',
+          dateRange: { startDate, endDate }
+        }),
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `reporte-ventas-${startDate || 'todo'}-${endDate || 'todo'}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else {
+        console.error('Error exporting PDF')
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const handleFilter = () => {
+    fetchSalesReport()
+  }
+
+  const clearFilters = () => {
+    setStartDate('')
+    setEndDate('')
+    fetchSalesReport()
   }
 
   if (loading) {
@@ -72,6 +151,55 @@ export default function SalesReportPage() {
           { label: 'Ventas' }
         ]}
       />
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Fecha Inicio</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Fecha Fin</label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <Button onClick={handleFilter} className="flex-1">
+                <Filter className="h-4 w-4 mr-2" />
+                Filtrar
+              </Button>
+              <Button variant="outline" onClick={clearFilters}>
+                Limpiar
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Export Button */}
+      <div className="flex justify-end mb-6">
+        <Button onClick={exportToPDF} disabled={exporting}>
+          <Download className="h-4 w-4 mr-2" />
+          {exporting ? 'Exportando...' : 'Exportar PDF'}
+        </Button>
+      </div>
 
       {report && (
         <>
@@ -205,7 +333,7 @@ export default function SalesReportPage() {
 
       {!report && !loading && (
         <div className="text-center py-8">
-          <p className="text-gray-500">No hay datos de ventas disponibles</p>
+          <p className="text-gray-500">No hay datos de ventas disponibles para el período seleccionado</p>
         </div>
       )}
     </div>
