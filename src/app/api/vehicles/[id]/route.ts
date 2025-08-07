@@ -40,13 +40,13 @@ export async function PUT(
   try {
     console.log('🔄 Actualizando vehículo:', params.id)
     
-    const contentType = request.headers.get('content-type')
+    const contentType = request.headers.get('content-type') || ''
     console.log('📋 Content-Type:', contentType)
     
     let body: any = {}
+    let images: File[] = []
     
-    // Solo intentar leer el body una vez
-    if (contentType?.includes('application/json')) {
+    if (contentType.includes('application/json')) {
       try {
         const text = await request.text()
         console.log('📄 Request body (text):', text.substring(0, 200) + '...')
@@ -68,10 +68,41 @@ export async function PUT(
           { status: 400 }
         )
       }
+    } else if (contentType.includes('multipart/form-data')) {
+      try {
+        const formData = await request.formData()
+        
+        // Extraer datos del formulario
+        body = {
+          brand: formData.get('brand') as string,
+          model: formData.get('model') as string,
+          year: formData.get('year') as string,
+          color: formData.get('color') as string,
+          mileage: formData.get('mileage') as string,
+          price: formData.get('price') as string,
+          description: formData.get('description') as string,
+          vin: formData.get('vin') as string,
+          licensePlate: formData.get('licensePlate') as string,
+          fuelType: formData.get('fuelType') as string,
+          transmission: formData.get('transmission') as string,
+          status: formData.get('status') as string,
+          vehicleTypeId: formData.get('vehicleTypeId') as string
+        }
+        
+        images = formData.getAll('images') as File[]
+        console.log('✅ FormData procesado correctamente:', Object.keys(body))
+        console.log('📸 Imágenes encontradas:', images.length)
+      } catch (formError) {
+        console.error('❌ Error processing FormData:', formError)
+        return NextResponse.json(
+          { error: 'Invalid form data' },
+          { status: 400 }
+        )
+      }
     } else {
       console.error('❌ Content-Type no soportado:', contentType)
       return NextResponse.json(
-        { error: 'Unsupported content type. Use application/json' },
+        { error: 'Unsupported content type. Use application/json or multipart/form-data' },
         { status: 400 }
       )
     }
@@ -113,8 +144,60 @@ export async function PUT(
       }
     })
 
+    // Procesar imágenes si existen
+    if (images.length > 0) {
+      try {
+        const { writeFile, mkdir } = await import('fs/promises')
+        const { join } = await import('path')
+        
+        // Crear directorio de uploads si no existe
+        const uploadsDir = join(process.cwd(), 'uploads')
+        await mkdir(uploadsDir, { recursive: true })
+
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i]
+          if (image.size > 0) {
+            const bytes = await image.arrayBuffer()
+            const buffer = Buffer.from(bytes)
+            
+            // Generar nombre único para la imagen
+            const timestamp = Date.now()
+            const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
+            const filepath = join(uploadsDir, filename)
+            
+            // Guardar archivo
+            await writeFile(filepath, buffer)
+            
+            // Guardar referencia en la base de datos
+            await prisma.vehicleImage.create({
+              data: {
+                filename,
+                path: `/uploads/${filename}`,
+                isPrimary: i === 0, // La primera imagen es la principal
+                vehicleId: vehicle.id
+              }
+            })
+            
+            console.log('✅ Imagen guardada:', filename)
+          }
+        }
+      } catch (imageError) {
+        console.error('❌ Error procesando imágenes:', imageError)
+        // Continuar sin las imágenes si hay error
+      }
+    }
+
+    // Obtener el vehículo actualizado con las imágenes
+    const updatedVehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicle.id },
+      include: {
+        vehicleType: true,
+        images: true
+      }
+    })
+
     console.log('✅ Vehículo actualizado exitosamente:', vehicle.id)
-    return NextResponse.json(vehicle)
+    return NextResponse.json(updatedVehicle)
   } catch (error) {
     console.error('❌ Error updating vehicle:', error)
     return NextResponse.json(
