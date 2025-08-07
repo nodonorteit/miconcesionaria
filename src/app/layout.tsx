@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Parana Automotores - Sistema de Gestión',
+  title: 'Sistema de Gestión',
   description: 'Sistema completo de gestión para concesionaria de vehículos',
   icons: {
     icon: '/favicon.svg',

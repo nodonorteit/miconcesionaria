@@ -10,9 +10,9 @@ export function Header() {
   const { data: session } = useSession()
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
   const [companyConfig, setCompanyConfig] = useState({
-    name: 'AutoMax',
-    logoUrl: '/logo.svg',
-    description: 'Sistema de Gestión'
+    name: '',
+    logoUrl: '',
+    description: ''
   })
   const [configLoaded, setConfigLoaded] = useState(false)
 
@@ -58,21 +58,26 @@ export function Header() {
           {!configLoaded && (
             <div className="text-xs text-gray-500">Cargando...</div>
           )}
-          <Image 
-            src={companyConfig.logoUrl} 
-            alt={`${companyConfig.name} Logo`}
-            width={200} 
-            height={60} 
-            className="h-12 w-auto"
-            onError={(e) => {
-              console.error('❌ Error cargando logo:', companyConfig.logoUrl)
-              e.currentTarget.src = '/logo.svg'
-            }}
-            onLoad={() => {
-              console.log('✅ Logo cargado correctamente:', companyConfig.logoUrl)
-            }}
-          />
-
+          {companyConfig.logoUrl ? (
+            <Image
+              src={companyConfig.logoUrl}
+              alt={`${companyConfig.name || 'Empresa'} Logo`}
+              width={120}
+              height={40}
+              className="h-8 w-auto"
+              unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
+              onError={(e) => {
+                console.error('Error loading logo:', companyConfig.logoUrl)
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : (
+            <div className="h-8 px-4 bg-gray-200 rounded-lg flex items-center justify-center">
+              <span className="text-gray-700 font-medium text-sm">
+                {companyConfig.name || 'Sistema de Gestión'}
+              </span>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center space-x-4">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,35 +9,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Car } from 'lucide-react'
 import Image from 'next/image'
+import { useCompanyConfig } from '@/hooks/useCompanyConfig'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [companyConfig, setCompanyConfig] = useState({
-    name: 'AutoMax',
-    logoUrl: '/logo.svg',
-    description: 'Sistema de Gestión'
-  })
+  const { companyConfig, loading: configLoading } = useCompanyConfig()
   const router = useRouter()
-
-  useEffect(() => {
-    // Cargar configuración de empresa
-    const loadCompanyConfig = async () => {
-      try {
-        const response = await fetch('/api/admin/company')
-        if (response.ok) {
-          const data = await response.json()
-          setCompanyConfig(data)
-        }
-      } catch (error) {
-        console.error('Error loading company config:', error)
-      }
-    }
-
-    loadCompanyConfig()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,13 +51,30 @@ export default function SignIn() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Image 
-              src={companyConfig.logoUrl} 
-              alt={`${companyConfig.name} Logo`}
-              width={240} 
-              height={72} 
-              className="h-16 w-auto"
-            />
+            {configLoading ? (
+              <div className="h-16 w-48 bg-gray-200 rounded-lg flex items-center justify-center animate-pulse">
+                <span className="text-gray-500">Cargando...</span>
+              </div>
+            ) : companyConfig.logoUrl ? (
+              <Image 
+                src={companyConfig.logoUrl} 
+                alt={`${companyConfig.name || 'Empresa'} Logo`}
+                width={240} 
+                height={72} 
+                className="h-16 w-auto"
+                unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
+                onError={(e) => {
+                  console.error('Error loading logo:', companyConfig.logoUrl)
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : (
+              <div className="h-16 w-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                <span className="text-gray-500 font-medium">
+                  {companyConfig.name || 'Sistema de Gestión'}
+                </span>
+              </div>
+            )}
           </div>
           <CardDescription>
             Inicia sesión en tu cuenta

@@ -22,20 +22,20 @@ export async function GET() {
       return NextResponse.json(result)
     }
     
-    // Si no existe, devolver configuración por defecto
-    console.log('⚠️ No hay configuración en BD, usando por defecto')
+    // Si no existe, devolver configuración por defecto vacía
+    console.log('⚠️ No hay configuración en BD, usando valores por defecto')
     return NextResponse.json({
-      name: 'Parana Automotores',
-      logoUrl: '/uploads/company_logo_1754448284279_parana_automotores.jpeg',
-      description: 'Sistema de Gestión'
+      name: '',
+      logoUrl: '',
+      description: ''
     })
   } catch (error) {
     console.error('❌ Error fetching company config:', error)
-    // En caso de error, devolver configuración por defecto
+    // En caso de error, devolver configuración por defecto vacía
     return NextResponse.json({
-      name: 'Parana Automotores',
-      logoUrl: '/uploads/company_logo_1754448284279_parana_automotores.jpeg',
-      description: 'Sistema de Gestión'
+      name: '',
+      logoUrl: '',
+      description: ''
     })
   }
 }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     const description = formData.get('description') as string
     const logo = formData.get('logo') as File
 
-    let logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg' // Por defecto
+    let logoUrl = '' // Sin valor por defecto
 
     // Procesar logo si se subió uno nuevo
     if (logo && logo.size > 0) {
@@ -82,9 +82,9 @@ export async function POST(request: NextRequest) {
         
       } catch (error) {
         console.error('❌ Error saving logo:', error)
-        // Si no se puede guardar, usar el logo por defecto
-        logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg'
-        console.log('⚠️ Usando logo por defecto debido a error de permisos')
+        // Si no se puede guardar, continuar sin logo
+        logoUrl = ''
+        console.log('⚠️ No se pudo guardar el logo')
       }
     } else {
       console.log('📝 No se subió ningún logo nuevo')
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       
       await prisma.$executeRaw`
         INSERT INTO company_config (name, logoUrl, description, createdAt, updatedAt)
-        VALUES (${name || 'Parana Automotores'}, ${logoUrl}, ${description || 'Sistema de Gestión'}, NOW(), NOW())
+        VALUES (${name || ''}, ${logoUrl || ''}, ${description || ''}, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
         name = VALUES(name),
         logoUrl = VALUES(logoUrl),
@@ -112,9 +112,9 @@ export async function POST(request: NextRequest) {
     }
 
     const config = {
-      name: name || 'Parana Automotores',
-      logoUrl,
-      description: description || 'Sistema de Gestión'
+      name: name || '',
+      logoUrl: logoUrl || '',
+      description: description || ''
     }
 
     return NextResponse.json(config)

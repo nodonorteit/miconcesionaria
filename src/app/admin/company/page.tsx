@@ -18,9 +18,9 @@ interface CompanyConfig {
 
 export default function CompanyConfigPage() {
   const [config, setConfig] = useState<CompanyConfig>({
-    name: 'AutoMax',
-    logoUrl: '/logo.svg',
-    description: 'Sistema de Gestión'
+    name: '',
+    logoUrl: '',
+    description: ''
   })
   const [loading, setLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -161,7 +161,7 @@ export default function CompanyConfigPage() {
                   id="name"
                   value={config.name}
                   onChange={(e) => setConfig({...config, name: e.target.value})}
-                  placeholder="Ej: AutoMax"
+                                      placeholder="Ej: Parana Automotores"
                   required
                 />
               </div>
