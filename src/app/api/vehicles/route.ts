@@ -39,47 +39,112 @@ export async function GET() {
 // POST - Crear un nuevo vehículo
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
+    console.log('🔄 Creando nuevo vehículo...')
     
-    // Extraer datos del formulario
-    const brand = formData.get('brand') as string
-    const model = formData.get('model') as string
-    const year = formData.get('year') as string
-    const color = formData.get('color') as string
-    const mileage = formData.get('mileage') as string
-    const price = formData.get('price') as string
-    const description = formData.get('description') as string
-    const vin = formData.get('vin') as string
-    const licensePlate = formData.get('licensePlate') as string
-    const fuelType = formData.get('fuelType') as string
-    const transmission = formData.get('transmission') as string
-    const status = formData.get('status') as string
-    const vehicleTypeId = formData.get('vehicleTypeId') as string
+    const contentType = request.headers.get('content-type') || ''
+    console.log('📋 Content-Type:', contentType)
+    
+    let vehicleData: any = {}
+    let images: File[] = []
+    
+    if (contentType.includes('application/json')) {
+      // Manejar JSON
+      try {
+        const text = await request.text()
+        console.log('📄 Request body (JSON):', text.substring(0, 200) + '...')
+        
+        if (!text || text.trim() === '') {
+          console.error('❌ Request body está vacío')
+          return NextResponse.json(
+            { error: 'Request body is empty' },
+            { status: 400 }
+          )
+        }
+        
+        vehicleData = JSON.parse(text)
+        console.log('✅ JSON parseado correctamente:', Object.keys(vehicleData))
+      } catch (parseError) {
+        console.error('❌ Error parsing JSON:', parseError)
+        return NextResponse.json(
+          { error: 'Invalid JSON format' },
+          { status: 400 }
+        )
+      }
+    } else if (contentType.includes('multipart/form-data')) {
+      // Manejar FormData
+      try {
+        const formData = await request.formData()
+        
+        // Extraer datos del formulario
+        vehicleData = {
+          brand: formData.get('brand') as string,
+          model: formData.get('model') as string,
+          year: formData.get('year') as string,
+          color: formData.get('color') as string,
+          mileage: formData.get('mileage') as string,
+          price: formData.get('price') as string,
+          description: formData.get('description') as string,
+          vin: formData.get('vin') as string,
+          licensePlate: formData.get('licensePlate') as string,
+          fuelType: formData.get('fuelType') as string,
+          transmission: formData.get('transmission') as string,
+          status: formData.get('status') as string,
+          vehicleTypeId: formData.get('vehicleTypeId') as string
+        }
+        
+        images = formData.getAll('images') as File[]
+        console.log('✅ FormData procesado correctamente:', Object.keys(vehicleData))
+        console.log('📸 Imágenes encontradas:', images.length)
+      } catch (formError) {
+        console.error('❌ Error processing FormData:', formError)
+        return NextResponse.json(
+          { error: 'Invalid form data' },
+          { status: 400 }
+        )
+      }
+    } else {
+      console.error('❌ Content-Type no soportado:', contentType)
+      return NextResponse.json(
+        { error: 'Unsupported content type. Use application/json or multipart/form-data' },
+        { status: 400 }
+      )
+    }
 
     // Validar campos requeridos
-    if (!brand || !model || !year || !color || !mileage || !price || !vehicleTypeId) {
+    if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.color || !vehicleData.mileage || !vehicleData.price || !vehicleData.vehicleTypeId) {
+      console.error('❌ Campos requeridos faltantes:', {
+        brand: !!vehicleData.brand,
+        model: !!vehicleData.model,
+        year: !!vehicleData.year,
+        color: !!vehicleData.color,
+        mileage: !!vehicleData.mileage,
+        price: !!vehicleData.price,
+        vehicleTypeId: !!vehicleData.vehicleTypeId
+      })
       return NextResponse.json(
         { error: 'Todos los campos requeridos deben estar completos' },
         { status: 400 }
       )
     }
 
+    console.log('📋 Datos del vehículo a crear:', vehicleData)
+
     // Crear el vehículo
     const vehicle = await prisma.vehicle.create({
       data: {
-        brand,
-        model,
-        year: parseInt(year),
-        color,
-        mileage: parseInt(mileage),
-        price: parseFloat(price),
-        description: description || null,
-        vin: vin || null,
-        licensePlate: licensePlate || null,
-        fuelType: fuelType || 'GASOLINE' as any,
-        transmission: transmission || 'MANUAL' as any,
-        status: (status || 'AVAILABLE') as any,
-        vehicleTypeId,
+        brand: vehicleData.brand,
+        model: vehicleData.model,
+        year: parseInt(vehicleData.year),
+        color: vehicleData.color,
+        mileage: parseInt(vehicleData.mileage),
+        price: parseFloat(vehicleData.price),
+        description: vehicleData.description || null,
+        vin: vehicleData.vin || null,
+        licensePlate: vehicleData.licensePlate || null,
+        fuelType: vehicleData.fuelType || 'GASOLINE' as any,
+        transmission: vehicleData.transmission || 'MANUAL' as any,
+        status: (vehicleData.status || 'AVAILABLE') as any,
+        vehicleTypeId: vehicleData.vehicleTypeId,
         isActive: true
       },
       include: {
@@ -88,37 +153,45 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Procesar imágenes si existen
-    const images = formData.getAll('images') as File[]
-    if (images.length > 0) {
-      // Crear directorio de uploads si no existe
-      const uploadsDir = join(process.cwd(), 'uploads')
-      await mkdir(uploadsDir, { recursive: true })
+    console.log('✅ Vehículo creado:', vehicle.id)
 
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i]
-        if (image.size > 0) {
-          const bytes = await image.arrayBuffer()
-          const buffer = Buffer.from(bytes)
-          
-          // Generar nombre único para la imagen
-          const timestamp = Date.now()
-          const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
-          const filepath = join(uploadsDir, filename)
-          
-          // Guardar archivo
-          await writeFile(filepath, buffer)
-          
-          // Guardar referencia en la base de datos
-          await prisma.vehicleImage.create({
-            data: {
-              filename,
-              path: `/uploads/${filename}`,
-              isPrimary: i === 0, // La primera imagen es la principal
-              vehicleId: vehicle.id
-            }
-          })
+    // Procesar imágenes si existen
+    if (images.length > 0) {
+      try {
+        // Crear directorio de uploads si no existe
+        const uploadsDir = join(process.cwd(), 'uploads')
+        await mkdir(uploadsDir, { recursive: true })
+
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i]
+          if (image.size > 0) {
+            const bytes = await image.arrayBuffer()
+            const buffer = Buffer.from(bytes)
+            
+            // Generar nombre único para la imagen
+            const timestamp = Date.now()
+            const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
+            const filepath = join(uploadsDir, filename)
+            
+            // Guardar archivo
+            await writeFile(filepath, buffer)
+            
+            // Guardar referencia en la base de datos
+            await prisma.vehicleImage.create({
+              data: {
+                filename,
+                path: `/uploads/${filename}`,
+                isPrimary: i === 0, // La primera imagen es la principal
+                vehicleId: vehicle.id
+              }
+            })
+            
+            console.log('✅ Imagen guardada:', filename)
+          }
         }
+      } catch (imageError) {
+        console.error('❌ Error procesando imágenes:', imageError)
+        // Continuar sin las imágenes si hay error
       }
     }
 
@@ -131,11 +204,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log('✅ Vehículo creado exitosamente con imágenes')
     return NextResponse.json(vehicleWithImages, { status: 201 })
   } catch (error) {
-    console.error('Error creating vehicle:', error)
+    console.error('❌ Error creating vehicle:', error)
     return NextResponse.json(
-      { error: 'Error creating vehicle' },
+      { error: 'Error creating vehicle', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
