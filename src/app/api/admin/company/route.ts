@@ -18,22 +18,8 @@ export async function GET() {
     
     if (Array.isArray(config) && config.length > 0) {
       const result = config[0]
-      
-      // Corregir la URL del logo si es necesario
-      let logoUrl = result.logoUrl
-      if (logoUrl === '/logo.svg') {
-        // Buscar el logo más reciente en uploads
-        logoUrl = '/uploads/company_logo_1754448284279_parana_automotores.jpeg'
-        console.log('🔧 Corrigiendo URL del logo a:', logoUrl)
-      }
-      
-      const correctedResult = {
-        ...result,
-        logoUrl
-      }
-      
-      console.log('✅ Devolviendo configuración de BD corregida:', correctedResult)
-      return NextResponse.json(correctedResult)
+      console.log('✅ Devolviendo configuración de BD:', result)
+      return NextResponse.json(result)
     }
     
     // Si no existe, devolver configuración por defecto
