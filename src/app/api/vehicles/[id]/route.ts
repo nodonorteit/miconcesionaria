@@ -129,8 +129,16 @@ export async function PUT(
       licensePlate: body.licensePlate || null,
       fuelType: body.fuelType || 'GASOLINE',
       transmission: body.transmission || 'MANUAL',
-      status: body.status || 'AVAILABLE',
-      vehicleTypeId: body.vehicleTypeId
+      status: body.status || 'AVAILABLE'
+    }
+
+    // Agregar vehicleType si se proporciona
+    if (body.vehicleTypeId) {
+      updateData.vehicleType = {
+        connect: {
+          id: body.vehicleTypeId
+        }
+      }
     }
     
     console.log('📋 Datos a actualizar:', updateData)

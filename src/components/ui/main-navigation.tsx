@@ -15,8 +15,7 @@ import {
   FileText,
   Settings,
   MinusCircle,
-  Archive,
-  Search
+  Archive
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -99,11 +98,6 @@ export function MainNavigation() {
       href: '/admin',
       icon: Settings,
       permission: 'canViewAdmin'
-    },
-    {
-      label: 'Scraping',
-      href: '/scraping',
-      icon: Search
     }
   ]
 
