@@ -16,7 +16,7 @@ const protectedRoutes = [
   '/admin'
 ]
 
-// Rutas que solo pueden acceder administradores
+// Rutas que solo pueden acceder administradores y managers
 const adminOnlyRoutes = [
   '/admin',
   '/reports',
@@ -28,7 +28,7 @@ const adminOnlyRoutes = [
   '/cashflow'
 ]
 
-// Rutas que pueden acceder usuarios comunes
+// Rutas que pueden acceder usuarios comunes (USER)
 const userAllowedRoutes = [
   '/vehicles',
   '/customers'
@@ -57,11 +57,11 @@ export async function middleware(request: NextRequest) {
   // Verificar permisos según el rol
   const userRole = token.role as string || 'USER'
 
-  // Rutas solo para administradores
+  // Rutas solo para administradores y managers
   if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-      // Usuario común intentando acceder a ruta de admin
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      // Usuario común intentando acceder a ruta de admin/manager
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 
@@ -71,10 +71,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Para otras rutas protegidas, verificar si es admin o manager
+  // Para otras rutas protegidas que no están en adminOnlyRoutes ni userAllowedRoutes
+  // (esto no debería pasar con la configuración actual, pero por seguridad)
   if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
     // Usuario común intentando acceder a ruta restringida
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()
@@ -89,7 +90,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - auth (auth routes)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public|auth).*)',
   ],
 } 

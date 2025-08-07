@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/auth/auth-provider'
 import { Header } from '@/components/ui/header'
 import { MainNavigation } from '@/components/ui/main-navigation'
 import { Toaster } from 'react-hot-toast'
+import { ConditionalLayout } from '@/components/ui/conditional-layout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,20 +26,9 @@ export default function RootLayout({
     <html lang="es">
       <body className={inter.className}>
         <AuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Header />
-            <div className="flex">
-              {/* Sidebar */}
-              <div className="w-64 bg-white shadow-sm border-r border-gray-200 min-h-screen p-4">
-                <MainNavigation />
-              </div>
-              
-              {/* Main Content */}
-              <div className="flex-1">
-                {children}
-              </div>
-            </div>
-          </div>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
           <Toaster position="top-right" />
         </AuthProvider>
       </body>
