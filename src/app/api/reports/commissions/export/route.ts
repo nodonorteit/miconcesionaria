@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import puppeteer from 'puppeteer'
 
 // POST - Exportar reporte de comisiones a PDF
 export async function POST(request: NextRequest) {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     // Generar contenido HTML para el PDF
     const htmlContent = generatePDFHTML(sellers as any[], companyName, logoUrl, dateRange)
 
-    // Convertir HTML a PDF (usando una librería como puppeteer o similar)
+    // Convertir HTML a PDF usando Puppeteer
     const pdfBuffer = await generatePDF(htmlContent)
 
     return new NextResponse(pdfBuffer, {
@@ -169,7 +170,6 @@ function generatePDFHTML(sellers: any[], companyName: string, logoUrl: string, d
     </head>
     <body>
       <div class="header">
-        <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
         <div class="company-info">
           <h1 class="company-name">${companyName}</h1>
           <p class="report-title">Reporte de Comisiones</p>
@@ -234,7 +234,48 @@ function generatePDFHTML(sellers: any[], companyName: string, logoUrl: string, d
 }
 
 async function generatePDF(htmlContent: string): Promise<Buffer> {
-  // Por ahora, vamos a devolver un HTML simple
-  // En producción, deberías usar una librería como puppeteer o similar
-  return Buffer.from(htmlContent, 'utf-8')
+  try {
+    // Iniciar Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu'
+      ],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    })
+    
+    const page = await browser.newPage()
+    
+    // Configurar el contenido HTML
+    await page.setContent(htmlContent, {
+      waitUntil: 'networkidle0'
+    })
+    
+    // Generar PDF
+    const pdf = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20mm',
+        right: '20mm',
+        bottom: '20mm',
+        left: '20mm'
+      }
+    })
+    
+    await browser.close()
+    
+    return Buffer.from(pdf)
+  } catch (error) {
+    console.error('Error generating PDF:', error)
+    // Fallback: devolver HTML como texto plano
+    return Buffer.from(htmlContent, 'utf-8')
+  }
 } 
