@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import puppeteer from 'puppeteer'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 // POST - Exportar reporte de ventas a PDF
 export async function POST(request: NextRequest) {
@@ -62,11 +63,8 @@ export async function POST(request: NextRequest) {
 
     const sales = await prisma.$queryRawUnsafe(salesQuery, ...dateParams)
 
-    // Generar contenido HTML para el PDF
-    const htmlContent = generatePDFHTML(sales as any[], statsData, companyName, logoUrl, dateRange)
-
-    // Convertir HTML a PDF usando Puppeteer
-    const pdfBuffer = await generatePDF(htmlContent)
+    // Generar PDF usando jsPDF
+    const pdfBuffer = await generatePDF(sales as any[], statsData, companyName, dateRange)
 
     return new NextResponse(pdfBuffer, {
       headers: {
@@ -83,223 +81,93 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generatePDFHTML(sales: any[], statsData: any, companyName: string, logoUrl: string, dateRange: any) {
-  const totalSales = Number(statsData.totalSales)
-  const totalRevenue = Number(statsData.totalRevenue)
-  const totalCommission = Number(statsData.totalCommission)
-  const averageSaleValue = Number(statsData.averageSaleValue)
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Reporte de Ventas</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 20px;
-          color: #333;
-        }
-        .header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 30px;
-          border-bottom: 2px solid #e5e7eb;
-          padding-bottom: 20px;
-        }
-        .logo {
-          width: 80px;
-          height: 80px;
-          object-fit: contain;
-          margin-right: 20px;
-        }
-        .company-info {
-          flex: 1;
-        }
-        .company-name {
-          font-size: 24px;
-          font-weight: bold;
-          margin: 0;
-          color: #1f2937;
-        }
-        .report-title {
-          font-size: 18px;
-          color: #6b7280;
-          margin: 5px 0 0 0;
-        }
-        .date-range {
-          font-size: 14px;
-          color: #9ca3af;
-          margin: 5px 0 0 0;
-        }
-        .stats {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 30px;
-          background: #f9fafb;
-          padding: 20px;
-          border-radius: 8px;
-        }
-        .stat-item {
-          text-align: center;
-        }
-        .stat-value {
-          font-size: 24px;
-          font-weight: bold;
-          color: #1f2937;
-        }
-        .stat-label {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 5px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 20px;
-        }
-        th, td {
-          border: 1px solid #e5e7eb;
-          padding: 8px;
-          text-align: left;
-          font-size: 12px;
-        }
-        th {
-          background-color: #f3f4f6;
-          font-weight: bold;
-          color: #374151;
-        }
-        tr:nth-child(even) {
-          background-color: #f9fafb;
-        }
-        .amount {
-          color: #059669;
-          font-weight: bold;
-        }
-        .footer {
-          margin-top: 40px;
-          text-align: center;
-          color: #6b7280;
-          font-size: 12px;
-          border-top: 1px solid #e5e7eb;
-          padding-top: 20px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-info">
-          <h1 class="company-name">${companyName}</h1>
-          <p class="report-title">Reporte de Ventas</p>
-          <p class="date-range">
-            ${dateRange?.startDate && dateRange?.endDate 
-              ? `Período: ${new Date(dateRange.startDate).toLocaleDateString('es-AR')} - ${new Date(dateRange.endDate).toLocaleDateString('es-AR')}`
-              : 'Período: Todo el tiempo'
-            }
-          </p>
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat-item">
-          <div class="stat-value">${totalSales}</div>
-          <div class="stat-label">Total Ventas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">$${totalRevenue.toLocaleString()}</div>
-          <div class="stat-label">Ingresos Totales</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">$${totalCommission.toLocaleString()}</div>
-          <div class="stat-label">Comisiones</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">$${averageSaleValue.toLocaleString()}</div>
-          <div class="stat-label">Promedio por Venta</div>
-        </div>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>N° Venta</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Vendedor</th>
-            <th>Monto</th>
-            <th>Comisión</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sales.map(sale => `
-            <tr>
-              <td>${sale.saleNumber}</td>
-              <td>${new Date(sale.date).toLocaleDateString('es-AR')}</td>
-              <td>${sale.customer}</td>
-              <td>${sale.vehicle}</td>
-              <td>${sale.seller}</td>
-              <td class="amount">$${Number(sale.amount).toLocaleString()}</td>
-              <td class="amount">$${Number(sale.commission).toLocaleString()}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      <div class="footer">
-        <p>Reporte generado el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
-        <p>${companyName} - Sistema de Gestión</p>
-      </div>
-    </body>
-    </html>
-  `
-}
-
-async function generatePDF(htmlContent: string): Promise<Buffer> {
+async function generatePDF(sales: any[], statsData: any, companyName: string, dateRange: any): Promise<Buffer> {
   try {
-    // Iniciar Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
-    })
+    // Crear nuevo documento PDF
+    const doc = new jsPDF()
     
-    const page = await browser.newPage()
+    // Configurar fuente y tamaño
+    doc.setFont('helvetica')
+    doc.setFontSize(20)
     
-    // Configurar el contenido HTML
-    await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0'
-    })
+    // Título del documento
+    doc.text('Reporte de Ventas', 20, 30)
     
-    // Generar PDF
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
+    // Información de la empresa
+    doc.setFontSize(14)
+    doc.text(companyName, 20, 45)
+    
+    // Período
+    doc.setFontSize(12)
+    const periodText = dateRange?.startDate && dateRange?.endDate 
+      ? `Período: ${new Date(dateRange.startDate).toLocaleDateString('es-AR')} - ${new Date(dateRange.endDate).toLocaleDateString('es-AR')}`
+      : 'Período: Todo el tiempo'
+    doc.text(periodText, 20, 55)
+    
+    // Estadísticas
+    const totalSales = Number(statsData.totalSales)
+    const totalRevenue = Number(statsData.totalRevenue)
+    const totalCommission = Number(statsData.totalCommission)
+    const averageSaleValue = Number(statsData.averageSaleValue)
+    
+    doc.setFontSize(12)
+    doc.text(`Total Ventas: ${totalSales}`, 20, 70)
+    doc.text(`Ingresos Totales: $${totalRevenue.toLocaleString()}`, 20, 80)
+    doc.text(`Comisiones: $${totalCommission.toLocaleString()}`, 20, 90)
+    doc.text(`Promedio por Venta: $${averageSaleValue.toLocaleString()}`, 20, 100)
+    
+    // Tabla de ventas
+    const tableData = sales.map(sale => [
+      sale.saleNumber,
+      new Date(sale.date).toLocaleDateString('es-AR'),
+      sale.customer,
+      sale.vehicle,
+      sale.seller,
+      `$${Number(sale.amount).toLocaleString()}`,
+      `$${Number(sale.commission).toLocaleString()}`
+    ])
+    
+    autoTable(doc, {
+      head: [['N° Venta', 'Fecha', 'Cliente', 'Vehículo', 'Vendedor', 'Monto', 'Comisión']],
+      body: tableData,
+      startY: 120,
+      styles: {
+        fontSize: 9,
+        cellPadding: 2
+      },
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
       }
     })
     
-    await browser.close()
+    // Footer
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(10)
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.width - 30,
+        doc.internal.pageSize.height - 10
+      )
+      doc.text(
+        `Generado: ${new Date().toLocaleDateString('es-AR')} ${new Date().toLocaleTimeString('es-AR')}`,
+        20,
+        doc.internal.pageSize.height - 10
+      )
+    }
     
-    return Buffer.from(pdf)
+    // Convertir a Buffer
+    const pdfBytes = doc.output('arraybuffer')
+    return Buffer.from(pdfBytes)
+    
   } catch (error) {
     console.error('Error generating PDF:', error)
-    // Fallback: devolver HTML como texto plano
-    return Buffer.from(htmlContent, 'utf-8')
+    throw error
   }
 } 

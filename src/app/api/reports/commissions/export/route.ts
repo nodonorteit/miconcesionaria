@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import puppeteer from 'puppeteer'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 // POST - Exportar reporte de comisiones a PDF
 export async function POST(request: NextRequest) {
@@ -45,11 +46,8 @@ export async function POST(request: NextRequest) {
 
     const sellers = await prisma.$queryRawUnsafe(sellersQuery, ...dateParams)
 
-    // Generar contenido HTML para el PDF
-    const htmlContent = generatePDFHTML(sellers as any[], companyName, logoUrl, dateRange)
-
-    // Convertir HTML a PDF usando Puppeteer
-    const pdfBuffer = await generatePDF(htmlContent)
+    // Generar PDF usando jsPDF
+    const pdfBuffer = await generatePDF(sellers as any[], companyName, dateRange)
 
     return new NextResponse(pdfBuffer, {
       headers: {
@@ -66,216 +64,90 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function generatePDFHTML(sellers: any[], companyName: string, logoUrl: string, dateRange: any) {
-  const totalCommission = sellers.reduce((sum, seller) => sum + Number(seller.totalCommission), 0)
-  const totalSales = sellers.reduce((sum, seller) => sum + Number(seller.totalSales), 0)
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Reporte de Comisiones</title>
-      <style>
-        body {
-          font-family: Arial, sans-serif;
-          margin: 0;
-          padding: 20px;
-          color: #333;
-        }
-        .header {
-          display: flex;
-          align-items: center;
-          margin-bottom: 30px;
-          border-bottom: 2px solid #e5e7eb;
-          padding-bottom: 20px;
-        }
-        .logo {
-          width: 80px;
-          height: 80px;
-          object-fit: contain;
-          margin-right: 20px;
-        }
-        .company-info {
-          flex: 1;
-        }
-        .company-name {
-          font-size: 24px;
-          font-weight: bold;
-          margin: 0;
-          color: #1f2937;
-        }
-        .report-title {
-          font-size: 18px;
-          color: #6b7280;
-          margin: 5px 0 0 0;
-        }
-        .date-range {
-          font-size: 14px;
-          color: #9ca3af;
-          margin: 5px 0 0 0;
-        }
-        .stats {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 30px;
-          background: #f9fafb;
-          padding: 20px;
-          border-radius: 8px;
-        }
-        .stat-item {
-          text-align: center;
-        }
-        .stat-value {
-          font-size: 24px;
-          font-weight: bold;
-          color: #1f2937;
-        }
-        .stat-label {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 5px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 20px;
-        }
-        th, td {
-          border: 1px solid #e5e7eb;
-          padding: 12px;
-          text-align: left;
-        }
-        th {
-          background-color: #f3f4f6;
-          font-weight: bold;
-          color: #374151;
-        }
-        tr:nth-child(even) {
-          background-color: #f9fafb;
-        }
-        .commission-amount {
-          color: #059669;
-          font-weight: bold;
-        }
-        .footer {
-          margin-top: 40px;
-          text-align: center;
-          color: #6b7280;
-          font-size: 12px;
-          border-top: 1px solid #e5e7eb;
-          padding-top: 20px;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-info">
-          <h1 class="company-name">${companyName}</h1>
-          <p class="report-title">Reporte de Comisiones</p>
-          <p class="date-range">
-            ${dateRange?.startDate && dateRange?.endDate 
-              ? `Período: ${new Date(dateRange.startDate).toLocaleDateString('es-AR')} - ${new Date(dateRange.endDate).toLocaleDateString('es-AR')}`
-              : 'Período: Todo el tiempo'
-            }
-          </p>
-        </div>
-      </div>
-
-      <div class="stats">
-        <div class="stat-item">
-          <div class="stat-value">${sellers.length}</div>
-          <div class="stat-label">Total Vendedores</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">${totalSales.toLocaleString()}</div>
-          <div class="stat-label">Total Ventas</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">$${totalCommission.toLocaleString()}</div>
-          <div class="stat-label">Total Comisiones</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-value">$${sellers.length > 0 ? (totalCommission / sellers.length).toLocaleString() : '0'}</div>
-          <div class="stat-label">Promedio por Vendedor</div>
-        </div>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Vendedor</th>
-            <th>Email</th>
-            <th>Ventas</th>
-            <th>Comisión Total</th>
-            <th>Tasa</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${sellers.map(seller => `
-            <tr>
-              <td>${seller.firstName} ${seller.lastName}</td>
-              <td>${seller.email}</td>
-              <td>${seller.totalSales}</td>
-              <td class="commission-amount">$${Number(seller.totalCommission).toLocaleString()}</td>
-              <td>${(Number(seller.commissionRate) * 100).toFixed(1)}%</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-
-      <div class="footer">
-        <p>Reporte generado el ${new Date().toLocaleDateString('es-AR')} a las ${new Date().toLocaleTimeString('es-AR')}</p>
-        <p>${companyName} - Sistema de Gestión</p>
-      </div>
-    </body>
-    </html>
-  `
-}
-
-async function generatePDF(htmlContent: string): Promise<Buffer> {
+async function generatePDF(sellers: any[], companyName: string, dateRange: any): Promise<Buffer> {
   try {
-    // Iniciar Puppeteer
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-        '--disable-gpu'
-      ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined
-    })
+    // Crear nuevo documento PDF
+    const doc = new jsPDF()
     
-    const page = await browser.newPage()
+    // Configurar fuente y tamaño
+    doc.setFont('helvetica')
+    doc.setFontSize(20)
     
-    // Configurar el contenido HTML
-    await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0'
-    })
+    // Título del documento
+    doc.text('Reporte de Comisiones', 20, 30)
     
-    // Generar PDF
-    const pdf = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20mm',
-        right: '20mm',
-        bottom: '20mm',
-        left: '20mm'
+    // Información de la empresa
+    doc.setFontSize(14)
+    doc.text(companyName, 20, 45)
+    
+    // Período
+    doc.setFontSize(12)
+    const periodText = dateRange?.startDate && dateRange?.endDate 
+      ? `Período: ${new Date(dateRange.startDate).toLocaleDateString('es-AR')} - ${new Date(dateRange.endDate).toLocaleDateString('es-AR')}`
+      : 'Período: Todo el tiempo'
+    doc.text(periodText, 20, 55)
+    
+    // Estadísticas
+    const totalCommission = sellers.reduce((sum, seller) => sum + Number(seller.totalCommission), 0)
+    const totalSales = sellers.reduce((sum, seller) => sum + Number(seller.totalSales), 0)
+    const averageCommission = sellers.length > 0 ? totalCommission / sellers.length : 0
+    
+    doc.setFontSize(12)
+    doc.text(`Total Vendedores: ${sellers.length}`, 20, 70)
+    doc.text(`Total Ventas: ${totalSales.toLocaleString()}`, 20, 80)
+    doc.text(`Total Comisiones: $${totalCommission.toLocaleString()}`, 20, 90)
+    doc.text(`Promedio por Vendedor: $${averageCommission.toLocaleString()}`, 20, 100)
+    
+    // Tabla de comisiones
+    const tableData = sellers.map(seller => [
+      `${seller.firstName} ${seller.lastName}`,
+      seller.email,
+      seller.totalSales.toString(),
+      `$${Number(seller.totalCommission).toLocaleString()}`,
+      `${(Number(seller.commissionRate) * 100).toFixed(1)}%`
+    ])
+    
+    autoTable(doc, {
+      head: [['Vendedor', 'Email', 'Ventas', 'Comisión Total', 'Tasa']],
+      body: tableData,
+      startY: 120,
+      styles: {
+        fontSize: 10,
+        cellPadding: 3
+      },
+      headStyles: {
+        fillColor: [66, 139, 202],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
       }
     })
     
-    await browser.close()
+    // Footer
+    const pageCount = doc.getNumberOfPages()
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i)
+      doc.setFontSize(10)
+      doc.text(
+        `Página ${i} de ${pageCount}`,
+        doc.internal.pageSize.width - 30,
+        doc.internal.pageSize.height - 10
+      )
+      doc.text(
+        `Generado: ${new Date().toLocaleDateString('es-AR')} ${new Date().toLocaleTimeString('es-AR')}`,
+        20,
+        doc.internal.pageSize.height - 10
+      )
+    }
     
-    return Buffer.from(pdf)
+    // Convertir a Buffer
+    const pdfBytes = doc.output('arraybuffer')
+    return Buffer.from(pdfBytes)
+    
   } catch (error) {
     console.error('Error generating PDF:', error)
-    // Fallback: devolver HTML como texto plano
-    return Buffer.from(htmlContent, 'utf-8')
+    throw error
   }
 } 
