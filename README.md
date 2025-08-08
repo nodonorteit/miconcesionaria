@@ -42,6 +42,49 @@
 - **Contenedores**: Docker & Docker Compose
 - **Deployment**: Ubuntu Server con Plesk
 
+## 🚀 Flujo de Despliegue
+
+### 🏗️ **Imágenes Docker**
+
+El sistema utiliza **dos imágenes separadas**:
+
+1. **🟢 Producción** (`:latest`)
+   - Se construye desde `master`/`main`
+   - URL: `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest`
+   - Entorno: `production`
+
+2. **🟡 Staging** (`:staging`)
+   - Se construye desde `staging`
+   - URL: `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging`
+   - Entorno: `staging`
+
+### 🔄 **Flujo de Trabajo**
+
+```
+feature/* → dev → staging → master
+                ↓         ↓
+            🟡 Staging  🟢 Production
+            Image       Image
+```
+
+### 📋 **Comandos de Despliegue**
+
+#### **Staging**
+```bash
+# En el servidor de staging
+git pull origin staging
+docker-compose -f docker-compose.staging.yml pull
+docker-compose -f docker-compose.staging.yml up -d
+```
+
+#### **Producción**
+```bash
+# En el servidor de producción
+git pull origin master
+docker-compose -f docker-compose.prod.yml pull
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 ## 🚀 Instalación Local
 
 ### Prerrequisitos
@@ -135,6 +178,7 @@ miconcesionaria/
 ├── scripts/               # Scripts de utilidad
 ├── docker-compose.yml     # Configuración de desarrollo
 ├── docker-compose.prod.yml # Configuración de producción
+├── docker-compose.staging.yml # Configuración de staging
 └── Dockerfile             # Imagen Docker
 ```
 
@@ -183,6 +227,24 @@ docker-compose logs -f
 
 # Detener servicios
 docker-compose down
+```
+
+### Staging
+```bash
+# Desplegar staging
+docker-compose -f docker-compose.staging.yml up -d
+
+# Ver logs de staging
+docker-compose -f docker-compose.staging.yml logs -f
+```
+
+### Producción
+```bash
+# Desplegar producción
+docker-compose -f docker-compose.prod.yml up -d
+
+# Ver logs de producción
+docker-compose -f docker-compose.prod.yml logs -f
 ```
 
 ## 📧 Configuración de Email

@@ -2,12 +2,12 @@ name: Build and Push Docker Images to Huawei Cloud
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ master, main, staging ]
     tags: [ 'v*' ]
     paths-ignore:
       - 'docker-compose.prod.yml'
   pull_request:
-    branches: [ master, main ]
+    branches: [ master, main, staging ]
 
 env:
   REGISTRY: swr.sa-argentina-1.myhuaweicloud.com
@@ -30,60 +30,94 @@ jobs:
       run: |
         echo "${{ secrets.HUAWEI_SECRET_ACCESS_KEY }}" | docker login -u "${{ secrets.HUAWEI_ACCESS_KEY_ID }}" --password-stdin swr.sa-argentina-1.myhuaweicloud.com
 
+    - name: Set image tag
+      id: set-tag
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "tag=latest" >> $GITHUB_OUTPUT
+          echo "environment=production" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          echo "tag=staging" >> $GITHUB_OUTPUT
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        else
+          echo "tag=dev" >> $GITHUB_OUTPUT
+          echo "environment=development" >> $GITHUB_OUTPUT
+        fi
+
     - name: Build Docker image
       run: |
-        docker build -t swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest .
+        docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{ steps.set-tag.outputs.tag }} .
 
     - name: Push Docker image
       run: |
-        docker push swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+        docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{ steps.set-tag.outputs.tag }}
 
     # MariaDB image removed - using native MariaDB on server
 
-    - name: Update docker-compose with new images
-      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    - name: Update docker-compose files
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
       run: |
-        # Crear archivo docker-compose.prod.yml con las imágenes de Huawei Cloud
-        cat > docker-compose.prod.yml <<EOF
-        version: '3.8'
+        # Crear archivo docker-compose.prod.yml para producción
+        if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+          cat > docker-compose.prod.yml <<EOF
+          version: '3.8'
+          
+          services:
+            app:
+              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:latest
+              platform: linux/amd64
+              network_mode: host
+              environment:
+                - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+                - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
+                - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
+                - SMTP_HOST=smtp1.s.ipzmarketing.com
+                - SMTP_PORT=587
+                - SMTP_USER=pzbkjxwenzkr
+                - SMTP_PASS=7FOtsP0qKvNF
+                - NODE_ENV=production
+              volumes:
+                - uploads_data:/app/uploads
+              restart: unless-stopped
+          
+          volumes:
+            uploads_data:
+          EOF
+        fi
         
-        services:
-          app:
-            image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:latest
-            platform: linux/amd64
-            network_mode: host
-            # ports:
-            #   - "3000:3000"
-            environment:
-              - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
-              - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
-              - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
-              - SMTP_HOST=smtp1.s.ipzmarketing.com
-              - SMTP_PORT=587
-              - SMTP_USER=pzbkjxwenzkr
-              - SMTP_PASS=7FOtsP0qKvNF
-              - NODE_ENV=production
-            volumes:
-              - ./uploads:/app/uploads
-            restart: unless-stopped
-            # healthcheck:
-            #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-            #   interval: 30s
-            #   timeout: 10s
-            #   retries: 3
-            # No depends_on needed - using native MariaDB
-        
-          # MariaDB service removed - using native MariaDB on server
-          # Database connection will be configured via environment variables
-        
-        # No volumes needed - using native MariaDB
-        EOF
+        # Crear archivo docker-compose.staging.yml para staging
+        if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          cat > docker-compose.staging.yml <<EOF
+          version: '3.8'
+          
+          services:
+            app:
+              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:staging
+              platform: linux/amd64
+              network_mode: host
+              environment:
+                - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+                - NEXTAUTH_URL=https://staging.miconcesionaria.nodonorte.com
+                - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
+                - SMTP_HOST=smtp1.s.ipzmarketing.com
+                - SMTP_PORT=587
+                - SMTP_USER=pzbkjxwenzkr
+                - SMTP_PASS=7FOtsP0qKvNF
+                - NODE_ENV=staging
+              volumes:
+                - uploads_data_staging:/app/uploads
+              restart: unless-stopped
+          
+          volumes:
+            uploads_data_staging:
+          EOF
+        fi
 
-    - name: Commit updated docker-compose
-      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    - name: Commit updated docker-compose files
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add docker-compose.prod.yml
-        git commit -m "🔄 Update docker-compose with Huawei Cloud images" || echo "No changes to commit"
+        git add docker-compose*.yml
+        git commit -m "🔄 Update docker-compose for ${{ steps.set-tag.outputs.environment }} environment" || echo "No changes to commit"
         git push || echo "Push failed - manual update may be needed" 
