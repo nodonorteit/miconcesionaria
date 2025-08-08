@@ -30,27 +30,32 @@ jobs:
       run: |
         echo "${{ secrets.HUAWEI_SECRET_ACCESS_KEY }}" | docker login -u "${{ secrets.HUAWEI_ACCESS_KEY_ID }}" --password-stdin swr.sa-argentina-1.myhuaweicloud.com
 
-    - name: Set image tag
+    - name: Set image tag and environment
       id: set-tag
       run: |
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "tag=latest" >> $GITHUB_OUTPUT
           echo "environment=production" >> $GITHUB_OUTPUT
+          echo "image_name=miconcesionaria:latest" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
           echo "tag=staging" >> $GITHUB_OUTPUT
           echo "environment=staging" >> $GITHUB_OUTPUT
+          echo "image_name=miconcesionaria:staging" >> $GITHUB_OUTPUT
         else
           echo "tag=dev" >> $GITHUB_OUTPUT
           echo "environment=development" >> $GITHUB_OUTPUT
+          echo "image_name=miconcesionaria:dev" >> $GITHUB_OUTPUT
         fi
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{ steps.set-tag.outputs.tag }} .
+        echo "🏗️ Construyendo imagen: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}"
+        docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }} .
 
     - name: Push Docker image
       run: |
-        docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:${{ steps.set-tag.outputs.tag }}
+        echo "🚀 Subiendo imagen: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}"
+        docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}
 
     # MariaDB image removed - using native MariaDB on server
 
@@ -59,6 +64,7 @@ jobs:
       run: |
         # Crear archivo docker-compose.prod.yml para producción
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "📝 Creando docker-compose.prod.yml para PRODUCCIÓN"
           cat > docker-compose.prod.yml << 'EOF'
         version: '3.8'
         
@@ -87,6 +93,7 @@ jobs:
         
         # Crear archivo docker-compose.staging.yml para staging
         if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          echo "📝 Creando docker-compose.staging.yml para STAGING"
           cat > docker-compose.staging.yml << 'EOF'
         version: '3.8'
         
@@ -97,7 +104,7 @@ jobs:
             network_mode: host
             environment:
               - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
-              - NEXTAUTH_URL=https://staging.miconcesionaria.nodonorte.com
+              - NEXTAUTH_URL=https://miconcesionaria.staging.nodonorte.com
               - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
               - SMTP_HOST=smtp1.s.ipzmarketing.com
               - SMTP_PORT=587
