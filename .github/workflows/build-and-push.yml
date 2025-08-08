@@ -59,58 +59,58 @@ jobs:
       run: |
         # Crear archivo docker-compose.prod.yml para producción
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
-          cat > docker-compose.prod.yml <<EOF
-          version: '3.8'
-          
-          services:
-            app:
-              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:latest
-              platform: linux/amd64
-              network_mode: host
-              environment:
-                - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
-                - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
-                - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
-                - SMTP_HOST=smtp1.s.ipzmarketing.com
-                - SMTP_PORT=587
-                - SMTP_USER=pzbkjxwenzkr
-                - SMTP_PASS=7FOtsP0qKvNF
-                - NODE_ENV=production
-              volumes:
-                - uploads_data:/app/uploads
-              restart: unless-stopped
-          
-          volumes:
-            uploads_data:
-          EOF
+          cat > docker-compose.prod.yml << 'EOF'
+        version: '3.8'
+        
+        services:
+          app:
+            image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+            platform: linux/amd64
+            network_mode: host
+            environment:
+              - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+              - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
+              - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
+              - SMTP_HOST=smtp1.s.ipzmarketing.com
+              - SMTP_PORT=587
+              - SMTP_USER=pzbkjxwenzkr
+              - SMTP_PASS=7FOtsP0qKvNF
+              - NODE_ENV=production
+            volumes:
+              - uploads_data:/app/uploads
+            restart: unless-stopped
+        
+        volumes:
+          uploads_data:
+        EOF
         fi
         
         # Crear archivo docker-compose.staging.yml para staging
         if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
-          cat > docker-compose.staging.yml <<EOF
-          version: '3.8'
-          
-          services:
-            app:
-              image: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ env.IMAGE_NAME }}:staging
-              platform: linux/amd64
-              network_mode: host
-              environment:
-                - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
-                - NEXTAUTH_URL=https://staging.miconcesionaria.nodonorte.com
-                - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
-                - SMTP_HOST=smtp1.s.ipzmarketing.com
-                - SMTP_PORT=587
-                - SMTP_USER=pzbkjxwenzkr
-                - SMTP_PASS=7FOtsP0qKvNF
-                - NODE_ENV=staging
-              volumes:
-                - uploads_data_staging:/app/uploads
-              restart: unless-stopped
-          
-          volumes:
-            uploads_data_staging:
-          EOF
+          cat > docker-compose.staging.yml << 'EOF'
+        version: '3.8'
+        
+        services:
+          app:
+            image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging
+            platform: linux/amd64
+            network_mode: host
+            environment:
+              - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+              - NEXTAUTH_URL=https://staging.miconcesionaria.nodonorte.com
+              - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
+              - SMTP_HOST=smtp1.s.ipzmarketing.com
+              - SMTP_PORT=587
+              - SMTP_USER=pzbkjxwenzkr
+              - SMTP_PASS=7FOtsP0qKvNF
+              - NODE_ENV=staging
+            volumes:
+              - uploads_data_staging:/app/uploads
+            restart: unless-stopped
+        
+        volumes:
+          uploads_data_staging:
+        EOF
         fi
 
     - name: Commit updated docker-compose files
