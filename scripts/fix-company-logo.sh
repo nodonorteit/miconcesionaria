@@ -1,88 +1,93 @@
 #!/bin/bash
 
-# Script para corregir la configuración del logo de la empresa
-# Este script actualiza la URL del logo en la base de datos
+echo "🔧 Corrigiendo logo de empresa..."
 
-set -e
+# Verificar si estamos en el directorio correcto
+if [ ! -f "docker-compose.prod.yml" ] && [ ! -f "docker-compose.yml" ]; then
+    echo "❌ Error: No se encontró docker-compose.yml o docker-compose.prod.yml"
+    echo "   Asegúrate de estar en el directorio del proyecto"
+    exit 1
+fi
 
-echo "🔧 Corrigiendo configuración del logo de la empresa..."
-
-# Verificar si existe el directorio uploads
+# Crear directorio uploads si no existe
 if [ ! -d "./uploads" ]; then
-    echo "❌ Directorio uploads no encontrado"
-    exit 1
+    echo "📁 Creando directorio uploads..."
+    mkdir -p ./uploads
 fi
 
-# Buscar archivos de logo de empresa
-echo "🔍 Buscando archivos de logo..."
-LOGO_FILES=$(find ./uploads -name "company_logo_*" -type f | head -5)
-
-if [ -z "$LOGO_FILES" ]; then
-    echo "❌ No se encontraron archivos de logo de empresa"
-    echo "   Asegúrate de haber subido un logo desde la configuración de empresa"
-    exit 1
-fi
-
-echo "📁 Archivos de logo encontrados:"
-echo "$LOGO_FILES"
-
-# Tomar el archivo más reciente
-LATEST_LOGO=$(echo "$LOGO_FILES" | sort | tail -1)
-LOGO_FILENAME=$(basename "$LATEST_LOGO")
-LOGO_URL="/uploads/$LOGO_FILENAME"
-
-echo "🎯 Logo más reciente: $LOGO_FILENAME"
-echo "🔗 URL del logo: $LOGO_URL"
-
-# Crear script temporal de Node.js para actualizar la BD
-cat > /tmp/update-logo.js << EOF
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
-
-async function updateLogo() {
-  try {
-    console.log('🔗 Actualizando logo URL en la base de datos...');
+# Verificar si el archivo del logo existe
+LOGO_FILE="company_logo_1754448284279_parana_automotores.jpeg"
+if [ -f "./uploads/$LOGO_FILE" ]; then
+    echo "✅ Logo encontrado: $LOGO_FILE"
+    ls -la "./uploads/$LOGO_FILE"
+else
+    echo "❌ Logo no encontrado: $LOGO_FILE"
+    echo "🔍 Verificando archivos en uploads..."
+    ls -la ./uploads/
     
-    const result = await prisma.\$executeRaw\`
-      UPDATE company_config 
-      SET logoUrl = '${LOGO_URL}', updatedAt = NOW()
-      WHERE id = (SELECT id FROM company_config ORDER BY updatedAt DESC LIMIT 1)
-    \`;
+    # Buscar archivos de logo similares
+    echo "🔍 Buscando archivos de logo similares..."
+    find ./uploads -name "*company_logo*" -o -name "*logo*" 2>/dev/null || echo "No se encontraron archivos de logo"
     
-    console.log('✅ Logo URL actualizada exitosamente');
+    echo ""
+    echo "📋 Opciones para resolver:"
+    echo "1. Subir un nuevo logo desde la aplicación"
+    echo "2. Crear un logo por defecto"
+    echo "3. Limpiar la configuración de la base de datos"
     
-    // Verificar la actualización
-    const config = await prisma.\$queryRaw\`
-      SELECT * FROM company_config ORDER BY updatedAt DESC LIMIT 1
-    \`;
+    read -p "¿Qué opción prefieres? (1/2/3): " choice
     
-    console.log('📊 Configuración actualizada:', config[0]);
-    
-  } catch (error) {
-    console.error('❌ Error actualizando logo:', error);
-  } finally {
-    await prisma.\$disconnect();
-  }
-}
-
-updateLogo();
+    case $choice in
+        1)
+            echo "✅ Opción seleccionada: Subir nuevo logo desde la aplicación"
+            echo "   Ve a /admin/company y sube un nuevo logo"
+            ;;
+        2)
+            echo "✅ Opción seleccionada: Crear logo por defecto"
+            # Crear un logo por defecto simple
+            echo "📝 Creando logo por defecto..."
+            # Aquí podrías crear un logo SVG simple
+            cat > "./uploads/default-logo.svg" << 'EOF'
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#3b82f6"/>
+  <text x="100" y="100" font-family="Arial" font-size="24" fill="white" text-anchor="middle" dy=".3em">LOGO</text>
+</svg>
 EOF
+            echo "✅ Logo por defecto creado: ./uploads/default-logo.svg"
+            ;;
+        3)
+            echo "✅ Opción seleccionada: Limpiar configuración de BD"
+            echo "   Esto eliminará la referencia al logo en la base de datos"
+            echo "   Ejecuta: docker-compose exec app npx prisma db execute --file=scripts/clean-company-config.sql"
+            ;;
+        *)
+            echo "❌ Opción no válida"
+            ;;
+    esac
+fi
 
-# Ejecutar el script de actualización
-echo "💾 Actualizando base de datos..."
-node /tmp/update-logo.js
+# Verificar permisos del directorio uploads
+echo ""
+echo "🔐 Verificando permisos del directorio uploads..."
+ls -la ./uploads/
 
-# Limpiar archivo temporal
-rm -f /tmp/update-logo.js
+# Verificar si el contenedor puede acceder
+echo ""
+echo "🐳 Verificando acceso del contenedor..."
+if command -v docker-compose &> /dev/null; then
+    if [ -f "docker-compose.prod.yml" ]; then
+        docker-compose -f docker-compose.prod.yml exec -T app test -r /app/uploads 2>/dev/null && echo "✅ Contenedor puede leer uploads" || echo "❌ Contenedor NO puede leer uploads"
+    else
+        docker-compose exec -T app test -r /app/uploads 2>/dev/null && echo "✅ Contenedor puede leer uploads" || echo "❌ Contenedor NO puede leer uploads"
+    fi
+else
+    echo "⚠️ Docker Compose no disponible"
+fi
 
 echo ""
-echo "✅ Configuración del logo corregida!"
+echo "🎉 Verificación completada!"
 echo ""
-echo "📋 Resumen:"
-echo "   - Archivo: $LOGO_FILENAME"
-echo "   - URL: $LOGO_URL"
-echo "   - Base de datos: Actualizada"
-echo ""
-echo "🔄 Reinicia la aplicación para ver los cambios:"
-echo "   docker-compose restart app" 
+echo "📋 Próximos pasos:"
+echo "1. Si el logo no existe, súbelo desde /admin/company"
+echo "2. Si hay problemas de permisos, ejecuta: ./scripts/fix-uploads-permissions.sh"
+echo "3. Reinicia la aplicación: docker-compose restart app" 
