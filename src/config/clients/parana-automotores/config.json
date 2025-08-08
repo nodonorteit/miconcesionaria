@@ -1,0 +1,25 @@
+{
+  "clientName": "Paraná Automotores",
+  "clientDomain": "parana.automotores.nodonorte.com",
+  "logo": "/config/clients/parana-automotores/logo.svg",
+  "primaryColor": "#1f2937",
+  "secondaryColor": "#3b82f6",
+  "accentColor": "#f59e0b",
+  "description": "Sistema de gestión para Paraná Automotores",
+  "features": {
+    "vehicles": true,
+    "sales": true,
+    "reports": true,
+    "expenses": true,
+    "customers": true,
+    "sellers": true,
+    "providers": true,
+    "workshops": true
+  },
+  "settings": {
+    "allowImageUpload": true,
+    "maxImageSize": "10MB",
+    "enableNotifications": true,
+    "enableAuditLog": true
+  }
+} 
