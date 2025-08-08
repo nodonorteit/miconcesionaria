@@ -19,4 +19,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  uploads_data_staging: 
+  uploads_data_staging:
