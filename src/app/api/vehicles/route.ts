@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
       const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
         status: (vehicle.status && vehicle.status.trim() !== '') ? vehicle.status : 'SOLD' as any,
+        fuelType: (vehicle.fuelType && vehicle.fuelType.trim() !== '') ? vehicle.fuelType : 'GASOLINE' as any,
+        transmission: (vehicle.transmission && vehicle.transmission.trim() !== '') ? vehicle.transmission : 'MANUAL' as any,
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || '',
         sale: vehicle.sales[0] ? {
@@ -79,6 +81,8 @@ export async function GET(request: NextRequest) {
       const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
         status: (vehicle.status && vehicle.status.trim() !== '') ? vehicle.status : 'AVAILABLE' as any,
+        fuelType: (vehicle.fuelType && vehicle.fuelType.trim() !== '') ? vehicle.fuelType : 'GASOLINE' as any,
+        transmission: (vehicle.transmission && vehicle.transmission.trim() !== '') ? vehicle.transmission : 'MANUAL' as any,
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || ''
       }))
