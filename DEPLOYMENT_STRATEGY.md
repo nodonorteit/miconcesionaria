@@ -1,47 +1,50 @@
-# 🚀 Estrategia de Despliegue - Mi Concesionaria
+# 🚀 Estrategia de Deployment - Mi Concesionaria
 
-## 🎯 **Visión General**
+## 📋 **Resumen de la Estrategia**
 
-El sistema utiliza **dos entornos completamente separados** con **imágenes Docker independientes**:
+Implementamos un sistema de **deployment dual** con entornos separados para **staging** y **producción**, cada uno con su propia imagen Docker y subdominio.
 
-### 🏗️ **Imágenes Docker**
+## 🏗️ **Arquitectura de Entornos**
 
-| Entorno | Branch | Imagen | URL | Subdominio |
-|---------|--------|--------|-----|------------|
-| 🟡 **Staging** | `staging` | `miconcesionaria:staging` | `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging` | `miconcesionaria.staging.nodonorte.com` |
-| 🟢 **Producción** | `master`/`main` | `miconcesionaria:latest` | `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest` | `miconcesionaria.nodonorte.com` |
+### 🟡 **Staging Environment**
+- **Branch**: `staging`
+- **Imagen Docker**: `miconcesionaria:staging`
+- **Subdominio**: `miconcesionaria.staging.nodonorte.com`
+- **Puerto**: `3001` (variable de entorno `PORT=3001`)
+- **Base de datos**: Acceso directo al host (`127.0.0.1:3306`)
+- **Volumen**: `uploads_data_staging`
 
-## 🔄 **Flujo de Trabajo**
+### 🟢 **Production Environment**
+- **Branch**: `master` / `main`
+- **Imagen Docker**: `miconcesionaria:latest`
+- **Subdominio**: `miconcesionaria.nodonorte.com`
+- **Puerto**: `3000` (default)
+- **Base de datos**: Acceso directo al host (`127.0.0.1:3306`)
+- **Volumen**: `uploads_data`
+
+## 🔄 **Flujo de Deployment**
 
 ```
-feature/* → dev → staging → master
-                ↓         ↓
-            🟡 Staging  🟢 Production
-            Image       Image
-            :staging    :latest
+feature/* → dev → staging → master/main
+   ↓         ↓      ↓         ↓
+   dev    dev    staging   production
 ```
 
-### 📋 **Proceso Detallado**
+### 📝 **Proceso Automatizado**
+1. **Push a `staging`** → Build imagen `:staging` → Actualiza `docker-compose.staging.yml`
+2. **Push a `master`/`main`** → Build imagen `:latest` → Actualiza `docker-compose.prod.yml`
+3. **GitHub Actions** maneja automáticamente la construcción y actualización de archivos
 
-1. **🟡 Staging**
-   - Push a `staging` → Construye `miconcesionaria:staging`
-   - Despliegue en `miconcesionaria.staging.nodonorte.com`
-   - Testing y validación
-
-2. **🟢 Producción**
-   - Merge `staging` → `master` → Construye `miconcesionaria:latest`
-   - Despliegue en `miconcesionaria.nodonorte.com`
-   - Entorno de producción
-
-## 🐳 **Configuración de Contenedores**
+## 🐳 **Configuración Docker**
 
 ### **Staging** (`docker-compose.staging.yml`)
 ```yaml
 services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging
+    network_mode: host
     environment:
-      - NEXTAUTH_URL=https://miconcesionaria.staging.nodonorte.com
+      - PORT=3001
       - NODE_ENV=staging
     volumes:
       - uploads_data_staging:/app/uploads
@@ -52,131 +55,102 @@ services:
 services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+    network_mode: host
     environment:
-      - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
       - NODE_ENV=production
     volumes:
       - uploads_data:/app/uploads
 ```
 
-## 🚀 **Comandos de Despliegue**
+## 📁 **Gestión de Volúmenes y Uploads**
 
-### **🟡 Staging**
+### 🔍 **Problema Identificado**
+- **Staging** y **Producción** usan volúmenes Docker separados
+- Las imágenes subidas en producción no están disponibles en staging
+- Esto causa errores como "File not found" para logos de empresa
+
+### ✅ **Soluciones Disponibles**
+
+#### **1. Sincronización Manual (Recomendado para desarrollo)**
 ```bash
-# Desplegar staging
+# Copiar logo específico de empresa
+./scripts/copy-company-logo-to-staging.sh
+
+# Sincronizar todos los uploads
+./scripts/sync-uploads-between-environments.sh
+```
+
+#### **2. Sincronización Automática (Para producción)**
+- Configurar cron job para sincronizar volúmenes periódicamente
+- Usar rsync o similar para mantener archivos sincronizados
+
+#### **3. Volumen Compartido (Alternativa)**
+- Modificar `docker-compose.staging.yml` para usar el mismo volumen
+- **⚠️ Riesgo**: Los cambios en staging afectarían producción
+
+## 🚀 **Scripts de Deployment**
+
+### **Staging**
+```bash
 ./scripts/deploy-staging.sh
-
-# Ver logs
-docker-compose -f docker-compose.staging.yml logs -f
-
-# Verificar estado
-./scripts/check-environments.sh
 ```
 
-### **🟢 Producción**
+### **Producción**
 ```bash
-# Desplegar producción
 ./scripts/deploy-production.sh
-
-# Ver logs
-docker-compose -f docker-compose.prod.yml logs -f
-
-# Verificar estado
-./scripts/check-environments.sh
 ```
 
-## 📊 **Ventajas de esta Estrategia**
-
-### ✅ **Beneficios**
-
-1. **Testing Independiente**
-   - Staging completamente aislado de producción
-   - Pruebas sin riesgo de afectar usuarios reales
-
-2. **Rollback Fácil**
-   - Cada entorno tiene su propia imagen
-   - Rollback instantáneo a versiones anteriores
-
-3. **Entornos Aislados**
-   - Volúmenes separados (`uploads_data` vs `uploads_data_staging`)
-   - Configuraciones específicas por entorno
-
-4. **Despliegue Automático**
-   - GitHub Actions construye imágenes automáticamente
-   - Sin intervención manual
-
-5. **Monitoreo Separado**
-   - Logs independientes por entorno
-   - Métricas específicas de cada ambiente
+### **Verificación de Entornos**
+```bash
+./scripts/check-environments.sh
+```
 
 ## 🔧 **Configuración de Plesk**
 
-### **Subdominio Staging**
-- **Dominio**: `miconcesionaria.staging.nodonorte.com`
-- **Puerto**: `3001` (contenedor Docker)
-- **SSL**: Certificado Let's Encrypt
-- **Proxy**: Apache/Nginx reverso
+### **Proxy Rules**
+- **Staging**: `miconcesionaria.staging.nodonorte.com` → `127.0.0.1:3001`
+- **Producción**: `miconcesionaria.nodonorte.com` → `127.0.0.1:3000`
 
-### **Subdominio Producción**
-- **Dominio**: `miconcesionaria.nodonorte.com`
-- **Puerto**: `3000` (contenedor Docker)
-- **SSL**: Certificado Let's Encrypt
-- **Proxy**: Apache/Nginx reverso
+### **Puertos**
+- **Staging**: `3001` (contenedor usa `PORT=3001`)
+- **Producción**: `3000` (contenedor usa puerto default)
 
-## 📋 **Checklist de Despliegue**
+## 📊 **Monitoreo y Logs**
 
-### **🟡 Staging**
-- [ ] Push a `staging`
-- [ ] Verificar que GitHub Actions construya `:staging`
-- [ ] Ejecutar `./scripts/deploy-staging.sh`
-- [ ] Verificar `https://miconcesionaria.staging.nodonorte.com`
-- [ ] Probar funcionalidades críticas
-
-### **🟢 Producción**
-- [ ] Merge `staging` → `master`
-- [ ] Verificar que GitHub Actions construya `:latest`
-- [ ] Ejecutar `./scripts/deploy-production.sh`
-- [ ] Verificar `https://miconcesionaria.nodonorte.com`
-- [ ] Monitorear logs y métricas
-
-## 🚨 **Solución de Problemas**
-
-### **Imagen no se construye**
+### **Ver Logs de Staging**
 ```bash
-# Verificar GitHub Actions
-# Ir a Actions → Build and Push Docker Images
-# Revisar logs del workflow
-```
-
-### **Contenedor no inicia**
-```bash
-# Verificar logs
 docker-compose -f docker-compose.staging.yml logs -f
-docker-compose -f docker-compose.prod.yml logs -f
-
-# Verificar estado
-docker-compose -f docker-compose.staging.yml ps
-docker-compose -f docker-compose.prod.yml ps
 ```
 
-### **Problemas de permisos**
+### **Ver Logs de Producción**
 ```bash
-# Verificar volúmenes
-docker volume ls | grep uploads
-
-# Limpiar volúmenes si es necesario
-docker volume rm miconcesionaria_uploads_data
-docker volume rm miconcesionaria_uploads_data_staging
+docker-compose -f docker-compose.prod.yml logs -f
 ```
 
-## 🎯 **Próximos Pasos**
+### **Estado de Contenedores**
+```bash
+docker ps
+```
 
-1. **Configurar subdominios** en Plesk
-2. **Probar despliegue** de staging
-3. **Validar funcionalidades** en staging
-4. **Desplegar a producción** cuando esté listo
-5. **Monitorear** ambos entornos
+## 🚨 **Troubleshooting Común**
 
----
+### **Error: "File not found" para imágenes**
+- **Causa**: Volúmenes Docker separados
+- **Solución**: Ejecutar script de sincronización
+- **Comando**: `./scripts/sync-uploads-between-environments.sh`
 
-**¡Sistema de despliegue dual implementado y listo para usar! 🚀** 
+### **Error: "EADDRINUSE"**
+- **Causa**: Conflicto de puertos
+- **Solución**: Usar puertos diferentes (3001 para staging, 3000 para producción)
+
+### **Error: "Database connection failed"**
+- **Causa**: Contenedor aislado sin acceso a host
+- **Solución**: Usar `network_mode: host` (ya implementado)
+
+## 🔮 **Mejoras Futuras**
+
+1. **Sincronización automática** de volúmenes entre entornos
+2. **Backup automático** de volúmenes de uploads
+3. **Health checks** para ambos entornos
+4. **Rollback automático** en caso de fallos
+5. **Monitoreo de métricas** por entorno 
