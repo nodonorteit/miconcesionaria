@@ -4,7 +4,8 @@ services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging
     platform: linux/amd64
-    network_mode: host
+    ports:
+      - "3001:3000"
     environment:
       - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.staging.nodonorte.com

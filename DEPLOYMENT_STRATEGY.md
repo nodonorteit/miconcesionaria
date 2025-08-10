@@ -113,13 +113,13 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### **Subdominio Staging**
 - **Dominio**: `miconcesionaria.staging.nodonorte.com`
-- **Puerto**: `3000` (mismo servidor, puerto diferente)
+- **Puerto**: `3001` (contenedor Docker)
 - **SSL**: Certificado Let's Encrypt
 - **Proxy**: Apache/Nginx reverso
 
 ### **Subdominio Producción**
 - **Dominio**: `miconcesionaria.nodonorte.com`
-- **Puerto**: `3000` (mismo servidor, puerto diferente)
+- **Puerto**: `3000` (contenedor Docker)
 - **SSL**: Certificado Let's Encrypt
 - **Proxy**: Apache/Nginx reverso
 
