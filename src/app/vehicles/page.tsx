@@ -29,11 +29,20 @@ interface Vehicle {
   vehicleType?: {
     id: string
     name: string
+    description?: string
   }
+  vehicleTypeName?: string
+  vehicleTypeDescription?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
-  images?: string[]
+  images?: Array<{
+    id: string
+    filename: string
+    path: string
+    isPrimary: boolean
+    createdAt: string
+  }>
 }
 
 interface VehicleType {
@@ -93,6 +102,13 @@ export default function VehiclesPage() {
     vehicleTypeId: '',
     images: [] as File[]
   })
+  const [existingImages, setExistingImages] = useState<Array<{
+    id: string
+    filename: string
+    path: string
+    isPrimary: boolean
+    createdAt: string
+  }>>([])
   const [saleFormData, setSaleFormData] = useState({
     sellerId: '',
     customerId: '',
@@ -210,6 +226,7 @@ export default function VehiclesPage() {
 
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle)
+    setExistingImages(vehicle.images || [])
     setFormData({
       brand: vehicle.brand,
       model: vehicle.model,
@@ -858,21 +875,30 @@ export default function VehiclesPage() {
                 <div className="space-y-4">
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold mb-4">Galería de Fotos</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Placeholder para fotos - aquí se mostrarían las imágenes reales */}
-                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                        <Car className="h-12 w-12 text-gray-400" />
+                    {viewingVehicle.images && viewingVehicle.images.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-4">
+                        {viewingVehicle.images.map((image, index) => (
+                          <div key={image.id} className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                            <img
+                              src={`/uploads/${image.filename}`}
+                              alt={`${viewingVehicle.brand} ${viewingVehicle.model} - Foto ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error('Error loading image:', image.filename)
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        ))}
                       </div>
-                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                        <Car className="h-12 w-12 text-gray-400" />
+                    ) : (
+                      <div className="text-center py-8">
+                        <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center mb-4">
+                          <Car className="h-12 w-12 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500">No hay fotos cargadas para este vehículo</p>
                       </div>
-                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                        <Car className="h-12 w-12 text-gray-400" />
-                      </div>
-                      <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center">
-                        <Car className="h-12 w-12 text-gray-400" />
-                      </div>
-                    </div>
+                    )}
                     <p className="text-sm text-gray-500 mt-2">
                       {viewingVehicle.images && viewingVehicle.images.length > 0 
                         ? `${viewingVehicle.images.length} foto(s) cargada(s)`

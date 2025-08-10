@@ -12,73 +12,79 @@ export async function GET(request: NextRequest) {
     let vehicles: any[]
     
     if (sold === 'true') {
-      // Obtener vehículos vendidos con información de venta
-      vehicles = await prisma.$queryRaw`
-        SELECT 
-          v.*,
-          COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
-          COALESCE(vt.description, '') as vehicleTypeDescription,
-          s.id as saleId,
-          s.saleNumber,
-          s.totalAmount,
-          s.commission,
-          s.createdAt as saleCreatedAt,
-          sel.firstName as sellerFirstName,
-          sel.lastName as sellerLastName,
-          c.firstName as customerFirstName,
-          c.lastName as customerLastName
-        FROM Vehicle v
-        LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
-        LEFT JOIN sales s ON v.id = s.vehicleId
-        LEFT JOIN sellers sel ON s.sellerId = sel.id
-        LEFT JOIN Client c ON s.customerId = c.id
-        WHERE v.isActive = 1 AND v.status = 'SOLD'
-        ORDER BY s.createdAt DESC
-      `
+      // Obtener vehículos vendidos con información de venta e imágenes
+      vehicles = await prisma.vehicle.findMany({
+        where: {
+          isActive: true,
+          status: 'SOLD'
+        },
+        include: {
+          vehicleType: true,
+          images: true,
+          sales: {
+            include: {
+              seller: true,
+              customer: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
       
       // Procesar los resultados para incluir información de venta
-      const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
+      const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
         fuelType: vehicle.fuelType || 'GASOLINE',
         transmission: vehicle.transmission || 'MANUAL',
         status: vehicle.status || 'SOLD',
-        sale: vehicle.saleId ? {
-          id: vehicle.saleId,
-          saleNumber: vehicle.saleNumber,
-          totalAmount: Number(vehicle.totalAmount),
-          commission: Number(vehicle.commission),
-          createdAt: vehicle.saleCreatedAt,
+        vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
+        vehicleTypeDescription: vehicle.vehicleType?.description || '',
+        sale: vehicle.sales[0] ? {
+          id: vehicle.sales[0].id,
+          saleNumber: vehicle.sales[0].saleNumber,
+          totalAmount: Number(vehicle.sales[0].totalAmount),
+          commission: Number(vehicle.sales[0].commission),
+          createdAt: vehicle.sales[0].createdAt,
           seller: {
-            firstName: vehicle.sellerFirstName,
-            lastName: vehicle.sellerLastName
+            firstName: vehicle.sales[0].seller.firstName,
+            lastName: vehicle.sales[0].seller.lastName
           },
           customer: {
-            firstName: vehicle.customerFirstName,
-            lastName: vehicle.customerLastName
+            firstName: vehicle.sales[0].customer.firstName,
+            lastName: vehicle.sales[0].customer.lastName
           }
         } : null
       }))
       
       return NextResponse.json(processedVehicles)
     } else {
-      // Obtener vehículos disponibles (no vendidos)
-      vehicles = await prisma.$queryRaw`
-        SELECT 
-          v.*,
-          COALESCE(vt.name, 'Sin tipo') as vehicleTypeName,
-          COALESCE(vt.description, '') as vehicleTypeDescription
-        FROM Vehicle v
-        LEFT JOIN vehicle_types vt ON v.vehicleTypeId = vt.id
-        WHERE v.isActive = 1 AND v.status != 'SOLD'
-        ORDER BY v.createdAt DESC
-      `
+      // Obtener vehículos disponibles (no vendidos) con imágenes
+      vehicles = await prisma.vehicle.findMany({
+        where: {
+          isActive: true,
+          status: {
+            not: 'SOLD'
+          }
+        },
+        include: {
+          vehicleType: true,
+          images: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      })
       
       // Procesar los resultados para manejar valores vacíos
-      const processedVehicles = (vehicles as any[]).map((vehicle: any) => ({
+      const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
         fuelType: vehicle.fuelType || 'GASOLINE',
         transmission: vehicle.transmission || 'MANUAL',
-        status: vehicle.status || 'AVAILABLE'
+        status: vehicle.status || 'AVAILABLE',
+        vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
+        vehicleTypeDescription: vehicle.vehicleType?.description || ''
       }))
       
       return NextResponse.json(processedVehicles)
