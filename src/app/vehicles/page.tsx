@@ -371,6 +371,46 @@ export default function VehiclesPage() {
     })
   }
 
+  // Función para eliminar imágenes existentes
+  const handleDeleteImage = async (imageId: string) => {
+    if (!editingVehicle) return
+    
+    try {
+      const response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'deleteImage',
+          imageId: imageId
+        })
+      })
+
+      if (response.ok) {
+        // Actualizar el estado local removiendo la imagen eliminada
+        setEditingVehicle({
+          ...editingVehicle,
+          images: editingVehicle.images?.filter(img => img.id !== imageId) || []
+        })
+        
+        // También actualizar la lista de vehículos
+        setVehicles(vehicles.map(vehicle => 
+          vehicle.id === editingVehicle.id 
+            ? { ...vehicle, images: vehicle.images?.filter(img => img.id !== imageId) || [] }
+            : vehicle
+        ))
+        
+        toast.success('Imagen eliminada correctamente')
+      } else {
+        toast.error('Error al eliminar la imagen')
+      }
+    } catch (error) {
+      console.error('Error deleting image:', error)
+      toast.error('Error al eliminar la imagen')
+    }
+  }
+
   // Filtrar vehículos basado en el término de búsqueda
   const filteredVehicles = vehicles.filter(vehicle => {
     const searchLower = searchTerm.toLowerCase()
@@ -556,6 +596,43 @@ export default function VehiclesPage() {
                   <p className="text-sm text-gray-500 mt-1">
                     Máximo 10 fotos. Formatos: JPG, PNG, GIF. Máximo 5MB por archivo.
                   </p>
+                  
+                  {/* Mostrar imágenes existentes en modo edición */}
+                  {editingVehicle && editingVehicle.images && editingVehicle.images.length > 0 && (
+                    <div className="col-span-2">
+                      <Label>Imágenes existentes</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                        {editingVehicle.images.map((image) => (
+                          <div key={image.id} className="relative group">
+                            <img
+                              src={`/uploads/${image.filename}`}
+                              alt={`Imagen del vehículo`}
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteImage(image.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {image.isPrimary && (
+                              <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                Principal
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {editingVehicle.images.length} imagen(es) actual(es). Pasa el mouse sobre una imagen para eliminarla.
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="licensePlate">Patente</Label>
