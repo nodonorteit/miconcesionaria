@@ -221,8 +221,16 @@ export async function POST(request: NextRequest) {
     if (images.length > 0) {
       try {
         // Crear directorio de uploads si no existe
-        const uploadsDir = join(process.cwd(), 'uploads')
-        await mkdir(uploadsDir, { recursive: true })
+        const uploadsDir = join(process.cwd(), 'uploads')  // En Docker, esto es /app/uploads
+        
+        // Verificar si el directorio existe y tiene permisos
+        try {
+          await mkdir(uploadsDir, { recursive: true })
+          console.log('✅ Directorio de uploads creado/verificado:', uploadsDir)
+        } catch (mkdirError) {
+          console.error('❌ Error creando directorio de uploads:', mkdirError)
+          // Continuar sin crear el directorio si ya existe
+        }
 
         for (let i = 0; i < images.length; i++) {
           const image = images[i]
