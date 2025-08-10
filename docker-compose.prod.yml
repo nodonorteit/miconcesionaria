@@ -4,8 +4,7 @@ services:
   app:
     image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
     platform: linux/amd64
-    ports:
-      - "3000:3000"
+    network_mode: host
     environment:
       - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
@@ -18,15 +17,6 @@ services:
     volumes:
       - uploads_data:/app/uploads
     restart: unless-stopped
-    # healthcheck:
-    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    # No depends_on needed - using native MariaDB
-
-  # MariaDB service removed - using native MariaDB on server
-  # Database connection will be configured via environment variables
 
 volumes:
   uploads_data:
