@@ -180,35 +180,61 @@ export default function VehiclesPage() {
     e.preventDefault()
     
     try {
-      const formDataToSend = new FormData()
-      formDataToSend.append('brand', formData.brand)
-      formDataToSend.append('model', formData.model)
-      formDataToSend.append('year', formData.year)
-      formDataToSend.append('color', formData.color)
-      formDataToSend.append('mileage', formData.mileage)
-      formDataToSend.append('price', formData.price)
-      formDataToSend.append('description', formData.description)
-      formDataToSend.append('vin', formData.vin)
-      formDataToSend.append('licensePlate', formData.licensePlate)
-      formDataToSend.append('fuelType', formData.fuelType)
-      formDataToSend.append('transmission', formData.transmission)
-      formDataToSend.append('status', formData.status)
+      let response: Response
       
-      // Agregar imágenes
-      formData.images.forEach((image, index) => {
-        formDataToSend.append(`images`, image)
-      })
-
-      const url = editingVehicle 
-        ? `/api/vehicles/${editingVehicle.id}`
-        : '/api/vehicles'
-      
-      const method = editingVehicle ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        body: formDataToSend,
-      })
+      if (editingVehicle) {
+        // EDITAR VEHÍCULO - Enviar JSON
+        const vehicleData = {
+          brand: formData.brand,
+          model: formData.model,
+          year: formData.year,
+          color: formData.color,
+          mileage: formData.mileage,
+          price: formData.price,
+          description: formData.description,
+          vin: formData.vin,
+          licensePlate: formData.licensePlate,
+          fuelType: formData.fuelType,
+          transmission: formData.transmission,
+          status: formData.status,
+          vehicleTypeId: formData.vehicleTypeId,
+          isActive: true
+        }
+        
+        response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(vehicleData),
+        })
+      } else {
+        // NUEVO VEHÍCULO - Enviar FormData (para imágenes)
+        const formDataToSend = new FormData()
+        formDataToSend.append('brand', formData.brand)
+        formDataToSend.append('model', formData.model)
+        formDataToSend.append('year', formData.year)
+        formDataToSend.append('color', formData.color)
+        formDataToSend.append('mileage', formData.mileage)
+        formDataToSend.append('price', formData.price)
+        formDataToSend.append('description', formData.description)
+        formDataToSend.append('vin', formData.vin)
+        formDataToSend.append('licensePlate', formData.licensePlate)
+        formDataToSend.append('fuelType', formData.fuelType)
+        formDataToSend.append('transmission', formData.transmission)
+        formDataToSend.append('status', formData.status)
+        formDataToSend.append('vehicleTypeId', formData.vehicleTypeId)
+        
+        // Agregar imágenes
+        formData.images.forEach((image, index) => {
+          formDataToSend.append(`images`, image)
+        })
+        
+        response = await fetch('/api/vehicles', {
+          method: 'POST',
+          body: formDataToSend,
+        })
+      }
 
       if (response.ok) {
         toast.success(editingVehicle ? 'Vehículo actualizado' : 'Vehículo creado')
@@ -217,10 +243,13 @@ export default function VehiclesPage() {
         resetForm()
         fetchVehicles()
       } else {
-        toast.error('Error al guardar vehículo')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error response:', errorData)
+        toast.error(`Error al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
       }
     } catch (error) {
-      toast.error('Error al guardar vehículo')
+      console.error('Error in handleSubmit:', error)
+      toast.error(`Error al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
     }
   }
 
