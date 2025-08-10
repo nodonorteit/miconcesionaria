@@ -18,16 +18,7 @@ const nextConfig = {
     ],
     unoptimized: true, // Permitir imágenes no optimizadas para uploads
   },
-  // Configurar archivos estáticos
-  async rewrites() {
-    return [
-      {
-        source: '/uploads/:path*',
-        destination: '/api/uploads/:path*',
-      },
-    ]
-  },
-  // Configurar headers para archivos estáticos
+  // Configuración de archivos estáticos eliminada - permite acceso directo a /uploads
   async headers() {
     return [
       {

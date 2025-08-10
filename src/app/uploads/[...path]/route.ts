@@ -8,13 +8,13 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    // Cambiar de process.cwd() a /app/uploads para acceder al volumen Docker
+    // Servir archivos directamente desde el volumen Docker
     const filePath = join('/app/uploads', ...params.path)
-    console.log('🔍 Buscando archivo:', filePath)
+    console.log('🔍 [Static Route] Buscando archivo:', filePath)
     
     // Verificar que el archivo existe
     if (!existsSync(filePath)) {
-      console.error(`❌ File not found: ${filePath}`)
+      console.error(`❌ [Static Route] File not found: ${filePath}`)
       return new NextResponse('File not found', { status: 404 })
     }
     
@@ -22,22 +22,22 @@ export async function GET(
     const fs = await import('fs')
     const stats = await fs.promises.stat(filePath)
     if (!stats.isFile()) {
-      console.error(`❌ Path is not a file: ${filePath}`)
+      console.error(`❌ [Static Route] Path is not a file: ${filePath}`)
       return new NextResponse('Not a file', { status: 400 })
     }
     
-    console.log('📄 Leyendo archivo:', filePath, 'Tamaño:', stats.size)
+    console.log('📄 [Static Route] Leyendo archivo:', filePath, 'Tamaño:', stats.size)
     
     // Leer el archivo
     const fileBuffer = await readFile(filePath)
     
     // Verificar que el archivo no esté vacío
     if (fileBuffer.length === 0) {
-      console.error(`❌ File is empty: ${filePath}`)
+      console.error(`❌ [Static Route] File is empty: ${filePath}`)
       return new NextResponse('File is empty', { status: 400 })
     }
     
-    console.log('✅ Archivo leído correctamente, tamaño:', fileBuffer.length, 'bytes')
+    console.log('✅ [Static Route] Archivo leído correctamente, tamaño:', fileBuffer.length, 'bytes')
     
     // Determinar el tipo MIME basado en la extensión
     const ext = filePath.split('.').pop()?.toLowerCase()
@@ -75,22 +75,23 @@ export async function GET(
         break
     }
     
-    console.log('🎨 Content-Type detectado:', contentType)
+    console.log('🎨 [Static Route] Content-Type detectado:', contentType)
     
-    // Devolver el archivo con el tipo MIME correcto
+    // Devolver el archivo con el tipo MIME correcto y headers de cache
     const response = new NextResponse(fileBuffer, {
       headers: {
         'Content-Type': contentType,
-        'Cache-Control': 'public, max-age=31536000', // Cache por 1 año
+        'Cache-Control': 'public, max-age=31536000, immutable', // Cache por 1 año
         'Content-Length': fileBuffer.length.toString(),
+        'Access-Control-Allow-Origin': '*', // Permitir CORS para imágenes
       },
     })
     
-    console.log('✅ Archivo servido correctamente')
+    console.log('✅ [Static Route] Archivo servido correctamente')
     return response
     
   } catch (error) {
-    console.error('❌ Error serving file:', error)
+    console.error('❌ [Static Route] Error serving file:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   }
 } 
