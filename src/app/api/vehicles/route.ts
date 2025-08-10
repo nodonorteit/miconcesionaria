@@ -36,8 +36,6 @@ export async function GET(request: NextRequest) {
       // Procesar los resultados para incluir información de venta
       const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
-        fuelType: vehicle.fuelType || 'GASOLINE',
-        transmission: vehicle.transmission || 'MANUAL',
         status: vehicle.status || 'SOLD',
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || '',
@@ -80,8 +78,6 @@ export async function GET(request: NextRequest) {
       // Procesar los resultados para manejar valores vacíos
       const processedVehicles = vehicles.map((vehicle) => ({
         ...vehicle,
-        fuelType: vehicle.fuelType || 'GASOLINE',
-        transmission: vehicle.transmission || 'MANUAL',
         status: vehicle.status || 'AVAILABLE',
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || ''
