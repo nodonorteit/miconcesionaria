@@ -10,6 +10,7 @@ import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import Link from 'next/link'
+import { ImageCarousel } from '@/components/ui/image-carousel'
 
 interface Vehicle {
   id: string
@@ -87,6 +88,15 @@ export default function VehiclesPage() {
   const [sellingVehicle, setSellingVehicle] = useState<Vehicle | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [carouselOpen, setCarouselOpen] = useState(false)
+  const [carouselImages, setCarouselImages] = useState<Array<{
+    id: string
+    filename: string
+    path: string
+    isPrimary: boolean
+    createdAt: string
+  }>>([])
+  const [carouselInitialIndex, setCarouselInitialIndex] = useState(0)
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -534,6 +544,19 @@ export default function VehiclesPage() {
     toast.success('Imagen removida del formulario')
   }
 
+  // Función para abrir el carrusel de imágenes
+  const handleOpenCarousel = (images: Array<{
+    id: string
+    filename: string
+    path: string
+    isPrimary: boolean
+    createdAt: string
+  }>, initialIndex: number = 0) => {
+    setCarouselImages(images)
+    setCarouselInitialIndex(initialIndex)
+    setCarouselOpen(true)
+  }
+
   // Filtrar vehículos basado en el término de búsqueda
   const filteredVehicles = vehicles.filter(vehicle => {
     const searchLower = searchTerm.toLowerCase()
@@ -805,12 +828,13 @@ export default function VehiclesPage() {
                     <div className="col-span-2">
                       <Label>Imágenes existentes</Label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                        {editingVehicle.images.map((image) => (
+                        {editingVehicle.images.map((image, index) => (
                           <div key={image.id} className="relative group">
                             <img
                               src={`/uploads/${image.filename}`}
                               alt={`Imagen del vehículo`}
-                              className="w-full h-24 object-cover rounded-lg border"
+                              className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => handleOpenCarousel(editingVehicle.images || [], index)}
                             />
                             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
                               <Button
@@ -950,9 +974,27 @@ export default function VehiclesPage() {
             <div className="flex-1">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Car className="h-6 w-6 text-blue-600" />
-                  </div>
+                  {vehicle.images && vehicle.images.length > 0 ? (
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                           onClick={() => handleOpenCarousel(vehicle.images || [], 0)}>
+                        <img
+                          src={vehicle.images[0].path}
+                          alt={`${vehicle.brand} ${vehicle.model}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      {vehicle.images.length > 1 && (
+                        <div className="absolute -bottom-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          +{vehicle.images.length - 1}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Car className="h-6 w-6 text-blue-600" />
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">
@@ -1169,7 +1211,8 @@ export default function VehiclesPage() {
                             <img
                               src={`/uploads/${image.filename}`}
                               alt={`${viewingVehicle.brand} ${viewingVehicle.model} - Foto ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => handleOpenCarousel(viewingVehicle.images || [], index)}
                               onError={(e) => {
                                 console.error('Error loading image:', image.filename)
                                 e.currentTarget.style.display = 'none'
@@ -1338,6 +1381,14 @@ export default function VehiclesPage() {
           </div>
         </div>
       )}
+
+      {/* Carrusel de imágenes */}
+      <ImageCarousel
+        images={carouselImages}
+        isOpen={carouselOpen}
+        onClose={() => setCarouselOpen(false)}
+        initialImageIndex={carouselInitialIndex}
+      />
     </div>
   )
 } 
