@@ -15,12 +15,8 @@ export async function GET() {
       totalExpenses,
       totalExpensesAmount
     ] = await Promise.all([
-      prisma.vehicle.count({
-        where: { isActive: true }
-      }),
-      prisma.customer.count({
-        where: { isActive: true }
-      }),
+      prisma.vehicle.count(),
+      prisma.customer.count(),
       prisma.sale.count(),
       prisma.sale.aggregate({
         _sum: {
