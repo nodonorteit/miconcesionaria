@@ -54,8 +54,6 @@ model Vehicle {
   vin         String?  @unique
   licensePlate String?
   status      VehicleStatus @default(AVAILABLE)
-  purchasePrice Decimal? @db.Decimal(10, 2)
-  salePrice   Decimal? @db.Decimal(10, 2)
   description String?
   vehicleTypeId String
   createdAt   DateTime @default(now())
@@ -132,7 +130,6 @@ model Provider {
   address     String?
   city        String?
   state       String?
-  zipCode     String?
   taxId       String?  @unique
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -149,7 +146,6 @@ model Workshop {
   address     String?
   city        String?
   state       String?
-  zipCode     String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
