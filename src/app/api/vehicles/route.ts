@@ -306,8 +306,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(vehicleWithImages, { status: 201 })
   } catch (error) {
     console.error('❌ Error creating vehicle:', error)
+    
+    // Manejar errores específicos de Prisma
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      // Error de constraint único
+      const field = (error as any).meta?.target?.[0] || 'campo'
+      return NextResponse.json(
+        { 
+          error: `El ${field} ya existe en la base de datos. Por favor, usa un valor diferente.`,
+          details: `Error de duplicado en: ${field}`
+        }, 
+        { status: 400 }
+      )
+    }
+    
+    // Otros errores de Prisma
+    if (error && typeof error === 'object' && 'code' in error && (error as any).code?.startsWith('P')) {
+      return NextResponse.json(
+        { 
+          error: 'Error en la base de datos. Por favor, verifica los datos e intenta nuevamente.',
+          details: (error as any).message || 'Error de Prisma desconocido'
+        }, 
+        { status: 400 }
+      )
+    }
+    
+    // Error genérico
     return NextResponse.json(
-      { error: 'Error creating vehicle', details: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        error: 'Error interno del servidor. Por favor, intenta nuevamente.',
+        details: error instanceof Error ? error.message : 'Error desconocido'
+      }, 
       { status: 500 }
     )
   }
