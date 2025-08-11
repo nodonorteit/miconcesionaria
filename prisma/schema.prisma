@@ -186,6 +186,9 @@ model Sale {
   user        User @relation(fields: [userId], references: [id])
   payments    Payment[]
   receipts    Receipt[]
+  
+  // Relación con el documento de venta
+  saleDocument SaleDocument?
 
   @@map("sales")
 }
@@ -278,6 +281,52 @@ model PurchaseTicket {
   updatedAt   DateTime @updatedAt
 
   @@map("purchase_tickets")
+}
+
+model SaleDocument {
+  id          String   @id @default(cuid())
+  saleId      String   @unique
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  
+  // Información del vehículo
+  vehicleBrand        String
+  vehicleModel        String
+  vehicleYear         Int
+  vehicleColor        String
+  vehicleMileage      Int
+  vehicleVin          String?
+  vehicleLicensePlate String?
+  vehicleType         String
+  
+  // Información del cliente
+  customerFirstName   String
+  customerLastName    String
+  customerEmail       String
+  customerPhone       String?
+  customerDocument    String?
+  customerCity        String?
+  customerState       String?
+  
+  // Información del vendedor
+  sellerFirstName     String
+  sellerLastName      String
+  sellerEmail         String
+  sellerPhone         String?
+  sellerCommissionRate Float
+  
+  // Información de la venta
+  saleDate            DateTime @default(now())
+  totalAmount         Decimal  @db.Decimal(10, 2)
+  commissionAmount    Decimal  @db.Decimal(10, 2)
+  notes               String?
+  
+  // Metadatos del documento
+  documentNumber      String   @unique @default(cuid())
+  status              String   @default("ACTIVE") // ACTIVE, CANCELLED, REFUNDED
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@map("sale_documents")
 }
 
 // Enums
