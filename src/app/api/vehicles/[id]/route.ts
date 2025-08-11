@@ -41,7 +41,7 @@ export async function PUT(
     
     let vehicleData: any
     let hasImages = false
-    let images: File[] = []
+    let images: any[] = []
     
     // Verificar si es FormData o JSON
     const contentType = request.headers.get('content-type')
@@ -72,10 +72,11 @@ export async function PUT(
       const imageFiles = formData.getAll('images')
       if (imageFiles.length > 0) {
         hasImages = true
-        images = imageFiles.filter(file => file instanceof File) as File[]
-        console.log(`📸 ${images.length} imagen(es) encontrada(s) en FormData`)
+        // En Node.js, los archivos de FormData no son instancias de File
+        images = imageFiles as any[]
+        console.log(`📸 ${imageFiles.length} imagen(es) encontrada(s) en FormData`)
         
-        images.forEach((image, index) => {
+        imageFiles.forEach((image: any, index: number) => {
           console.log(`📸 Imagen ${index + 1}:`, image.name, 'Size:', image.size, 'Type:', image.type)
         })
       }
