@@ -195,33 +195,79 @@ export default function VehiclesPage() {
       
       if (editingVehicle) {
         console.log('✏️ Editando vehículo existente...')
-        // EDITAR VEHÍCULO - Enviar JSON
-        const vehicleData = {
-          brand: formData.brand,
-          model: formData.model,
-          year: formData.year,
-          color: formData.color,
-          mileage: formData.mileage,
-          price: formData.price,
-          description: formData.description,
-          vin: formData.vin,
-          licensePlate: formData.licensePlate,
-          fuelType: formData.fuelType,
-          transmission: formData.transmission,
-          status: formData.status,
-          vehicleTypeId: formData.vehicleTypeId,
-          isActive: true
+        
+        // Si hay imágenes nuevas, usar FormData
+        if (formData.images.length > 0) {
+          console.log('📸 Hay imágenes nuevas, usando FormData para edición...')
+          const formDataToSend = new FormData()
+          formDataToSend.append('brand', formData.brand)
+          formDataToSend.append('model', formData.model)
+          formDataToSend.append('year', formData.year.toString())
+          formDataToSend.append('color', formData.color)
+          formDataToSend.append('mileage', formData.mileage.toString())
+          formDataToSend.append('price', formData.price.toString())
+          formDataToSend.append('description', formData.description || '')
+          formDataToSend.append('vin', formData.vin || '')
+          formDataToSend.append('licensePlate', formData.licensePlate || '')
+          formDataToSend.append('fuelType', formData.fuelType)
+          formDataToSend.append('transmission', formData.transmission)
+          formDataToSend.append('status', formData.status)
+          formDataToSend.append('vehicleTypeId', formData.vehicleTypeId)
+          formDataToSend.append('isActive', 'true')
+          
+          // Agregar imágenes nuevas
+          console.log(`📸 Agregando ${formData.images.length} imagen(es) nuevas al FormData...`)
+          formData.images.forEach((image, index) => {
+            console.log(`📸 Imagen nueva ${index + 1}:`, image.name, 'Size:', image.size, 'Type:', image.type)
+            formDataToSend.append(`images`, image)
+          })
+          
+          // Verificar que FormData tenga las imágenes
+          console.log('🔍 Verificando FormData antes del envío (edición)...')
+          const entries = Array.from(formDataToSend.entries())
+          entries.forEach(([key, value]) => {
+            if (key === 'images') {
+              console.log(`📸 FormData[${key}]:`, value instanceof File ? `${value.name} (${value.size} bytes)` : value)
+            } else {
+              console.log(`📋 FormData[${key}]:`, value)
+            }
+          })
+          
+          console.log('📤 Enviando FormData para edición al servidor...')
+          response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
+            method: 'PUT',
+            body: formDataToSend, // Sin Content-Type para FormData
+          })
+        } else {
+          // Sin imágenes nuevas, usar JSON
+          console.log('📋 Sin imágenes nuevas, usando JSON para edición...')
+          const vehicleData = {
+            brand: formData.brand,
+            model: formData.model,
+            year: formData.year,
+            color: formData.color,
+            mileage: formData.mileage,
+            price: formData.price,
+            description: formData.description,
+            vin: formData.vin,
+            licensePlate: formData.licensePlate,
+            fuelType: formData.fuelType,
+            transmission: formData.transmission,
+            status: formData.status,
+            vehicleTypeId: formData.vehicleTypeId,
+            isActive: true
+          }
+          
+          console.log('📤 Enviando datos JSON para edición:', vehicleData)
+          
+          response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(vehicleData),
+          })
         }
-        
-        console.log('📤 Enviando datos JSON:', vehicleData)
-        
-        response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(vehicleData),
-        })
       } else {
         console.log('🆕 Creando nuevo vehículo...')
         // NUEVO VEHÍCULO - Enviar FormData (para imágenes)
