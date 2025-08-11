@@ -45,66 +45,62 @@ model VehicleType {
 }
 
 model Vehicle {
-  id            String      @id @default(cuid())
-  brand         String
-  model         String
-  year          Int
-  color         String
-  mileage       Int
-  price         Decimal     @db.Decimal(10, 2)
-  description   String?
-  vin           String?     @unique
-  licensePlate  String?
-  fuelType      FuelType
-  transmission  Transmission
-  status        VehicleStatus @default(AVAILABLE)
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  // Relations
+  id          String   @id @default(cuid())
+  brand       String
+  model       String
+  year        Int
+  color       String
+  mileage     Int
+  vin         String?  @unique
+  licensePlate String?
+  status      VehicleStatus @default(AVAILABLE)
+  purchasePrice Decimal? @db.Decimal(10, 2)
+  salePrice   Decimal? @db.Decimal(10, 2)
+  description String?
   vehicleTypeId String
-  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
-  images        VehicleImage[]
-  sales         Sale[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@map("Vehicle")
+  vehicleType VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  sales       Sale[]
+  purchases   Purchase[]
+  images      VehicleImage[]
+
+  @@map("vehicles")
 }
 
 model VehicleImage {
   id        String   @id @default(cuid())
-  filename  String
-  path      String
-  isPrimary Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  // Relations
+  url       String
   vehicleId String
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@map("vehicle_images")
 }
 
 model Customer {
-  id          String   @id @default(cuid())
-  firstName   String
-  lastName    String
-  email       String?  @unique
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  zipCode     String?
-  documentNumber String? @unique
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String      @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String?     @unique
+  phone         String?
+  documentNumber String?    @unique
+  city          String?
+  state         String?
+  address       String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   // Relations
-  sales       Sale[]
-  payments    Payment[]
+  sales         Sale[]
+  purchases     Purchase[] @relation("CustomerAsSeller")
+  payments      Payment[]
 
-  @@map("Client")
+  @@map("customers")
 }
 
 model Seller {
@@ -168,27 +164,22 @@ model Sale {
   id          String   @id @default(cuid())
   saleNumber  String   @unique
   saleDate    DateTime @default(now())
+  vehicleId   String
+  customerId  String
+  sellerId    String
   totalAmount Decimal  @db.Decimal(10, 2)
   commission  Decimal  @db.Decimal(10, 2)
   status      SaleStatus @default(PENDING)
   notes       String?
+  paymentMethod String @default("CONTADO")
+  deliveryDate DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
-  vehicleId   String
-  vehicle     Vehicle @relation(fields: [vehicleId], references: [id])
-  customerId  String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
   customer    Customer @relation(fields: [customerId], references: [id])
-  sellerId    String
-  seller      Seller @relation(fields: [sellerId], references: [id])
-  userId      String
-  user        User @relation(fields: [userId], references: [id])
-  payments    Payment[]
-  receipts    Receipt[]
-  
-  // Relación con el documento de venta
-  saleDocument SaleDocument?
+  seller      Seller   @relation(fields: [sellerId], references: [id])
+  documents   SaleDocument[]
 
   @@map("sales")
 }
@@ -285,60 +276,32 @@ model PurchaseTicket {
 
 model SaleDocument {
   id          String   @id @default(cuid())
-  saleId      String   @unique
+  documentNumber String @unique
+  saleId      String
+  templateId  String?
+  content     String   // HTML del documento generado
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
-  
-  // Información del vehículo
-  vehicleBrand        String
-  vehicleModel        String
-  vehicleYear         Int
-  vehicleColor        String
-  vehicleMileage      Int
-  vehicleVin          String?
-  vehicleLicensePlate String?
-  vehicleType         String
-  
-  // Información del cliente
-  customerFirstName   String
-  customerLastName    String
-  customerEmail       String
-  customerPhone       String?
-  customerDocument    String?
-  customerCity        String?
-  customerState       String?
-  
-  // Información del vendedor
-  sellerFirstName     String
-  sellerLastName      String
-  sellerEmail         String
-  sellerPhone         String?
-  sellerCommissionRate Float
-  
-  // Información de la venta
-  saleDate            DateTime @default(now())
-  totalAmount         Decimal  @db.Decimal(10, 2)
-  commissionAmount    Decimal  @db.Decimal(10, 2)
-  notes               String?
-  
-  // Metadatos del documento
-  documentNumber      String   @unique @default(cuid())
-  status              String   @default("ACTIVE") // ACTIVE, CANCELLED, REFUNDED
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-  
+  template    DocumentTemplate? @relation(fields: [templateId], references: [id])
+
   @@map("sale_documents")
 }
 
 model DocumentTemplate {
   id          String   @id @default(cuid())
   name        String   @unique
-  type        String   // BOLETO_COMPRA_VENTA, RECIBO, etc.
+  type        String   // BOLETO_COMPRA_VENTA, RECIBO, COMPRA_VEHICULO, etc.
   content     String   // HTML del template
   variables   Json     // Variables disponibles en el template
   isActive    Boolean  @default(true)
   isDefault   Boolean  @default(false) // Template por defecto para el tipo
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  saleDocuments    SaleDocument[]
+  purchaseDocuments PurchaseDocument[]
 
   @@map("document_templates")
 }
@@ -424,4 +387,47 @@ enum ExpenseType {
   WORKSHOP
   PARTS
   COMMISSION
+} 
+
+model Purchase {
+  id          String   @id @default(cuid())
+  purchaseNumber String @unique
+  purchaseDate DateTime @default(now())
+  vehicleId   String
+  sellerId    String  // El cliente que vende el vehículo
+  totalAmount Decimal @db.Decimal(10, 2)
+  commission  Decimal @db.Decimal(10, 2) @default(0)
+  status      PurchaseStatus @default(PENDING)
+  notes       String?
+  paymentMethod String @default("CONTADO")
+  deliveryDate DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  seller      Customer @relation("CustomerAsSeller", fields: [sellerId], references: [id])
+  documents   PurchaseDocument[]
+
+  @@map("purchases")
+}
+
+model PurchaseDocument {
+  id          String   @id @default(cuid())
+  documentNumber String @unique
+  purchaseId  String
+  templateId  String?
+  content     String   // HTML del documento generado
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  purchase    Purchase @relation(fields: [purchaseId], references: [id])
+  template    DocumentTemplate? @relation(fields: [templateId], references: [id])
+
+  @@map("purchase_documents")
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 } 

@@ -34,7 +34,7 @@ export default function SellersPage() {
     lastName: '',
     email: '',
     phone: '',
-    commissionRate: '5'
+    commissionRate: '0'
   })
 
   useEffect(() => {
@@ -140,8 +140,42 @@ export default function SellersPage() {
       lastName: '',
       email: '',
       phone: '',
-      commissionRate: '5'
+      commissionRate: '0'
     })
+  }
+
+  const handleCreateConcesionaria = async () => {
+    const confirmed = window.confirm(
+      '¿Estás seguro de que quieres crear un vendedor "CONCESIONARIA" con 0% de comisión?'
+    )
+
+    if (!confirmed) return
+
+    try {
+      const response = await fetch('/api/sellers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: 'CONCESIONARIA',
+          lastName: 'CONCESIONARIA',
+          email: 'concesionaria@example.com',
+          phone: '000-000-0000',
+          commissionRate: 0,
+          isActive: true,
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Vendedor "CONCESIONARIA" creado correctamente')
+        fetchSellers()
+      } else {
+        toast.error('Error al crear vendedor "CONCESIONARIA"')
+      }
+    } catch (error) {
+      toast.error('Error al crear vendedor "CONCESIONARIA"')
+    }
   }
 
   // Filtrar vendedores basado en el término de búsqueda
@@ -184,6 +218,14 @@ export default function SellersPage() {
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Vendedor
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={handleCreateConcesionaria}
+          className="bg-blue-50 text-blue-700 hover:bg-blue-100"
+        >
+          <UserCheck className="h-4 w-4 mr-2" />
+          Crear Concesionaria
         </Button>
       </div>
 
@@ -243,10 +285,14 @@ export default function SellersPage() {
                     max="100"
                     value={formData.commissionRate}
                     onChange={(e) => setFormData({...formData, commissionRate: e.target.value})}
+                    placeholder="0.00"
                     required
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Porcentaje que se lleva el vendedor por cada venta
+                    {formData.commissionRate === '0' 
+                      ? 'Sin comisión - Para ventas directas de la concesionaria'
+                      : 'Porcentaje que se lleva el vendedor por cada venta'
+                    }
                   </p>
                 </div>
               </div>
@@ -295,8 +341,15 @@ export default function SellersPage() {
                         Inactivo
                       </span>
                     )}
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      {seller.commissionRate}% Comisión
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      seller.commissionRate === 0 
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-purple-100 text-purple-800'
+                    }`}>
+                      {seller.commissionRate === 0 
+                        ? 'Sin Comisión'
+                        : `${seller.commissionRate}% Comisión`
+                      }
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
