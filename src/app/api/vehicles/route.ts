@@ -15,7 +15,6 @@ export async function GET(request: NextRequest) {
       // Obtener vehículos vendidos con información de venta e imágenes
       vehicles = await prisma.vehicle.findMany({
         where: {
-          isActive: true,
           status: 'SOLD'
         },
         include: {
@@ -63,7 +62,6 @@ export async function GET(request: NextRequest) {
       // Obtener vehículos disponibles (no vendidos) con imágenes
       vehicles = await prisma.vehicle.findMany({
         where: {
-          isActive: true,
           status: {
             not: 'SOLD'
           }
@@ -214,8 +212,7 @@ export async function POST(request: NextRequest) {
         vin: vehicleData.vin || null,
         licensePlate: vehicleData.licensePlate || null,
         status: (vehicleData.status || 'AVAILABLE') as any,
-        vehicleTypeId: vehicleData.vehicleTypeId,
-        isActive: true
+        vehicleTypeId: vehicleData.vehicleTypeId
       },
       include: {
         vehicleType: true,

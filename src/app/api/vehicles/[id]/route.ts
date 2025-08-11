@@ -107,8 +107,7 @@ export async function PUT(
         description: vehicleData.description,
         vin: vehicleData.vin,
         licensePlate: vehicleData.licensePlate,
-        vehicleTypeId: vehicleData.vehicleTypeId,
-        isActive: vehicleData.isActive
+        vehicleTypeId: vehicleData.vehicleTypeId
       }
     })
     
