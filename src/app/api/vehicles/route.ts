@@ -102,9 +102,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     console.log('🔄 Creando nuevo vehículo...')
+    console.log('📋 Headers recibidos:', Object.fromEntries(request.headers.entries()))
     
     const contentType = request.headers.get('content-type') || ''
-    console.log('📋 Content-Type:', contentType)
+    console.log('📋 Content-Type detectado:', contentType)
     
     let vehicleData: any = {}
     let images: File[] = []
@@ -157,6 +158,16 @@ export async function POST(request: NextRequest) {
         images = formData.getAll('images') as File[]
         console.log('✅ FormData procesado correctamente:', Object.keys(vehicleData))
         console.log('📸 Imágenes encontradas:', images.length)
+        
+        // Log detallado de cada imagen
+        images.forEach((image, index) => {
+          console.log(`📸 Imagen ${index + 1}:`, {
+            name: image.name,
+            size: image.size,
+            type: image.type,
+            lastModified: image.lastModified
+          })
+        })
       } catch (formError) {
         console.error('❌ Error processing FormData:', formError)
         return NextResponse.json(
@@ -219,9 +230,11 @@ export async function POST(request: NextRequest) {
 
     // Procesar imágenes si existen
     if (images.length > 0) {
+      console.log('🖼️ Iniciando procesamiento de imágenes...')
       try {
         // Crear directorio de uploads si no existe
         const uploadsDir = join(process.cwd(), 'uploads')  // En Docker, esto es /app/uploads
+        console.log('📁 Directorio de uploads a usar:', uploadsDir)
         
         // Verificar si el directorio existe y tiene permisos
         try {
@@ -234,29 +247,44 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < images.length; i++) {
           const image = images[i]
+          console.log(`🖼️ Procesando imagen ${i + 1}/${images.length}:`, image.name)
+          
           if (image.size > 0) {
-            const bytes = await image.arrayBuffer()
-            const buffer = Buffer.from(bytes)
-            
-            // Generar nombre único para la imagen
-            const timestamp = Date.now()
-            const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
-            const filepath = join(uploadsDir, filename)
-            
-            // Guardar archivo
-            await writeFile(filepath, buffer)
-            
-            // Guardar referencia en la base de datos
-            await prisma.vehicleImage.create({
-              data: {
-                filename,
-                path: `/uploads/${filename}`,
-                isPrimary: i === 0, // La primera imagen es la principal
-                vehicleId: vehicle.id
-              }
-            })
-            
-            console.log('✅ Imagen guardada:', filename)
+            try {
+              const bytes = await image.arrayBuffer()
+              const buffer = Buffer.from(bytes)
+              console.log(`📊 Buffer creado: ${buffer.length} bytes`)
+              
+              // Generar nombre único para la imagen
+              const timestamp = Date.now()
+              const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
+              const filepath = join(uploadsDir, filename)
+              console.log(`📝 Nombre del archivo: ${filename}`)
+              console.log(`📁 Ruta completa: ${filepath}`)
+              
+              // Guardar archivo
+              console.log('💾 Guardando archivo en disco...')
+              await writeFile(filepath, buffer)
+              console.log('✅ Archivo guardado en disco exitosamente')
+              
+              // Guardar referencia en la base de datos
+              console.log('💾 Guardando referencia en BD...')
+              await prisma.vehicleImage.create({
+                data: {
+                  filename,
+                  path: `/uploads/${filename}`,
+                  isPrimary: i === 0, // La primera imagen es la principal
+                  vehicleId: vehicle.id
+                }
+              })
+              
+              console.log('✅ Imagen procesada completamente:', filename)
+            } catch (imageError) {
+              console.error(`❌ Error procesando imagen ${i + 1}:`, imageError)
+              // Continuar con la siguiente imagen
+            }
+          } else {
+            console.log(`⚠️ Imagen ${i + 1} tiene tamaño 0, saltando...`)
           }
         }
       } catch (imageError) {

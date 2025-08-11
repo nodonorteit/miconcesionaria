@@ -179,10 +179,15 @@ export default function VehiclesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('🚀 Iniciando envío del formulario...')
+    console.log('📋 Datos del formulario:', formData)
+    console.log('📸 Imágenes seleccionadas:', formData.images)
+    
     try {
       let response: Response
       
       if (editingVehicle) {
+        console.log('✏️ Editando vehículo existente...')
         // EDITAR VEHÍCULO - Enviar JSON
         const vehicleData = {
           brand: formData.brand,
@@ -201,6 +206,8 @@ export default function VehiclesPage() {
           isActive: true
         }
         
+        console.log('📤 Enviando datos JSON:', vehicleData)
+        
         response = await fetch(`/api/vehicles/${editingVehicle.id}`, {
           method: 'PUT',
           headers: {
@@ -209,6 +216,7 @@ export default function VehiclesPage() {
           body: JSON.stringify(vehicleData),
         })
       } else {
+        console.log('🆕 Creando nuevo vehículo...')
         // NUEVO VEHÍCULO - Enviar FormData (para imágenes)
         const formDataToSend = new FormData()
         formDataToSend.append('brand', formData.brand)
@@ -226,30 +234,51 @@ export default function VehiclesPage() {
         formDataToSend.append('vehicleTypeId', formData.vehicleTypeId)
         
         // Agregar imágenes
+        console.log(`📸 Agregando ${formData.images.length} imagen(es) al FormData...`)
         formData.images.forEach((image, index) => {
+          console.log(`📸 Imagen ${index + 1}:`, image.name, 'Size:', image.size, 'Type:', image.type)
           formDataToSend.append(`images`, image)
         })
         
+        // Verificar que FormData tenga las imágenes
+        console.log('🔍 Verificando FormData antes del envío...')
+        const entries = Array.from(formDataToSend.entries())
+        entries.forEach(([key, value]) => {
+          if (key === 'images') {
+            console.log(`📸 FormData[${key}]:`, value instanceof File ? `${value.name} (${value.size} bytes)` : value)
+          } else {
+            console.log(`📋 FormData[${key}]:`, value)
+          }
+        })
+        
+        console.log('📤 Enviando FormData al servidor...')
         response = await fetch('/api/vehicles', {
           method: 'POST',
           body: formDataToSend,
         })
+        
+        console.log('📥 Respuesta del servidor recibida:', response.status, response.statusText)
       }
 
       if (response.ok) {
+        console.log('✅ Operación exitosa!')
+        const responseData = await response.json().catch(() => ({}))
+        console.log('📥 Datos de respuesta:', responseData)
+        
         toast.success(editingVehicle ? 'Vehículo actualizado' : 'Vehículo creado')
         setShowForm(false)
         setEditingVehicle(null)
         resetForm()
         fetchVehicles()
       } else {
+        console.error('❌ Error en la respuesta del servidor:', response.status, response.statusText)
         const errorData = await response.json().catch(() => ({}))
-        console.error('Error response:', errorData)
-        toast.error(`Error al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
+        console.error('📋 Detalles del error:', errorData)
+        toast.error(`Error al ${editingVehicle ? 'actualizar' : 'crear'} vehículo: ${response.status}`)
       }
     } catch (error) {
-      console.error('Error in handleSubmit:', error)
-      toast.error(`Error al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
+      console.error('💥 Error inesperado en handleSubmit:', error)
+      toast.error(`Error inesperado al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
     }
   }
 
