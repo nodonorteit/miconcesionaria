@@ -8,16 +8,23 @@ The table `sale_documents` does not exist in the current database.
 
 ## 🔧 Solución
 
-### Opción 1: Script SQL (Recomendado para Producción/Staging)
-1. **Conectar al servidor** donde está corriendo la aplicación
-2. **Ejecutar el script SQL**:
-   ```bash
-   # Desde el directorio del proyecto
-   ./scripts/setup-sale-documents.sh
-   ```
+### Opción 1: Scripts Automatizados (Recomendado)
 
-### Opción 2: Ejecutar SQL Manualmente
-Si no tienes acceso al script, ejecuta directamente en MySQL:
+#### Para STAGING:
+```bash
+# Desde el directorio del proyecto
+./scripts/setup-sale-documents-staging.sh
+```
+
+#### Para PRODUCCIÓN:
+```bash
+# Desde el directorio del proyecto
+./scripts/setup-sale-documents-production.sh
+```
+
+### Opción 2: Script SQL Manual
+Si no tienes acceso a los scripts, ejecuta directamente en MySQL:
+
 ```sql
 -- Crear tabla sale_documents
 CREATE TABLE IF NOT EXISTS `sale_documents` (
@@ -63,23 +70,38 @@ ADD CONSTRAINT `sale_documents_saleId_fkey`
 FOREIGN KEY (`saleId`) REFERENCES `sales`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 ```
 
-## 📋 Requisitos Previos
-- Acceso a la base de datos MySQL
-- Variable `DATABASE_URL` configurada
-- Cliente MySQL instalado en el servidor
+## 📋 Credenciales de Base de Datos
+
+### STAGING:
+- **Host**: 127.0.0.1
+- **Puerto**: 3306
+- **Base de datos**: miconcesionaria
+- **Usuario**: miconcesionaria
+- **Contraseña**: !FVsxr?pmm34xm2N
+
+### PRODUCCIÓN:
+- **Host**: 127.0.0.1
+- **Puerto**: 3306
+- **Base de datos**: miconcesionaria
+- **Usuario**: miconcesionaria
+- **Contraseña**: !FVsxr?pmm34xm2N
 
 ## 🚀 Pasos de Configuración
 
-### 1. Verificar Variables de Entorno
+### 1. Conectar al Servidor
 ```bash
-echo $DATABASE_URL
-# Debe mostrar algo como: mysql://usuario:password@host:puerto/database
+# Conectar al servidor donde está corriendo la aplicación
+ssh usuario@servidor
+cd /ruta/al/proyecto
 ```
 
 ### 2. Ejecutar Script de Configuración
 ```bash
-cd /ruta/al/proyecto
-./scripts/setup-sale-documents.sh
+# Para STAGING
+./scripts/setup-sale-documents-staging.sh
+
+# Para PRODUCCIÓN
+./scripts/setup-sale-documents-production.sh
 ```
 
 ### 3. Verificar Creación
@@ -100,6 +122,7 @@ Después de crear la tabla, la aplicación debería:
 ### Error: "Access denied"
 - Verificar credenciales de la base de datos
 - Verificar permisos del usuario MySQL
+- Verificar que el usuario tenga acceso desde 127.0.0.1
 
 ### Error: "Table already exists"
 - La tabla ya fue creada, continuar con la verificación
@@ -108,9 +131,13 @@ Después de crear la tabla, la aplicación debería:
 - Verificar que la tabla `sales` existe
 - Verificar que las referencias son correctas
 
+### Error: "mysql command not found"
+- Instalar cliente MySQL: `sudo apt-get install mysql-client`
+
 ## 📞 Soporte
 Si persisten los problemas, verificar:
 1. Logs de la aplicación
 2. Estado de la base de datos
 3. Permisos de usuario
-4. Configuración de Prisma 
+4. Configuración de Prisma
+5. Conectividad de red al puerto 3306 
