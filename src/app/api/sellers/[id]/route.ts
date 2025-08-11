@@ -61,7 +61,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         lastName,
         email,
         phone,
-        commissionRate: commissionRate || 5.0
+        commissionRate: commissionRate !== undefined ? commissionRate : 5.0
       }
     })
 

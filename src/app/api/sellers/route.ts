@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         lastName,
         email,
         phone,
-        commissionRate: commissionRate || 5.0
+        commissionRate: commissionRate !== undefined ? commissionRate : 5.0
       }
     })
 
