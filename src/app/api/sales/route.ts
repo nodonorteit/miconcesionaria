@@ -3,37 +3,26 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 // GET - Obtener todas las ventas
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const vehicleId = searchParams.get('vehicleId')
+    
+    let whereClause = {}
+    if (vehicleId) {
+      whereClause = { vehicleId }
+    }
+
     const sales = await prisma.sale.findMany({
-      where: {
-        status: {
-          not: 'CANCELLED'
-        }
-      },
+      where: whereClause,
       include: {
         vehicle: {
-          select: {
-            id: true,
-            brand: true,
-            model: true,
-            year: true
+          include: {
+            vehicleType: true
           }
         },
-        customer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        },
-        seller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        }
+        customer: true,
+        seller: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -44,7 +33,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching sales:', error)
     return NextResponse.json(
-      { error: 'Error al obtener ventas' },
+      { error: 'Error al obtener las ventas' },
       { status: 500 }
     )
   }
@@ -54,7 +43,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes } = body
+    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes, paymentMethod, deliveryDate } = body
 
     // Validar campos requeridos
     if (!vehicleId || !customerId || !sellerId || !totalAmount) {
@@ -106,27 +95,42 @@ export async function POST(request: NextRequest) {
       },
       include: {
         vehicle: {
-          select: {
-            id: true,
-            brand: true,
-            model: true,
-            year: true
+          include: {
+            vehicleType: true
           }
         },
-        customer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        },
-        seller: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true
-          }
-        }
+        customer: true,
+        seller: true
+      }
+    })
+
+    // Crear automáticamente el documento de venta
+    await prisma.saleDocument.create({
+      data: {
+        saleId: sale.id,
+        vehicleBrand: sale.vehicle.brand,
+        vehicleModel: sale.vehicle.model,
+        vehicleYear: sale.vehicle.year,
+        vehicleColor: '', // Se puede agregar al schema si es necesario
+        vehicleMileage: 0, // Se puede agregar al schema si es necesario
+        vehicleVin: sale.vehicle.vin || '',
+        vehicleLicensePlate: sale.vehicle.licensePlate || '',
+        vehicleType: sale.vehicle.vehicleType.name,
+        customerFirstName: sale.customer.firstName,
+        customerLastName: sale.customer.lastName,
+        customerEmail: sale.customer.email || '',
+        customerPhone: sale.customer.phone || '',
+        customerDocument: sale.customer.documentNumber || '',
+        customerCity: sale.customer.city || '',
+        customerState: sale.customer.state || '',
+        sellerFirstName: sale.seller.firstName,
+        sellerLastName: sale.seller.lastName,
+        sellerEmail: sale.seller.email || '',
+        sellerPhone: sale.seller.phone || '',
+        sellerCommissionRate: parseFloat(sale.seller.commissionRate.toString()),
+        totalAmount: sale.totalAmount,
+        commissionAmount: sale.commission,
+        notes: sale.notes || ''
       }
     })
 

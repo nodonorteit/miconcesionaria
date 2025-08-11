@@ -1,0 +1,164 @@
+/* Estilos para impresión del boleto */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\\:p-4 {
+    padding: 1rem !important;
+  }
+
+  /* Asegurar que el documento se ajuste a la página */
+  .max-w-4xl {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  /* Mejorar la legibilidad en impresión */
+  .text-gray-900 {
+    color: black !important;
+  }
+
+  .text-gray-600 {
+    color: #4b5563 !important;
+  }
+
+  .text-gray-700 {
+    color: #374151 !important;
+  }
+
+  .text-gray-500 {
+    color: #6b7280 !important;
+  }
+
+  .text-green-600 {
+    color: #059669 !important;
+  }
+
+  /* Asegurar que las líneas de firma sean visibles */
+  .border-b {
+    border-bottom: 1px solid #9ca3af !important;
+  }
+
+  .border-t-2 {
+    border-top: 2px solid #9ca3af !important;
+  }
+
+  /* Espaciado consistente */
+  .space-y-3 > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  .space-y-3 > * {
+    margin-top: 0 !important;
+  }
+
+  /* Asegurar que el documento se divida correctamente en páginas */
+  .min-h-screen {
+    min-height: auto !important;
+  }
+
+  /* Mejorar la legibilidad del texto pequeño */
+  .text-sm {
+    font-size: 0.875rem !important;
+  }
+
+  /* Asegurar que los bordes sean visibles */
+  .border-gray-400 {
+    border-color: #9ca3af !important;
+  }
+
+  /* Asegurar que el fondo gris sea visible */
+  .bg-gray-50 {
+    background-color: #f9fafb !important;
+  }
+}
+
+/* Estilos adicionales para pantalla */
+@media screen {
+  .boleto-container {
+    font-family: 'Arial', sans-serif;
+  }
+
+  .boleto-header {
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .boleto-section {
+    margin-bottom: 2rem;
+  }
+
+  .boleto-section-title {
+    color: #1f2937;
+    font-weight: 600;
+    border-bottom: 1px solid #d1d5db;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .boleto-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .boleto-info-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .boleto-info-label {
+    font-weight: 500;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .boleto-info-value {
+    color: #111827;
+    font-size: 1rem;
+  }
+
+  .boleto-signature-section {
+    margin-top: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .boleto-signature-box {
+    text-align: center;
+    border-top: 2px solid #9ca3af;
+    padding-top: 1rem;
+  }
+
+  .boleto-signature-line {
+    margin-top: 2rem;
+    height: 4rem;
+    border-bottom: 1px solid #9ca3af;
+  }
+
+  .boleto-observations {
+    background-color: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  .boleto-footer {
+    text-align: center;
+    margin-top: 2rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+  }
+} 

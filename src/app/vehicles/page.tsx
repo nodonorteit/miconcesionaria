@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, Car, Eye, ShoppingCart, Archive } from 'lucide-react'
+import { Plus, Edit, Trash2, Car, Eye, ShoppingCart, Archive, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -125,7 +125,9 @@ export default function VehiclesPage() {
     customerId: '',
     totalAmount: '',
     commission: '',
-    notes: ''
+    notes: '',
+    paymentMethod: 'CONTADO',
+    deliveryDate: new Date().toISOString().split('T')[0]
   })
 
   useEffect(() => {
@@ -412,7 +414,9 @@ export default function VehiclesPage() {
       customerId: '',
       totalAmount: vehicle.price.toString(),
       commission: '',
-      notes: ''
+      notes: '',
+      paymentMethod: 'CONTADO',
+      deliveryDate: new Date().toISOString().split('T')[0]
     })
   }
 
@@ -452,19 +456,30 @@ export default function VehiclesPage() {
           totalAmount: saleFormData.totalAmount,
           commission: saleFormData.commission,
           status: 'PENDING',
-          notes: saleFormData.notes
+          notes: saleFormData.notes,
+          paymentMethod: saleFormData.paymentMethod,
+          deliveryDate: saleFormData.deliveryDate
         }),
       })
 
       if (response.ok) {
+        const saleData = await response.json()
         toast.success('Venta creada exitosamente')
+        
+        // Mostrar opción para generar boleto
+        if (confirm('¿Deseas generar el boleto de compra-venta ahora?')) {
+          generateSaleDocument(saleData.id)
+        }
+        
         setSellingVehicle(null)
         setSaleFormData({
           sellerId: '',
           customerId: '',
           totalAmount: '',
           commission: '',
-          notes: ''
+          notes: '',
+          paymentMethod: 'CONTADO',
+          deliveryDate: new Date().toISOString().split('T')[0]
         })
         fetchVehicles() // Actualizar la lista para mostrar el nuevo estado
       } else {
@@ -473,6 +488,57 @@ export default function VehiclesPage() {
       }
     } catch (error) {
       toast.error('Error al crear la venta')
+    }
+  }
+
+  const generateSaleDocument = async (saleId: string) => {
+    try {
+      const response = await fetch('/api/sales/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ saleId }),
+      })
+
+      if (response.ok) {
+        const documentData = await response.json()
+        // Abrir el boleto en una nueva ventana
+        openSaleDocument(documentData.id)
+      } else {
+        toast.error('Error al generar el documento')
+      }
+    } catch (error) {
+      toast.error('Error al generar el documento')
+    }
+  }
+
+  const openSaleDocument = (documentId: string) => {
+    // Abrir el boleto en una nueva ventana
+    const newWindow = window.open(`/sales/documents/${documentId}`, '_blank')
+    if (!newWindow) {
+      toast.error('Por favor, permite popups para ver el boleto')
+    }
+  }
+
+  const handleGenerateBoleto = async (vehicleId: string) => {
+    try {
+      // Buscar la venta del vehículo
+      const response = await fetch(`/api/sales?vehicleId=${vehicleId}`)
+      if (response.ok) {
+        const sales = await response.json()
+        if (sales.length > 0) {
+          const sale = sales[0] // Tomar la primera venta
+          // Generar el documento
+          generateSaleDocument(sale.id)
+        } else {
+          toast.error('No se encontró la venta para este vehículo')
+        }
+      } else {
+        toast.error('Error al buscar la venta')
+      }
+    } catch (error) {
+      toast.error('Error al generar el boleto')
     }
   }
 
@@ -1049,6 +1115,20 @@ export default function VehiclesPage() {
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
               </Button>
+              
+              {/* Botón para generar boleto si el vehículo está vendido */}
+              {vehicle.status === 'SOLD' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleGenerateBoleto(vehicle.id)}
+                  className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden sm:inline">Boleto</span>
+                </Button>
+              )}
+              
               {vehicle.status !== 'SOLD' && permissions.canCreateSales && (
                 <Button
                   size="sm"
@@ -1347,6 +1427,33 @@ export default function VehiclesPage() {
                       onChange={(e) => setSaleFormData({...saleFormData, commission: e.target.value})}
                       placeholder="Se calcula automáticamente"
                       readOnly
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="paymentMethod">Método de Pago *</Label>
+                    <select
+                      id="paymentMethod"
+                      value={saleFormData.paymentMethod}
+                      onChange={(e) => setSaleFormData({...saleFormData, paymentMethod: e.target.value})}
+                      className="w-full p-2 border rounded"
+                      required
+                    >
+                      <option value="CONTADO">Contado (Efectivo)</option>
+                      <option value="TRANSFERENCIA">Transferencia</option>
+                      <option value="CHEQUE">Cheque</option>
+                      <option value="FINANCIADO">Financiado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="deliveryDate">Fecha de Entrega *</Label>
+                    <Input
+                      id="deliveryDate"
+                      type="date"
+                      value={saleFormData.deliveryDate}
+                      onChange={(e) => setSaleFormData({...saleFormData, deliveryDate: e.target.value})}
+                      required
                     />
                   </div>
                 </div>
