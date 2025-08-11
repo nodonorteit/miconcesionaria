@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Printer, Download, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useCompanyConfig } from '@/hooks/useCompanyConfig'
+import { useDocumentTemplate } from '@/hooks/useDocumentTemplate'
+import { renderTemplate } from '@/lib/template-renderer'
 import './boleto.css'
 
 interface SaleDocument {
@@ -20,6 +21,8 @@ interface SaleDocument {
     totalAmount: number
     commission: number
     notes?: string
+    paymentMethod?: string
+    deliveryDate?: string
     vehicle: {
       id: string
       brand: string
@@ -61,6 +64,7 @@ export default function SaleDocumentPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { companyConfig, loading: configLoading } = useCompanyConfig()
+  const { template: documentTemplate, loading: templateLoading } = useDocumentTemplate('BOLETO_COMPRA_VENTA')
 
   useEffect(() => {
     if (params.id) {
@@ -88,24 +92,7 @@ export default function SaleDocumentPage() {
     window.print()
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount)
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
-  }
-
-  if (loading) {
+  if (loading || configLoading || templateLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -116,7 +103,7 @@ export default function SaleDocumentPage() {
     )
   }
 
-  if (error || !document) {
+  if (error || !document || !documentTemplate) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md">
@@ -124,7 +111,9 @@ export default function SaleDocumentPage() {
             <CardTitle className="text-red-600">Error</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">{error || 'Documento no encontrado'}</p>
+            <p className="text-gray-600 mb-4">
+              {error || !document ? 'Documento no encontrado' : 'Template no encontrado'}
+            </p>
             <Link href="/vehicles">
               <Button>
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -136,6 +125,14 @@ export default function SaleDocumentPage() {
       </div>
     )
   }
+
+  // Renderizar el template con los datos de la venta
+  const renderedHtml = renderTemplate(
+    documentTemplate,
+    document.sale,
+    companyConfig,
+    document.documentNumber
+  )
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -153,162 +150,12 @@ export default function SaleDocumentPage() {
         </Button>
       </div>
 
-      {/* Documento */}
+      {/* Documento renderizado desde template */}
       <div className="max-w-4xl mx-auto bg-white shadow-lg print:shadow-none">
-        <div className="p-8 print:p-4">
-          {/* Encabezado */}
-          <div className="flex justify-between items-start mb-8">
-            <div className="flex-1">
-              {/* Logo de la empresa */}
-              {!configLoading && companyConfig.logoUrl && (
-                <div className="mb-4">
-                  <Image 
-                    src={companyConfig.logoUrl} 
-                    alt={`${companyConfig.name || 'Empresa'} Logo`}
-                    width={200} 
-                    height={80} 
-                    className="h-20 w-auto print:h-16"
-                    unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
-                    onError={(e) => {
-                      console.error('Error loading logo:', companyConfig.logoUrl)
-                      e.currentTarget.style.display = 'none'
-                    }}
-                  />
-                </div>
-              )}
-              
-              {/* Nombre de la empresa */}
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {companyConfig.name || 'PARANÁ AUTOMOTORES'}
-              </h1>
-              <p className="text-gray-600">Av. Ramirez 3421 - Paraná - Entre Ríos</p>
-              <p className="text-gray-600">CUIL/CUIT: 30718034376</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900 mb-2">BOLETO DE COMPRA-VENTA</div>
-              <div className="text-lg text-gray-600">N° {document.documentNumber}</div>
-              <div className="text-sm text-gray-500">Fecha: {formatDate(document.sale.saleDate)}</div>
-            </div>
-          </div>
-
-          {/* Información de las partes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">COMPRADOR</h3>
-              <p className="text-gray-800 font-medium">{companyConfig.name || 'Paraná Automotores'}</p>
-              <p className="text-gray-600">Av. Ramirez 3421</p>
-              <p className="text-gray-600">Paraná - Entre Ríos</p>
-              <p className="text-gray-600">CUIL/CUIT: 30718034376</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">VENDEDOR</h3>
-              <p className="text-gray-800 font-medium">{document.sale.customer.firstName} {document.sale.customer.lastName}</p>
-              <p className="text-gray-600">{document.sale.customer.address || 'Sin dirección'}</p>
-              <p className="text-gray-600">{document.sale.customer.city || ''} {document.sale.customer.state || ''}</p>
-              <p className="text-gray-600">Doc. Ident. N°: {document.sale.customer.documentNumber || '---'}</p>
-              <p className="text-gray-600">CUIL/CUIT: {document.sale.customer.documentNumber || '---'}</p>
-            </div>
-          </div>
-
-          {/* Información del vehículo */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">INFORMACIÓN DEL VEHÍCULO</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <span className="font-medium text-gray-600">Marca:</span>
-                <p className="text-gray-900">{document.sale.vehicle.brand}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Modelo:</span>
-                <p className="text-gray-900">{document.sale.vehicle.model}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Año:</span>
-                <p className="text-gray-900">{document.sale.vehicle.year}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Color:</span>
-                <p className="text-gray-900">{document.sale.vehicle.color}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Número de Motor:</span>
-                <p className="text-gray-900">{document.sale.vehicle.vin || '---'}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Patente:</span>
-                <p className="text-gray-900">{document.sale.vehicle.licensePlate || '---'}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Tipo:</span>
-                <p className="text-gray-900">{document.sale.vehicle.vehicleType.name}</p>
-              </div>
-              <div>
-                <span className="font-medium text-gray-600">Kilometraje:</span>
-                <p className="text-gray-900">{document.sale.vehicle.mileage.toLocaleString()} km</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Precio y forma de pago */}
-          <div className="mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">PRECIO TOTAL</h3>
-                <div className="text-3xl font-bold text-green-600">
-                  {formatCurrency(document.sale.totalAmount)}
-                </div>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">FORMA DE PAGO</h3>
-                <p className="text-gray-900 text-lg">CONTADO (Efectivo)</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Condiciones y responsabilidades */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">CONDICIONES Y RESPONSABILIDADES</h3>
-            <div className="space-y-3 text-sm text-gray-700">
-              <p><strong>Responsabilidades del Vendedor:</strong> El vendedor se responsabiliza por lo vendido, declarando que no tiene embargos, prendas agrarias (Ley 12.962), ni impedimentos para la venta.</p>
-              <p><strong>Condiciones de Entrega:</strong> La unidad se entrega en el estado en que se encuentra, y el comprador declara conocer sus características.</p>
-              <p><strong>Transferencia:</strong> El comprador se compromete a realizar la transferencia de dominio del vehículo dentro de los diez días de la fecha, según la Ley 22.977.</p>
-              <p><strong>Gastos:</strong> Todos los gastos de transferencia, trámites y gestiones son a cargo exclusivo del comprador.</p>
-            </div>
-          </div>
-
-          {/* Firmas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-            <div className="text-center">
-              <div className="border-t-2 border-gray-400 pt-4">
-                <p className="font-semibold text-gray-900">COMPRADOR</p>
-                <p className="text-gray-600">{companyConfig.name || 'Paraná Automotores'}</p>
-                <div className="mt-8 h-16 border-b border-gray-400"></div>
-                <p className="text-sm text-gray-500 mt-2">Firma</p>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="border-t-2 border-gray-400 pt-4">
-                <p className="font-semibold text-gray-900">VENDEDOR</p>
-                <p className="text-gray-600">{document.sale.customer.firstName} {document.sale.customer.lastName}</p>
-                <div className="mt-8 h-16 border-b border-gray-400"></div>
-                <p className="text-sm text-gray-500 mt-2">Firma</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Observaciones */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-700">
-              <strong>Observaciones:</strong> El vendedor es responsable de cualquier deuda de patente o multa que le aparezca al vehículo desde el día de la fecha hacia atrás.
-            </p>
-          </div>
-
-          {/* Pie de página */}
-          <div className="mt-8 text-center text-sm text-gray-500">
-            <p>Se firman dos ejemplares del mismo tenor.</p>
-            <p>Documento generado el {formatDate(new Date().toISOString())}</p>
-          </div>
-        </div>
+        <div 
+          className="p-8 print:p-4"
+          dangerouslySetInnerHTML={{ __html: renderedHtml }}
+        />
       </div>
     </div>
   )
