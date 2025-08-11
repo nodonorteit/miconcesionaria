@@ -16,16 +16,7 @@ import {
   Settings
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-
-interface DocumentTemplate {
-  id?: string
-  name: string
-  type: string
-  content: string
-  variables: any
-  isActive: boolean
-  isDefault: boolean
-}
+import { DocumentTemplate } from '@/types/document-template'
 
 interface DocumentTemplateEditorProps {
   template?: DocumentTemplate

@@ -15,25 +15,14 @@ import {
 } from 'lucide-react'
 import DocumentTemplateEditor from '@/components/ui/document-template-editor'
 import toast from 'react-hot-toast'
-
-interface DocumentTemplate {
-  id: string
-  name: string
-  type: string
-  content: string
-  variables: any
-  isActive: boolean
-  isDefault: boolean
-  createdAt: string
-  updatedAt: string
-}
+import { DocumentTemplate, DocumentTemplateWithTimestamps } from '@/types/document-template'
 
 export default function DocumentTemplatesPage() {
-  const [templates, setTemplates] = useState<DocumentTemplate[]>([])
+  const [templates, setTemplates] = useState<DocumentTemplateWithTimestamps[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditor, setShowEditor] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<DocumentTemplate | null>(null)
-  const [previewTemplate, setPreviewTemplate] = useState<DocumentTemplate | null>(null)
+  const [previewTemplate, setPreviewTemplate] = useState<DocumentTemplateWithTimestamps | null>(null)
 
   useEffect(() => {
     loadTemplates()
@@ -101,14 +90,14 @@ export default function DocumentTemplatesPage() {
     }
   }
 
-  const handleDuplicateTemplate = async (template: DocumentTemplate) => {
-    const duplicatedTemplate: Omit<DocumentTemplate, 'id' | 'createdAt' | 'updatedAt'> & { id?: string } = {
+  const handleDuplicateTemplate = async (template: DocumentTemplateWithTimestamps) => {
+    const duplicatedTemplate: DocumentTemplate = {
       ...template,
       id: undefined,
       name: `${template.name} (Copia)`,
       isDefault: false
     }
-    setEditingTemplate(duplicatedTemplate as any)
+    setEditingTemplate(duplicatedTemplate)
     setShowEditor(true)
   }
 
@@ -127,7 +116,7 @@ export default function DocumentTemplatesPage() {
     setEditingTemplate(null)
   }
 
-  const handlePreview = (template: DocumentTemplate) => {
+  const handlePreview = (template: DocumentTemplateWithTimestamps) => {
     setPreviewTemplate(template)
   }
 
