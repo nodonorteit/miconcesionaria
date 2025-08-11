@@ -17,7 +17,8 @@ import {
   Trash2,
   Download,
   Upload,
-  RefreshCw
+  RefreshCw,
+  Edit3
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -301,6 +302,35 @@ export default function SettingsPage() {
                 >
                   <Settings className="h-4 w-4" />
                   Guardar Configuración
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Gestión de Templates */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Edit3 className="h-5 w-5" />
+                Gestión de Templates
+              </CardTitle>
+              <CardDescription>
+                Personaliza los templates de documentos del sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Configura y personaliza los templates para boletos de compra-venta, recibos y otros documentos del sistema.
+                </p>
+                <Button 
+                  asChild
+                  className="flex items-center gap-2"
+                >
+                  <a href="/admin/settings/document-templates">
+                    <FileText className="h-4 w-4" />
+                    Gestionar Templates
+                  </a>
                 </Button>
               </div>
             </CardContent>

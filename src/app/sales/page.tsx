@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, ShoppingCart, Receipt, Eye } from 'lucide-react'
+import { Plus, Edit, Trash2, ShoppingCart, Receipt, Eye, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
+import { SaleDocument } from '@/components/ui/sale-document'
 
 interface Sale {
   id: string
@@ -22,16 +23,31 @@ interface Sale {
     brand: string
     model: string
     year: number
+    color: string
+    mileage: number
+    vin?: string
+    licensePlate?: string
+    vehicleType: {
+      name: string
+    }
   }
   customer: {
     id: string
     firstName: string
     lastName: string
+    email?: string
+    phone?: string
+    documentNumber?: string
+    city?: string
+    state?: string
   }
   seller: {
     id: string
     firstName: string
     lastName: string
+    email?: string
+    phone?: string
+    commissionRate: number
   }
   createdAt: string
   updatedAt: string
@@ -69,6 +85,8 @@ export default function SalesPage() {
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
   const [deletingSale, setDeletingSale] = useState<string | null>(null)
   const [viewingSale, setViewingSale] = useState<Sale | null>(null)
+  const [showSaleDocument, setShowSaleDocument] = useState(false)
+  const [selectedSaleForDocument, setSelectedSaleForDocument] = useState<Sale | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     vehicleId: '',
@@ -89,7 +107,7 @@ export default function SalesPage() {
 
   const fetchSales = async () => {
     try {
-      const response = await fetch('/api/sales')
+      const response = await fetch('/api/sales?include=vehicle,customer,seller,vehicleType')
       if (response.ok) {
         const data = await response.json()
         setSales(data)
@@ -302,6 +320,34 @@ export default function SalesPage() {
       case 'CANCELLED': return 'Cancelada'
       default: return status
     }
+  }
+
+  const handleGenerateDocument = async (saleId: string) => {
+    try {
+      const response = await fetch('/api/sales/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ saleId }),
+      })
+
+      if (response.ok) {
+        toast.success('Boleto generado exitosamente')
+        // Aquí podrías actualizar la lista de ventas si es necesario
+      } else {
+        const error = await response.json()
+        toast.error(error.error || 'Error al generar el boleto')
+      }
+    } catch (error) {
+      console.error('Error generating document:', error)
+      toast.error('Error al generar el boleto')
+    }
+  }
+
+  const openSaleDocument = (sale: Sale) => {
+    setSelectedSaleForDocument(sale)
+    setShowSaleDocument(true)
   }
 
   // Filtrar ventas basado en el término de búsqueda
@@ -534,6 +580,15 @@ export default function SalesPage() {
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
               </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openSaleDocument(sale)}
+                className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">Boleto</span>
+              </Button>
               {sale.status === 'PENDING' && (
                 <Button
                   size="sm"
@@ -702,6 +757,19 @@ export default function SalesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Boleto de Compra-Venta */}
+      {showSaleDocument && selectedSaleForDocument && (
+        <SaleDocument
+          sale={selectedSaleForDocument}
+          isOpen={showSaleDocument}
+          onClose={() => {
+            setShowSaleDocument(false)
+            setSelectedSaleForDocument(null)
+          }}
+          onGenerateDocument={handleGenerateDocument}
+        />
       )}
     </div>
   )
