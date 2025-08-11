@@ -58,7 +58,6 @@ model Vehicle {
   salePrice   Decimal? @db.Decimal(10, 2)
   description String?
   vehicleTypeId String
-  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -92,7 +91,6 @@ model Customer {
   city          String?
   state         String?
   address       String?
-  zipCode       String?
   isActive      Boolean     @default(true)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
