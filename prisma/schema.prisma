@@ -180,6 +180,10 @@ model Sale {
   customer    Customer @relation(fields: [customerId], references: [id])
   seller      Seller   @relation(fields: [sellerId], references: [id])
   documents   SaleDocument[]
+  payments    Payment[]
+  receipts    Receipt[]
+  userId      String
+  user        User @relation(fields: [userId], references: [id])
 
   @@map("sales")
 }
