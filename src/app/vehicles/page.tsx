@@ -86,6 +86,7 @@ export default function VehiclesPage() {
   const [viewingVehicle, setViewingVehicle] = useState<Vehicle | null>(null)
   const [sellingVehicle, setSellingVehicle] = useState<Vehicle | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -179,6 +180,12 @@ export default function VehiclesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (submitting) {
+      console.log('⏳ Ya se está enviando el formulario, ignorando...')
+      return
+    }
+    
+    setSubmitting(true)
     console.log('🚀 Iniciando envío del formulario...')
     console.log('📋 Datos del formulario:', formData)
     console.log('📸 Imágenes seleccionadas:', formData.images)
@@ -279,6 +286,9 @@ export default function VehiclesPage() {
     } catch (error) {
       console.error('💥 Error inesperado en handleSubmit:', error)
       toast.error(`Error inesperado al ${editingVehicle ? 'actualizar' : 'crear'} vehículo`)
+    } finally {
+      setSubmitting(false)
+      console.log('🏁 Finalizado envío del formulario')
     }
   }
 
@@ -469,6 +479,15 @@ export default function VehiclesPage() {
     }
   }
 
+  // Función para eliminar imágenes antes de enviar
+  const handleRemoveImageBeforeSubmit = (index: number) => {
+    setFormData({
+      ...formData,
+      images: formData.images.filter((_, i) => i !== index)
+    })
+    toast.success('Imagen removida del formulario')
+  }
+
   // Filtrar vehículos basado en el término de búsqueda
   const filteredVehicles = vehicles.filter(vehicle => {
     const searchLower = searchTerm.toLowerCase()
@@ -630,30 +649,110 @@ export default function VehiclesPage() {
                     multiple
                     accept=".jpg,.jpeg,.png,.gif"
                     onChange={(e) => {
-                      const files = Array.from(e.target.files || [])
-                      if (files.length > 10) {
-                        toast.error('Máximo 10 fotos permitidas')
-                        return
+                      const newFiles = Array.from(e.target.files || [])
+                      if (newFiles.length > 0) {
+                        // Validar que no exceda el límite total
+                        const totalImages = formData.images.length + newFiles.length
+                        if (totalImages > 10) {
+                          toast.error(`Máximo 10 fotos permitidas. Ya tienes ${formData.images.length} y estás agregando ${newFiles.length}`)
+                          return
+                        }
+                        
+                        // Validar tipos de archivo
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+                        const invalidFiles = newFiles.filter(file => !validTypes.includes(file.type))
+                        if (invalidFiles.length > 0) {
+                          toast.error('Solo se permiten archivos JPG, PNG o GIF')
+                          return
+                        }
+                        
+                        // Validar tamaño (máximo 5MB por archivo)
+                        const oversizedFiles = newFiles.filter(file => file.size > 5 * 1024 * 1024)
+                        if (oversizedFiles.length > 0) {
+                          toast.error('Cada archivo no puede ser mayor a 5MB')
+                          return
+                        }
+                        
+                        // AGREGAR las nuevas imágenes a las existentes
+                        setFormData({
+                          ...formData, 
+                          images: [...formData.images, ...newFiles]
+                        })
+                        
+                        // Limpiar el input para permitir seleccionar la misma imagen nuevamente
+                        e.target.value = ''
+                        
+                        toast.success(`${newFiles.length} imagen(es) agregada(s) correctamente`)
                       }
-                      // Validar tipos de archivo
-                      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-                      const invalidFiles = files.filter(file => !validTypes.includes(file.type))
-                      if (invalidFiles.length > 0) {
-                        toast.error('Solo se permiten archivos JPG, PNG o GIF')
-                        return
-                      }
-                      // Validar tamaño (máximo 5MB por archivo)
-                      const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024)
-                      if (oversizedFiles.length > 0) {
-                        toast.error('Cada archivo no puede ser mayor a 5MB')
-                        return
-                      }
-                      setFormData({...formData, images: files})
                     }}
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Máximo 10 fotos. Formatos: JPG, PNG, GIF. Máximo 5MB por archivo.
-                  </p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm text-gray-500">
+                      Máximo 10 fotos. Formatos: JPG, PNG, GIF. Máximo 5MB por archivo.
+                    </p>
+                    {formData.images.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setFormData({...formData, images: []})
+                          toast.success('Todas las imágenes han sido removidas')
+                        }}
+                        className="text-xs"
+                      >
+                        Limpiar todas
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Mostrar imágenes seleccionadas antes de enviar */}
+                  {formData.images.length > 0 && (
+                    <div className="col-span-2 mt-4">
+                      <Label>Imágenes seleccionadas ({formData.images.length}/10)</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                        {formData.images.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={URL.createObjectURL(image)}
+                              alt={`Imagen ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg border"
+                            />
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveImageBeforeSubmit(index)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            {index === 0 && (
+                              <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                Principal
+                              </div>
+                            )}
+                            <div className="absolute bottom-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                              {Math.round(image.size / 1024)}KB
+                            </div>
+                            <div className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                              #{index + 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-sm text-gray-500">
+                          {formData.images.length} imagen(es) seleccionada(s). La primera será la imagen principal.
+                        </p>
+                        <div className="text-sm text-blue-600 font-medium">
+                          Total: {formData.images.reduce((acc, img) => acc + img.size, 0).toLocaleString()} bytes
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Mostrar imágenes existentes en modo edición */}
                   {editingVehicle && editingVehicle.images && editingVehicle.images.length > 0 && (
@@ -772,8 +871,15 @@ export default function VehiclesPage() {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button type="submit">
-                  {editingVehicle ? 'Actualizar' : 'Crear'} Vehículo
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {editingVehicle ? 'Actualizando...' : 'Creando...'}
+                    </>
+                  ) : (
+                    `${editingVehicle ? 'Actualizar' : 'Crear'} Vehículo`
+                  )}
                 </Button>
                 <Button 
                   type="button" 
