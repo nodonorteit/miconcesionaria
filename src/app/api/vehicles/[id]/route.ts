@@ -36,8 +36,65 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const vehicleData = await request.json()
+    console.log('🔄 PUT request recibido para vehículo:', params.id)
+    console.log('📋 Content-Type:', request.headers.get('content-type'))
     
+    let vehicleData: any
+    let hasImages = false
+    let images: File[] = []
+    
+    // Verificar si es FormData o JSON
+    const contentType = request.headers.get('content-type')
+    
+    if (contentType && contentType.includes('multipart/form-data')) {
+      console.log('📸 Procesando FormData con imágenes...')
+      
+      const formData = await request.formData()
+      
+      // Extraer datos del vehículo
+      vehicleData = {
+        brand: formData.get('brand') as string,
+        model: formData.get('model') as string,
+        year: formData.get('year') as string,
+        color: formData.get('color') as string,
+        mileage: formData.get('mileage') as string,
+        price: formData.get('price') as string,
+        description: formData.get('description') as string,
+        vin: formData.get('vin') as string,
+        licensePlate: formData.get('licensePlate') as string,
+        fuelType: formData.get('fuelType') as string,
+        transmission: formData.get('transmission') as string,
+        vehicleTypeId: formData.get('vehicleTypeId') as string,
+        isActive: formData.get('isActive') === 'true'
+      }
+      
+      // Extraer imágenes
+      const imageFiles = formData.getAll('images')
+      if (imageFiles.length > 0) {
+        hasImages = true
+        images = imageFiles.filter(file => file instanceof File) as File[]
+        console.log(`📸 ${images.length} imagen(es) encontrada(s) en FormData`)
+        
+        images.forEach((image, index) => {
+          console.log(`📸 Imagen ${index + 1}:`, image.name, 'Size:', image.size, 'Type:', image.type)
+        })
+      }
+      
+      console.log('📋 Datos del vehículo extraídos:', vehicleData)
+    } else {
+      console.log('📋 Procesando JSON sin imágenes...')
+      vehicleData = await request.json()
+    }
+    
+    // Validar datos requeridos
+    if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.vehicleTypeId) {
+      return NextResponse.json(
+        { error: 'Faltan campos requeridos: brand, model, year, vehicleTypeId' },
+        { status: 400 }
+      )
+    }
+    
+    // Actualizar vehículo
     const updatedVehicle = await prisma.vehicle.update({
       where: { id: params.id },
       data: {
@@ -56,7 +113,60 @@ export async function PUT(
         isActive: vehicleData.isActive
       }
     })
-
+    
+    console.log('✅ Vehículo actualizado en BD:', updatedVehicle.id)
+    
+    // Si hay imágenes nuevas, procesarlas
+    if (hasImages && images.length > 0) {
+      console.log('📸 Procesando imágenes nuevas...')
+      
+      try {
+        // Importar fs/promises dinámicamente
+        const { mkdir, writeFile } = await import('fs/promises')
+        const path = await import('path')
+        
+        // Crear directorio de uploads si no existe
+        const uploadsDir = '/app/uploads'
+        await mkdir(uploadsDir, { recursive: true })
+        
+        // Procesar cada imagen
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i]
+          const timestamp = Date.now()
+          const randomString = Math.random().toString(36).substring(2, 15)
+          const filename = `${params.id}_${timestamp}_${i}_${randomString}.jpg`
+          const filePath = path.join(uploadsDir, filename)
+          
+          console.log(`📸 Procesando imagen ${i + 1}:`, filename)
+          
+          // Convertir Buffer a archivo
+          const bytes = await image.arrayBuffer()
+          const buffer = Buffer.from(bytes)
+          
+          // Guardar archivo
+          await writeFile(filePath, buffer)
+          console.log(`💾 Imagen guardada: ${filePath}`)
+          
+          // Guardar referencia en BD
+          const imageRecord = await prisma.vehicleImage.create({
+            data: {
+              filename,
+              path: `/uploads/${filename}`,
+              isPrimary: i === 0, // Primera imagen es principal
+              vehicleId: params.id
+            }
+          })
+          
+          console.log(`💾 Referencia de imagen guardada en BD:`, imageRecord.id)
+        }
+        
+        console.log('✅ Todas las imágenes procesadas correctamente')
+      } catch (imageError) {
+        console.error('❌ Error procesando imágenes:', imageError)
+        // No fallar la actualización del vehículo por errores de imagen
+      }
+    }
+    
     return NextResponse.json(updatedVehicle)
   } catch (error) {
     console.error('❌ Error updating vehicle:', error)
