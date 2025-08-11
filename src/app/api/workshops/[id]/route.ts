@@ -44,8 +44,7 @@ export async function PUT(
         phone: body.phone,
         address: body.address,
         city: body.city,
-        state: body.state,
-        zipCode: body.zipCode
+        state: body.state
       }
     })
 

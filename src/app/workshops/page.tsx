@@ -17,7 +17,6 @@ interface Workshop {
   address?: string
   city?: string
   state?: string
-  zipCode?: string
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -37,8 +36,7 @@ export default function WorkshopsPage() {
     phone: '',
     address: '',
     city: '',
-    state: '',
-    zipCode: ''
+    state: ''
   })
 
   useEffect(() => {
@@ -101,8 +99,7 @@ export default function WorkshopsPage() {
       phone: workshop.phone || '',
       address: workshop.address || '',
       city: workshop.city || '',
-      state: workshop.state || '',
-      zipCode: workshop.zipCode || ''
+      state: workshop.state || ''
     })
     setShowForm(true)
   }
@@ -138,8 +135,7 @@ export default function WorkshopsPage() {
       phone: '',
       address: '',
       city: '',
-      state: '',
-      zipCode: ''
+      state: ''
     })
   }
 
@@ -238,14 +234,6 @@ export default function WorkshopsPage() {
                     id="state"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zipCode">Código Postal</Label>
-                  <Input
-                    id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
                   />
                 </div>
               </div>
@@ -380,19 +368,13 @@ export default function WorkshopsPage() {
               {viewingWorkshop.city && (
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Ciudad</Label>
-                  <p>{viewingWorkshop.city}</p>
+                  <p className="text-gray-900">{viewingWorkshop.city}</p>
                 </div>
               )}
               {viewingWorkshop.state && (
                 <div>
                   <Label className="text-sm font-medium text-gray-500">Provincia</Label>
-                  <p>{viewingWorkshop.state}</p>
-                </div>
-              )}
-              {viewingWorkshop.zipCode && (
-                <div>
-                  <Label className="text-sm font-medium text-gray-500">Código Postal</Label>
-                  <p>{viewingWorkshop.zipCode}</p>
+                  <p className="text-gray-900">{viewingWorkshop.state}</p>
                 </div>
               )}
               <div>

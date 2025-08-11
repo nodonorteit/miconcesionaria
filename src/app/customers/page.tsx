@@ -13,12 +13,11 @@ interface Customer {
   id: string
   firstName: string
   lastName: string
-  email?: string
+  email: string
   phone?: string
   address?: string
   city?: string
   state?: string
-  zipCode?: string
   documentNumber?: string
   isActive: boolean
   createdAt: string
@@ -40,7 +39,6 @@ export default function CustomersPage() {
     address: '',
     city: '',
     state: '',
-    zipCode: '',
     documentNumber: ''
   })
 
@@ -101,12 +99,11 @@ export default function CustomersPage() {
     setFormData({
       firstName: customer.firstName,
       lastName: customer.lastName,
-      email: customer.email || '',
+      email: customer.email,
       phone: customer.phone || '',
       address: customer.address || '',
       city: customer.city || '',
       state: customer.state || '',
-      zipCode: customer.zipCode || '',
       documentNumber: customer.documentNumber || ''
     })
     setShowForm(true)
@@ -151,7 +148,6 @@ export default function CustomersPage() {
       address: '',
       city: '',
       state: '',
-      zipCode: '',
       documentNumber: ''
     })
   }
@@ -276,14 +272,6 @@ export default function CustomersPage() {
                     id="state"
                     value={formData.state}
                     onChange={(e) => setFormData({...formData, state: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zipCode">Código Postal</Label>
-                  <Input
-                    id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
                   />
                 </div>
               </div>

@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
         address: body.address,
         city: body.city,
         state: body.state,
-        zipCode: body.zipCode,
         taxId: body.taxId,
         isActive: true
       }

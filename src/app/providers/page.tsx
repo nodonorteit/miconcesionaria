@@ -17,7 +17,6 @@ interface Provider {
   address?: string
   city?: string
   state?: string
-  zipCode?: string
   taxId?: string
   isActive: boolean
   createdAt: string
@@ -39,7 +38,6 @@ export default function ProvidersPage() {
     address: '',
     city: '',
     state: '',
-    zipCode: '',
     taxId: ''
   })
 
@@ -104,7 +102,6 @@ export default function ProvidersPage() {
       address: provider.address || '',
       city: provider.city || '',
       state: provider.state || '',
-      zipCode: provider.zipCode || '',
       taxId: provider.taxId || ''
     })
     setShowForm(true)
@@ -148,7 +145,6 @@ export default function ProvidersPage() {
       address: '',
       city: '',
       state: '',
-      zipCode: '',
       taxId: ''
     })
   }
@@ -263,14 +259,6 @@ export default function ProvidersPage() {
                     id="state"
                     value={formData.state}
                     onChange={(e) => setFormData({...formData, state: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="zipCode">Código Postal</Label>
-                  <Input
-                    id="zipCode"
-                    value={formData.zipCode}
-                    onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
                   />
                 </div>
               </div>
@@ -463,12 +451,6 @@ export default function ProvidersPage() {
                         <div>
                           <span className="font-medium text-gray-600">Ubicación:</span>
                           <p className="text-gray-900">{viewingProvider.city}, {viewingProvider.state}</p>
-                        </div>
-                      )}
-                      {viewingProvider.zipCode && (
-                        <div>
-                          <span className="font-medium text-gray-600">Código Postal:</span>
-                          <p className="text-gray-900">{viewingProvider.zipCode}</p>
                         </div>
                       )}
                     </div>

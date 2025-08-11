@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
         address: body.address,
         city: body.city,
         state: body.state,
-        zipCode: body.zipCode,
         documentNumber: body.documentNumber,
         isActive: true
       }

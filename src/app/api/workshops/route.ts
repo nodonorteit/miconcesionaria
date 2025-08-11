@@ -28,10 +28,8 @@ export async function POST(request: NextRequest) {
     const workshopId = `ws-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     
     await prisma.$executeRaw`
-      INSERT INTO workshops (id, name, email, phone, address, city, state, zipCode, isActive, createdAt, updatedAt)
-      VALUES (${workshopId}, ${body.name}, ${body.email || null}, ${body.phone || null}, 
-              ${body.address || null}, ${body.city || null}, ${body.state || null}, ${body.zipCode || null}, 
-              1, NOW(), NOW())
+      INSERT INTO workshops (id, name, email, phone, address, city, state, isActive, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `
 
     const workshops = await prisma.$queryRaw`
