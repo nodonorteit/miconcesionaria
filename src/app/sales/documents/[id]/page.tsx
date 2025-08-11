@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Printer, Download, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useCompanyConfig } from '@/hooks/useCompanyConfig'
 import './boleto.css'
 
 interface SaleDocument {
@@ -58,6 +60,7 @@ export default function SaleDocumentPage() {
   const [document, setDocument] = useState<SaleDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { companyConfig, loading: configLoading } = useCompanyConfig()
 
   useEffect(() => {
     if (params.id) {
@@ -156,7 +159,28 @@ export default function SaleDocumentPage() {
           {/* Encabezado */}
           <div className="flex justify-between items-start mb-8">
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">PARANÁ AUTOMOTORES</h1>
+              {/* Logo de la empresa */}
+              {!configLoading && companyConfig.logoUrl && (
+                <div className="mb-4">
+                  <Image 
+                    src={companyConfig.logoUrl} 
+                    alt={`${companyConfig.name || 'Empresa'} Logo`}
+                    width={200} 
+                    height={80} 
+                    className="h-20 w-auto print:h-16"
+                    unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
+                    onError={(e) => {
+                      console.error('Error loading logo:', companyConfig.logoUrl)
+                      e.currentTarget.style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* Nombre de la empresa */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                {companyConfig.name || 'PARANÁ AUTOMOTORES'}
+              </h1>
               <p className="text-gray-600">Av. Ramirez 3421 - Paraná - Entre Ríos</p>
               <p className="text-gray-600">CUIL/CUIT: 30718034376</p>
             </div>
@@ -171,7 +195,7 @@ export default function SaleDocumentPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3 border-b pb-2">COMPRADOR</h3>
-              <p className="text-gray-800 font-medium">Paraná Automotores</p>
+              <p className="text-gray-800 font-medium">{companyConfig.name || 'Paraná Automotores'}</p>
               <p className="text-gray-600">Av. Ramirez 3421</p>
               <p className="text-gray-600">Paraná - Entre Ríos</p>
               <p className="text-gray-600">CUIL/CUIT: 30718034376</p>
@@ -257,7 +281,7 @@ export default function SaleDocumentPage() {
             <div className="text-center">
               <div className="border-t-2 border-gray-400 pt-4">
                 <p className="font-semibold text-gray-900">COMPRADOR</p>
-                <p className="text-gray-600">Paraná Automotores</p>
+                <p className="text-gray-600">{companyConfig.name || 'Paraná Automotores'}</p>
                 <div className="mt-8 h-16 border-b border-gray-400"></div>
                 <p className="text-sm text-gray-500 mt-2">Firma</p>
               </div>
