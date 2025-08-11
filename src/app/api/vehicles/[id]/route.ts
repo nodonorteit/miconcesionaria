@@ -104,12 +104,9 @@ export async function PUT(
         year: parseInt(vehicleData.year),
         color: vehicleData.color,
         mileage: parseInt(vehicleData.mileage),
-        price: parseFloat(vehicleData.price),
         description: vehicleData.description,
         vin: vehicleData.vin,
         licensePlate: vehicleData.licensePlate,
-        fuelType: vehicleData.fuelType,
-        transmission: vehicleData.transmission,
         vehicleTypeId: vehicleData.vehicleTypeId,
         isActive: vehicleData.isActive
       }
@@ -151,9 +148,7 @@ export async function PUT(
           // Guardar referencia en BD
           const imageRecord = await prisma.vehicleImage.create({
             data: {
-              filename,
-              path: `/uploads/${filename}`,
-              isPrimary: i === 0, // Primera imagen es principal
+              url: `/uploads/${filename}`,
               vehicleId: params.id
             }
           })

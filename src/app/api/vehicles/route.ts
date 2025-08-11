@@ -210,12 +210,9 @@ export async function POST(request: NextRequest) {
         year: parseInt(vehicleData.year),
         color: vehicleData.color,
         mileage: parseInt(vehicleData.mileage),
-        price: parseFloat(vehicleData.price),
         description: vehicleData.description || null,
         vin: vehicleData.vin || null,
         licensePlate: vehicleData.licensePlate || null,
-        fuelType: (vehicleData.fuelType && vehicleData.fuelType.trim() !== '') ? vehicleData.fuelType : 'GASOLINE' as any,
-        transmission: (vehicleData.transmission && vehicleData.transmission.trim() !== '') ? vehicleData.transmission : 'MANUAL' as any,
         status: (vehicleData.status || 'AVAILABLE') as any,
         vehicleTypeId: vehicleData.vehicleTypeId,
         isActive: true
@@ -271,9 +268,7 @@ export async function POST(request: NextRequest) {
               console.log('💾 Guardando referencia en BD...')
               await prisma.vehicleImage.create({
                 data: {
-                  filename,
-                  path: `/uploads/${filename}`,
-                  isPrimary: i === 0, // La primera imagen es la principal
+                  url: `/uploads/${filename}`,
                   vehicleId: vehicle.id
                 }
               })

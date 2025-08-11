@@ -108,29 +108,9 @@ export async function POST(request: NextRequest) {
     await prisma.saleDocument.create({
       data: {
         saleId: sale.id,
-        vehicleBrand: sale.vehicle.brand,
-        vehicleModel: sale.vehicle.model,
-        vehicleYear: sale.vehicle.year,
-        vehicleColor: '', // Se puede agregar al schema si es necesario
-        vehicleMileage: 0, // Se puede agregar al schema si es necesario
-        vehicleVin: sale.vehicle.vin || '',
-        vehicleLicensePlate: sale.vehicle.licensePlate || '',
-        vehicleType: sale.vehicle.vehicleType.name,
-        customerFirstName: sale.customer.firstName,
-        customerLastName: sale.customer.lastName,
-        customerEmail: sale.customer.email || '',
-        customerPhone: sale.customer.phone || '',
-        customerDocument: sale.customer.documentNumber || '',
-        customerCity: sale.customer.city || '',
-        customerState: sale.customer.state || '',
-        sellerFirstName: sale.seller.firstName,
-        sellerLastName: sale.seller.lastName,
-        sellerEmail: sale.seller.email || '',
-        sellerPhone: sale.seller.phone || '',
-        sellerCommissionRate: parseFloat(sale.seller.commissionRate.toString()),
-        totalAmount: sale.totalAmount,
-        commissionAmount: sale.commission,
-        notes: sale.notes || ''
+        documentNumber: `DOC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        content: '', // El contenido se generará cuando se renderice el template
+        templateId: null // Por ahora sin template, se puede actualizar después
       }
     })
 

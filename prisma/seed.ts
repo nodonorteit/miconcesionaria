@@ -81,7 +81,6 @@ async function main() {
       address: 'Av. Corrientes 1234',
       city: 'Buenos Aires',
       state: 'Buenos Aires',
-      zipCode: '1043',
       documentNumber: '12345678',
     },
   })
@@ -97,7 +96,6 @@ async function main() {
       address: 'Av. Libertador 5678',
       city: 'Buenos Aires',
       state: 'Buenos Aires',
-      zipCode: '1425',
       taxId: '30-12345678-9',
     },
   })
@@ -111,7 +109,6 @@ async function main() {
       address: 'Calle Ejemplo 999',
       city: 'Buenos Aires',
       state: 'Buenos Aires',
-      zipCode: '1405',
     },
   })
 
