@@ -189,19 +189,7 @@ export default function SoldVehiclesPage() {
                 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
-                    <div className="text-lg font-semibold text-green-600">
-                      {vehicle.purchasePrice ? (
-                        <span className="text-green-600">
-                          ${vehicle.purchasePrice.toLocaleString()}
-                        </span>
-                      ) : vehicle.salePrice ? (
-                        <span className="text-blue-600">
-                          ${vehicle.salePrice.toLocaleString()}
-                        </span>
-                      ) : (
-                        "No disponible"
-                      )}
-                    </div>
+                    <span className="font-semibold text-green-600">Consultar</span>
                     <div className="text-sm text-gray-600">
                       Comisión: ${vehicle.sale?.commission.toLocaleString()}
                     </div>

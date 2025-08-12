@@ -78,7 +78,7 @@ export async function GET(
     console.log('🎨 Content-Type detectado:', contentType)
     
     // Devolver el archivo con el tipo MIME correcto
-    const response = new NextResponse(fileBuffer, {
+    const response = new NextResponse(fileBuffer as any, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000', // Cache por 1 año

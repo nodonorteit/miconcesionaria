@@ -102,7 +102,6 @@ export async function PUT(
         brand: vehicleData.brand,
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
-        color: vehicleData.color,
         mileage: parseInt(vehicleData.mileage),
         description: vehicleData.description,
         vin: vehicleData.vin,

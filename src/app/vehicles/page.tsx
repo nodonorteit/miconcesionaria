@@ -1094,17 +1094,7 @@ export default function VehiclesPage() {
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Precio:</span>
-                      {vehicle.purchasePrice ? (
-                        <span className="ml-2 text-green-600 font-semibold">
-                          ${vehicle.purchasePrice.toLocaleString()}
-                        </span>
-                      ) : vehicle.salePrice ? (
-                        <span className="ml-2 text-blue-600 font-semibold">
-                          ${vehicle.salePrice.toLocaleString()}
-                        </span>
-                      ) : (
-                        <span className="ml-2 text-gray-500">No disponible</span>
-                      )}
+                      <p className="text-gray-900 font-semibold">Consultar</p>
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Estado:</span> {vehicle.status}
@@ -1387,19 +1377,7 @@ export default function VehiclesPage() {
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">Precio:</span>
-                      <p className="text-gray-900 font-semibold">
-                        {sellingVehicle.purchasePrice ? (
-                          <span className="text-green-600">
-                            ${sellingVehicle.purchasePrice.toLocaleString()}
-                          </span>
-                        ) : sellingVehicle.salePrice ? (
-                          <span className="text-blue-600">
-                            ${sellingVehicle.salePrice.toLocaleString()}
-                          </span>
-                        ) : (
-                          "No disponible"
-                        )}
-                      </p>
+                      <p className="text-gray-900 font-semibold">Consultar</p>
                     </div>
                   </div>
                 </div>

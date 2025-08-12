@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     // Generar PDF usando jsPDF
     const pdfBuffer = await generatePDF(sales as any[], statsData, companyName, dateRange)
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(pdfBuffer as any, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="reporte-ventas-${startDate || 'todo'}-${endDate || 'todo'}.pdf"`,

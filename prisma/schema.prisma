@@ -49,13 +49,10 @@ model Vehicle {
   brand       String
   model       String
   year        Int
-  color       String
   mileage     Int
   vin         String?  @unique
   licensePlate String?
   status      VehicleStatus @default(AVAILABLE)
-  purchasePrice Decimal? @db.Decimal(10, 2)
-  salePrice   Decimal? @db.Decimal(10, 2)
   description String?
   vehicleTypeId String
   createdAt   DateTime @default(now())

@@ -78,7 +78,7 @@ export async function GET(
     console.log('🎨 [Static Route] Content-Type detectado:', contentType)
     
     // Devolver el archivo con el tipo MIME correcto y headers de cache
-    const response = new NextResponse(fileBuffer, {
+    const response = new NextResponse(fileBuffer as any, {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable', // Cache por 1 año

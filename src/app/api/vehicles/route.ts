@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar campos requeridos
-    if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.color || !vehicleData.mileage || !vehicleData.price || !vehicleData.vehicleTypeId) {
+    if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.mileage || !vehicleData.vehicleTypeId) {
       console.error('❌ Campos requeridos faltantes:', {
         brand: !!vehicleData.brand,
         model: !!vehicleData.model,
@@ -206,7 +206,6 @@ export async function POST(request: NextRequest) {
         brand: vehicleData.brand,
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
-        color: vehicleData.color,
         mileage: parseInt(vehicleData.mileage),
         description: vehicleData.description || null,
         vin: vehicleData.vin || null,

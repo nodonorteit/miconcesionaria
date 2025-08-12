@@ -16,8 +16,6 @@ interface Vehicle {
   vin?: string
   licensePlate?: string
   status: string
-  purchasePrice?: number
-  salePrice?: number
   description?: string
   createdAt: string
   updatedAt: string
@@ -221,24 +219,6 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                 <div>
                   <p className="text-sm text-gray-600">Año</p>
                   <p className="font-medium">{vehicle.year}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Precio de Compra</p>
-                  <p className="font-medium">
-                    {vehicle.purchasePrice ? 
-                      `$${vehicle.purchasePrice.toLocaleString()}` : 
-                      'No disponible'
-                    }
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Precio de Venta</p>
-                  <p className="font-medium">
-                    {vehicle.salePrice ? 
-                      `$${vehicle.salePrice.toLocaleString()}` : 
-                      'No disponible'
-                    }
-                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Kilometraje</p>
