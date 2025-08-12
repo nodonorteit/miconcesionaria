@@ -64,10 +64,9 @@ export async function PUT(
     }
 
     // Obtener egreso existente
-    const existingExpenses = await prisma.$queryRaw`
-      SELECT * FROM expenses WHERE id = ${params.id}
-    `
-    const existingExpense = Array.isArray(existingExpenses) ? existingExpenses[0] : existingExpenses
+    const existingExpense = await prisma.expense.findUnique({
+      where: { id: params.id }
+    })
 
     if (!existingExpense) {
       return NextResponse.json(
@@ -132,20 +131,22 @@ export async function PUT(
     `
 
     // Obtener el egreso actualizado
-    const updatedExpenses = await prisma.$queryRaw`
-      SELECT 
-        e.*,
-        w.name as workshopName,
-        s.name as sellerName
-      FROM expenses e
-      LEFT JOIN workshops w ON e.workshopId = w.id
-      LEFT JOIN sellers s ON e.sellerId = s.id
-      WHERE e.id = ${params.id}
-    `
+    const updatedExpense = await prisma.expense.findUnique({
+      where: { id: params.id },
+      include: {
+        workshop: true,
+        seller: true
+      }
+    })
 
-    const expense = Array.isArray(updatedExpenses) ? updatedExpenses[0] : updatedExpenses
+    if (!updatedExpense) {
+      return NextResponse.json(
+        { error: 'Expense not found after update' },
+        { status: 404 }
+      )
+    }
 
-    return NextResponse.json(expense)
+    return NextResponse.json(updatedExpense)
   } catch (error) {
     console.error('Error updating expense:', error)
     return NextResponse.json(
@@ -161,10 +162,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const expenses = await prisma.$queryRaw`
-      SELECT * FROM expenses WHERE id = ${params.id}
-    `
-    const expense = Array.isArray(expenses) ? expenses[0] : expenses
+    const expense = await prisma.expense.findUnique({
+      where: { id: params.id }
+    })
 
     if (!expense) {
       return NextResponse.json(
@@ -174,9 +174,10 @@ export async function DELETE(
     }
 
     // Soft delete del egreso
-    await prisma.$executeRaw`
-      UPDATE expenses SET isActive = 0, updatedAt = NOW() WHERE id = ${params.id}
-    `
+    await prisma.expense.update({
+      where: { id: params.id },
+      data: { isActive: false }
+    })
 
     // Eliminar entrada correspondiente en cashflow
     await prisma.$executeRaw`
