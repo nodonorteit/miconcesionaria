@@ -168,8 +168,6 @@ model Sale {
   commission  Decimal  @db.Decimal(10, 2)
   status      SaleStatus @default(PENDING)
   notes       String?
-  paymentMethod String @default("CONTADO")
-  deliveryDate DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
