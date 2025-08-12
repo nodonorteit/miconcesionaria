@@ -265,7 +265,9 @@ export async function POST(request: NextRequest) {
               console.log('💾 Guardando referencia en BD...')
               await prisma.vehicleImage.create({
                 data: {
-                  url: `/uploads/${filename}`,
+                  path: `/uploads/${filename}`,
+                  filename: filename,
+                  isPrimary: i === 0,
                   vehicleId: vehicle.id
                 }
               })

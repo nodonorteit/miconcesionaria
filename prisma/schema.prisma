@@ -69,7 +69,9 @@ model Vehicle {
 
 model VehicleImage {
   id        String   @id @default(cuid())
-  url       String
+  filename  String
+  path      String
+  isPrimary Boolean  @default(false)
   vehicleId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

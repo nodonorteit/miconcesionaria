@@ -147,7 +147,9 @@ export async function PUT(
           // Guardar referencia en BD
           const imageRecord = await prisma.vehicleImage.create({
             data: {
-              url: `/uploads/${filename}`,
+              path: `/uploads/${filename}`,
+              filename: filename,
+              isPrimary: i === 0,
               vehicleId: params.id
             }
           })

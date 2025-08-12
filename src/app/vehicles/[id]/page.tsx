@@ -23,7 +23,7 @@ interface Vehicle {
   status: string
   images: Array<{
     id: string
-    url: string
+    path: string
     filename: string
   }>
   createdAt: string
@@ -139,7 +139,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                 {/* Main Image */}
                 <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden">
                   <img
-                    src={vehicle.images[currentImageIndex].url}
+                    src={vehicle.images[currentImageIndex].path}
                     alt={`${vehicle.brand} ${vehicle.model}`}
                     className="w-full h-full object-cover"
                   />
@@ -184,7 +184,7 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                         }`}
                       >
                         <img
-                          src={image.url}
+                          src={image.path}
                           alt={`Thumbnail ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -208,9 +208,6 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
               <CardTitle className="flex justify-between items-start">
                 <span>{vehicle.brand} {vehicle.model}</span>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600">
-                    ${vehicle.price.toLocaleString()}
-                  </div>
                   <div className="text-sm text-gray-600">
                     {getStatusLabel(vehicle.status)}
                   </div>
