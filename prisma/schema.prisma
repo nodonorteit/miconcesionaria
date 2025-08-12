@@ -54,6 +54,8 @@ model Vehicle {
   vin         String?  @unique
   licensePlate String?
   status      VehicleStatus @default(AVAILABLE)
+  purchasePrice Decimal? @db.Decimal(10, 2)
+  salePrice   Decimal? @db.Decimal(10, 2)
   description String?
   vehicleTypeId String
   createdAt   DateTime @default(now())

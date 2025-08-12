@@ -44,6 +44,8 @@ interface Vehicle {
     isPrimary: boolean
     createdAt: string
   }>
+  purchasePrice?: number
+  salePrice?: number
 }
 
 interface VehicleType {
@@ -1091,7 +1093,18 @@ export default function VehiclesPage() {
                       <span className="font-medium">Km:</span> {vehicle.mileage.toLocaleString()}
                     </span>
                     <span className="flex items-center">
-                      <span className="font-medium">Precio:</span> No disponible
+                      <span className="font-medium">Precio:</span>
+                      {vehicle.purchasePrice ? (
+                        <span className="ml-2 text-green-600 font-semibold">
+                          ${vehicle.purchasePrice.toLocaleString()}
+                        </span>
+                      ) : vehicle.salePrice ? (
+                        <span className="ml-2 text-blue-600 font-semibold">
+                          ${vehicle.salePrice.toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="ml-2 text-gray-500">No disponible</span>
+                      )}
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Estado:</span> {vehicle.status}
@@ -1233,7 +1246,19 @@ export default function VehiclesPage() {
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Precio:</span>
-                        <p className="text-gray-900 font-semibold">No disponible</p>
+                        <p className="text-gray-900 font-semibold">
+                          {viewingVehicle.purchasePrice ? (
+                            <span className="text-green-600">
+                              ${viewingVehicle.purchasePrice.toLocaleString()}
+                            </span>
+                          ) : viewingVehicle.salePrice ? (
+                            <span className="text-blue-600">
+                              ${viewingVehicle.salePrice.toLocaleString()}
+                            </span>
+                          ) : (
+                            "No disponible"
+                          )}
+                        </p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Estado:</span>
@@ -1362,7 +1387,19 @@ export default function VehiclesPage() {
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">Precio:</span>
-                      <p className="text-gray-900 font-semibold">No disponible</p>
+                      <p className="text-gray-900 font-semibold">
+                        {sellingVehicle.purchasePrice ? (
+                          <span className="text-green-600">
+                            ${sellingVehicle.purchasePrice.toLocaleString()}
+                          </span>
+                        ) : sellingVehicle.salePrice ? (
+                          <span className="text-blue-600">
+                            ${sellingVehicle.salePrice.toLocaleString()}
+                          </span>
+                        ) : (
+                          "No disponible"
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>

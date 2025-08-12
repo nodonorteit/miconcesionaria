@@ -12,22 +12,24 @@ interface Vehicle {
   brand: string
   model: string
   year: number
-  color: string
   mileage: number
-  price: number
-  description?: string
   vin?: string
   licensePlate?: string
-  fuelType: string
-  transmission: string
   status: string
-  images: Array<{
+  purchasePrice?: number
+  salePrice?: number
+  description?: string
+  createdAt: string
+  updatedAt: string
+  vehicleType: {
+    name: string
+  }
+  images: {
     id: string
     path: string
     filename: string
-  }>
-  createdAt: string
-  updatedAt: string
+    isPrimary: boolean
+  }[]
 }
 
 export default function VehicleDetailPage({ params }: { params: { id: string } }) {
@@ -221,20 +223,26 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
                   <p className="font-medium">{vehicle.year}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Color</p>
-                  <p className="font-medium">{vehicle.color}</p>
+                  <p className="text-sm text-gray-600">Precio de Compra</p>
+                  <p className="font-medium">
+                    {vehicle.purchasePrice ? 
+                      `$${vehicle.purchasePrice.toLocaleString()}` : 
+                      'No disponible'
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Precio de Venta</p>
+                  <p className="font-medium">
+                    {vehicle.salePrice ? 
+                      `$${vehicle.salePrice.toLocaleString()}` : 
+                      'No disponible'
+                    }
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Kilometraje</p>
                   <p className="font-medium">{vehicle.mileage.toLocaleString()} km</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Combustible</p>
-                  <p className="font-medium">{getFuelTypeLabel(vehicle.fuelType)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Transmisión</p>
-                  <p className="font-medium">{getTransmissionLabel(vehicle.transmission)}</p>
                 </div>
                 {vehicle.licensePlate && (
                   <div>

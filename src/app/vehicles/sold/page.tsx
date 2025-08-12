@@ -44,6 +44,8 @@ interface Vehicle {
       lastName: string
     }
   }
+  purchasePrice?: number
+  salePrice?: number
 }
 
 export default function SoldVehiclesPage() {
@@ -188,7 +190,17 @@ export default function SoldVehiclesPage() {
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
                     <div className="text-lg font-semibold text-green-600">
-                      ${vehicle.sale?.totalAmount.toLocaleString()}
+                      {vehicle.purchasePrice ? (
+                        <span className="text-green-600">
+                          ${vehicle.purchasePrice.toLocaleString()}
+                        </span>
+                      ) : vehicle.salePrice ? (
+                        <span className="text-blue-600">
+                          ${vehicle.salePrice.toLocaleString()}
+                        </span>
+                      ) : (
+                        "No disponible"
+                      )}
                     </div>
                     <div className="text-sm text-gray-600">
                       Comisión: ${vehicle.sale?.commission.toLocaleString()}
@@ -293,7 +305,19 @@ export default function SoldVehiclesPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Precio:</span>
-                      <span className="font-semibold text-green-600">${viewingVehicle.sale?.totalAmount.toLocaleString()}</span>
+                      <span className="font-semibold text-green-600">
+                        {viewingVehicle.purchasePrice ? (
+                          <span className="text-green-600">
+                            ${viewingVehicle.purchasePrice.toLocaleString()}
+                          </span>
+                        ) : viewingVehicle.salePrice ? (
+                          <span className="text-blue-600">
+                            ${viewingVehicle.salePrice.toLocaleString()}
+                          </span>
+                        ) : (
+                          "No disponible"
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Combustible:</span>
