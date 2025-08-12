@@ -217,17 +217,12 @@ export default function VehiclesPage() {
           formDataToSend.append('brand', formData.brand)
           formDataToSend.append('model', formData.model)
           formDataToSend.append('year', formData.year.toString())
-          formDataToSend.append('color', formData.color)
           formDataToSend.append('mileage', formData.mileage.toString())
-          formDataToSend.append('price', formData.price.toString())
           formDataToSend.append('description', formData.description || '')
           formDataToSend.append('vin', formData.vin || '')
           formDataToSend.append('licensePlate', formData.licensePlate || '')
-          formDataToSend.append('fuelType', formData.fuelType)
-          formDataToSend.append('transmission', formData.transmission)
           formDataToSend.append('status', formData.status)
           formDataToSend.append('vehicleTypeId', formData.vehicleTypeId)
-          formDataToSend.append('isActive', 'true')
           
           // Agregar imágenes nuevas
           console.log(`📸 Agregando ${formData.images.length} imagen(es) nuevas al FormData...`)
@@ -259,17 +254,12 @@ export default function VehiclesPage() {
             brand: formData.brand,
             model: formData.model,
             year: formData.year,
-            color: formData.color,
             mileage: formData.mileage,
-            price: formData.price,
             description: formData.description,
             vin: formData.vin,
             licensePlate: formData.licensePlate,
-            fuelType: formData.fuelType,
-            transmission: formData.transmission,
             status: formData.status,
-            vehicleTypeId: formData.vehicleTypeId,
-            isActive: true
+            vehicleTypeId: formData.vehicleTypeId
           }
           
           console.log('📤 Enviando datos JSON para edición:', vehicleData)
@@ -289,14 +279,10 @@ export default function VehiclesPage() {
         formDataToSend.append('brand', formData.brand)
         formDataToSend.append('model', formData.model)
         formDataToSend.append('year', formData.year)
-        formDataToSend.append('color', formData.color)
         formDataToSend.append('mileage', formData.mileage)
-        formDataToSend.append('price', formData.price)
         formDataToSend.append('description', formData.description)
         formDataToSend.append('vin', formData.vin)
         formDataToSend.append('licensePlate', formData.licensePlate)
-        formDataToSend.append('fuelType', formData.fuelType)
-        formDataToSend.append('transmission', formData.transmission)
         formDataToSend.append('status', formData.status)
         formDataToSend.append('vehicleTypeId', formData.vehicleTypeId)
         
@@ -1072,22 +1058,23 @@ export default function VehiclesPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {vehicle.year}
                     </span>
-                    {vehicle.isActive ? (
+                    {vehicle.status === 'AVAILABLE' ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Activo
+                        Disponible
+                      </span>
+                    ) : vehicle.status === 'SOLD' ? (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        Vendido
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Inactivo
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        {vehicle.status}
                       </span>
                     )}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
                     <span className="flex items-center">
                       <span className="font-medium">Tipo:</span> {vehicle.vehicleType?.name || 'Sin tipo'}
-                    </span>
-                    <span className="flex items-center">
-                      <span className="font-medium">Color:</span> {vehicle.color}
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Km:</span> {vehicle.mileage.toLocaleString()}
