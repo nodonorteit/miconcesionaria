@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes, paymentMethod, deliveryDate } = body
+    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes } = body
 
     // Validar campos requeridos
     if (!vehicleId || !customerId || !sellerId || !totalAmount) {
@@ -51,30 +51,6 @@ export async function POST(request: NextRequest) {
         { error: 'Todos los campos son requeridos' },
         { status: 400 }
       )
-    }
-
-    // Obtener el primer usuario disponible o crear uno por defecto
-    let userId: string
-    const existingUser = await prisma.user.findFirst({
-      where: { isActive: true },
-      select: { id: true }
-    })
-
-    if (existingUser) {
-      userId = existingUser.id
-    } else {
-      // Crear un usuario por defecto si no existe ninguno
-      const hashedPassword = await bcrypt.hash('admin123', 12)
-      const defaultUser = await prisma.user.create({
-        data: {
-          email: 'admin@miconcesionaria.com',
-          name: 'Administrador',
-          password: hashedPassword,
-          role: 'ADMIN',
-          isActive: true
-        }
-      })
-      userId = defaultUser.id
     }
 
     // Generar número de venta único
@@ -88,10 +64,15 @@ export async function POST(request: NextRequest) {
         commission: parseFloat(commission || '0'),
         status: status || 'PENDING',
         notes,
-        vehicleId,
-        customerId,
-        sellerId,
-        userId
+        vehicle: {
+          connect: { id: vehicleId }
+        },
+        customer: {
+          connect: { id: customerId }
+        },
+        seller: {
+          connect: { id: sellerId }
+        }
       },
       include: {
         vehicle: {

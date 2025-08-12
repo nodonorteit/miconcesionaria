@@ -22,7 +22,6 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  sales      Sale[]
   commissions Commission[]
   payments   Payment[]
 
@@ -176,8 +175,6 @@ model Sale {
   documents   SaleDocument[]
   payments    Payment[]
   receipts    Receipt[]
-  userId      String
-  user        User @relation(fields: [userId], references: [id])
 
   @@map("sales")
 }
