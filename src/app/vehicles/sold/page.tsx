@@ -187,12 +187,12 @@ export default function SoldVehiclesPage() {
                 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
-                    <p className="text-lg font-semibold text-green-600">
-                      ${vehicle.price.toLocaleString()}
-                    </p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(vehicle.status)}`}>
-                      Vendido
-                    </span>
+                    <div className="text-lg font-semibold text-green-600">
+                      ${vehicle.sale?.totalAmount.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Comisión: ${vehicle.sale?.commission.toLocaleString()}
+                    </div>
                   </div>
                   
                   <button
@@ -293,7 +293,7 @@ export default function SoldVehiclesPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Precio:</span>
-                      <span className="font-semibold text-green-600">${viewingVehicle.price.toLocaleString()}</span>
+                      <span className="font-semibold text-green-600">${viewingVehicle.sale?.totalAmount.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Combustible:</span>

@@ -1091,7 +1091,7 @@ export default function VehiclesPage() {
                       <span className="font-medium">Km:</span> {vehicle.mileage.toLocaleString()}
                     </span>
                     <span className="flex items-center">
-                      <span className="font-medium">Precio:</span> ${vehicle.price.toLocaleString()}
+                      <span className="font-medium">Precio:</span> No disponible
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Estado:</span> {vehicle.status}
@@ -1233,7 +1233,7 @@ export default function VehiclesPage() {
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Precio:</span>
-                        <p className="text-gray-900 font-semibold">${viewingVehicle.price.toLocaleString()}</p>
+                        <p className="text-gray-900 font-semibold">No disponible</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Estado:</span>
@@ -1362,7 +1362,7 @@ export default function VehiclesPage() {
                     </div>
                     <div>
                       <span className="font-medium text-gray-600">Precio:</span>
-                      <p className="text-gray-900 font-semibold">${sellingVehicle.price.toLocaleString()}</p>
+                      <p className="text-gray-900 font-semibold">No disponible</p>
                     </div>
                   </div>
                 </div>

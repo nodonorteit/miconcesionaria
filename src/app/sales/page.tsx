@@ -420,7 +420,7 @@ export default function SalesPage() {
                     <option value="">Seleccionar vehículo</option>
                     {vehicles.map((vehicle) => (
                       <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.brand} {vehicle.model} ({vehicle.year}) - ${vehicle.price.toLocaleString()}
+                        {vehicle.brand} {vehicle.model} ({vehicle.year}) - Precio no disponible
                       </option>
                     ))}
                   </select>
