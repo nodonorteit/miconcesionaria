@@ -77,8 +77,7 @@ export async function POST(request: NextRequest) {
       data: {
         saleId: sale.id,
         documentNumber: `DOC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        content: '', // El contenido se generará cuando se renderice el template
-        templateId: null // Por ahora sin template, se puede actualizar después
+        content: '' // El contenido se generará cuando se renderice el template
       }
     })
 
