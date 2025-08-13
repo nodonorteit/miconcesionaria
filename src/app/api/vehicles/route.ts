@@ -141,14 +141,11 @@ export async function POST(request: NextRequest) {
           brand: formData.get('brand') as string,
           model: formData.get('model') as string,
           year: formData.get('year') as string,
-          color: formData.get('color') as string,
           mileage: formData.get('mileage') as string,
           price: formData.get('price') as string,
           description: formData.get('description') as string,
           vin: formData.get('vin') as string,
           licensePlate: formData.get('licensePlate') as string,
-          fuelType: formData.get('fuelType') as string,
-          transmission: formData.get('transmission') as string,
           status: formData.get('status') as string,
           vehicleTypeId: formData.get('vehicleTypeId') as string
         }
@@ -187,7 +184,6 @@ export async function POST(request: NextRequest) {
         brand: !!vehicleData.brand,
         model: !!vehicleData.model,
         year: !!vehicleData.year,
-        color: !!vehicleData.color,
         mileage: !!vehicleData.mileage,
         price: !!vehicleData.price,
         vehicleTypeId: !!vehicleData.vehicleTypeId
@@ -207,6 +203,7 @@ export async function POST(request: NextRequest) {
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
         mileage: parseInt(vehicleData.mileage),
+        price: vehicleData.price ? parseFloat(vehicleData.price) : null,
         description: vehicleData.description || null,
         vin: vehicleData.vin || null,
         licensePlate: vehicleData.licensePlate || null,

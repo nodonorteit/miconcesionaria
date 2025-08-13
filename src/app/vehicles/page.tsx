@@ -104,6 +104,7 @@ export default function VehiclesPage() {
     model: '',
     year: '',
     mileage: '',
+    price: '',
     description: '',
     vin: '',
     licensePlate: '',
@@ -214,6 +215,7 @@ export default function VehiclesPage() {
           formDataToSend.append('model', formData.model)
           formDataToSend.append('year', formData.year.toString())
           formDataToSend.append('mileage', formData.mileage.toString())
+          formDataToSend.append('price', formData.price)
           formDataToSend.append('description', formData.description || '')
           formDataToSend.append('vin', formData.vin || '')
           formDataToSend.append('licensePlate', formData.licensePlate || '')
@@ -251,6 +253,7 @@ export default function VehiclesPage() {
             model: formData.model,
             year: formData.year,
             mileage: formData.mileage,
+            price: formData.price,
             description: formData.description,
             vin: formData.vin,
             licensePlate: formData.licensePlate,
@@ -276,6 +279,7 @@ export default function VehiclesPage() {
         formDataToSend.append('model', formData.model)
         formDataToSend.append('year', formData.year)
         formDataToSend.append('mileage', formData.mileage)
+        formDataToSend.append('price', formData.price)
         formDataToSend.append('description', formData.description)
         formDataToSend.append('vin', formData.vin)
         formDataToSend.append('licensePlate', formData.licensePlate)
@@ -342,6 +346,7 @@ export default function VehiclesPage() {
       model: vehicle.model,
       year: vehicle.year.toString(),
       mileage: vehicle.mileage.toString(),
+      price: vehicle.price?.toString() || '',
       description: vehicle.description || '',
       vin: vehicle.vin || '',
       licensePlate: vehicle.licensePlate || '',
@@ -528,6 +533,7 @@ export default function VehiclesPage() {
       model: '',
       year: '',
       mileage: '',
+      price: '',
       description: '',
       vin: '',
       licensePlate: '',
@@ -718,6 +724,18 @@ export default function VehiclesPage() {
                     value={formData.mileage}
                     onChange={(e) => setFormData({...formData, mileage: e.target.value})}
                     required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="price">Precio</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => setFormData({...formData, price: e.target.value})}
+                    placeholder="0.00"
                   />
                 </div>
 
@@ -1010,7 +1028,9 @@ export default function VehiclesPage() {
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Precio:</span>
-                      <p className="text-gray-900 font-semibold">Consultar</p>
+                      <span className="ml-2 text-gray-500">
+                        {vehicle.price ? `$${Number(vehicle.price).toLocaleString()}` : 'Consultar'}
+                      </span>
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Estado:</span> {vehicle.status}
@@ -1143,26 +1163,18 @@ export default function VehiclesPage() {
                         <p className="text-gray-900">{viewingVehicle.year}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-600">Color:</span>
-                        <p className="text-gray-900">{viewingVehicle.color}</p>
-                      </div>
-                      <div>
                         <span className="font-medium text-gray-600">Kilometraje:</span>
                         <p className="text-gray-900">{viewingVehicle.mileage.toLocaleString()} km</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Precio:</span>
                         <p className="text-gray-900 font-semibold">
-                          {viewingVehicle.purchasePrice ? (
+                          {viewingVehicle.price ? (
                             <span className="text-green-600">
-                              ${viewingVehicle.purchasePrice.toLocaleString()}
-                            </span>
-                          ) : viewingVehicle.salePrice ? (
-                            <span className="text-blue-600">
-                              ${viewingVehicle.salePrice.toLocaleString()}
+                              ${Number(viewingVehicle.price).toLocaleString()}
                             </span>
                           ) : (
-                            "No disponible"
+                            "Consultar"
                           )}
                         </p>
                       </div>

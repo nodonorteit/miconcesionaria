@@ -49,6 +49,7 @@ model Vehicle {
   model       String
   year        Int
   mileage     Int
+  price       Decimal? @db.Decimal(10, 2)
   vin         String?  @unique
   licensePlate String?
   status      VehicleStatus @default(AVAILABLE)

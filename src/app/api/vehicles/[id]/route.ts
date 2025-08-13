@@ -56,16 +56,13 @@ export async function PUT(
         brand: formData.get('brand') as string,
         model: formData.get('model') as string,
         year: formData.get('year') as string,
-        color: formData.get('color') as string,
         mileage: formData.get('mileage') as string,
         price: formData.get('price') as string,
         description: formData.get('description') as string,
         vin: formData.get('vin') as string,
         licensePlate: formData.get('licensePlate') as string,
-        fuelType: formData.get('fuelType') as string,
-        transmission: formData.get('transmission') as string,
-        vehicleTypeId: formData.get('vehicleTypeId') as string,
-        isActive: formData.get('isActive') === 'true'
+        status: formData.get('status') as string,
+        vehicleTypeId: formData.get('vehicleTypeId') as string
       }
       
       // Extraer imágenes
@@ -103,9 +100,11 @@ export async function PUT(
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
         mileage: parseInt(vehicleData.mileage),
+        price: vehicleData.price ? parseFloat(vehicleData.price) : null,
         description: vehicleData.description,
         vin: vehicleData.vin,
         licensePlate: vehicleData.licensePlate,
+        status: vehicleData.status,
         vehicleTypeId: vehicleData.vehicleTypeId
       }
     })
