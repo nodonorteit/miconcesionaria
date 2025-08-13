@@ -103,14 +103,10 @@ export default function VehiclesPage() {
     brand: '',
     model: '',
     year: '',
-    color: '',
     mileage: '',
-    price: '',
     description: '',
     vin: '',
     licensePlate: '',
-    fuelType: 'GASOLINE',
-    transmission: 'MANUAL',
     status: 'AVAILABLE',
     vehicleTypeId: '',
     images: [] as File[]
@@ -345,14 +341,10 @@ export default function VehiclesPage() {
       brand: vehicle.brand,
       model: vehicle.model,
       year: vehicle.year.toString(),
-      color: vehicle.color,
       mileage: vehicle.mileage.toString(),
-      price: vehicle.price.toString(),
       description: vehicle.description || '',
       vin: vehicle.vin || '',
       licensePlate: vehicle.licensePlate || '',
-      fuelType: vehicle.fuelType,
-      transmission: vehicle.transmission,
       status: vehicle.status,
       vehicleTypeId: vehicle.vehicleTypeId,
       images: []
@@ -535,14 +527,10 @@ export default function VehiclesPage() {
       brand: '',
       model: '',
       year: '',
-      color: '',
       mileage: '',
-      price: '',
       description: '',
       vin: '',
       licensePlate: '',
-      fuelType: 'GASOLINE',
-      transmission: 'MANUAL',
       status: 'AVAILABLE',
       vehicleTypeId: '',
       images: []
@@ -617,12 +605,11 @@ export default function VehiclesPage() {
     return (
       vehicle.brand.toLowerCase().includes(searchLower) ||
       vehicle.model.toLowerCase().includes(searchLower) ||
-      vehicle.color.toLowerCase().includes(searchLower) ||
       vehicle.licensePlate?.toLowerCase().includes(searchLower) ||
       vehicle.vin?.toLowerCase().includes(searchLower) ||
       vehicle.vehicleType?.name.toLowerCase().includes(searchLower) ||
       vehicle.year.toString().includes(searchLower) ||
-      vehicle.price.toString().includes(searchLower)
+      vehicle.mileage.toString().includes(searchLower)
     )
   })
 
@@ -722,15 +709,7 @@ export default function VehiclesPage() {
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="color">Color</Label>
-                  <Input
-                    id="color"
-                    value={formData.color}
-                    onChange={(e) => setFormData({...formData, color: e.target.value})}
-                    required
-                  />
-                </div>
+
                 <div>
                   <Label htmlFor="mileage">Kilometraje</Label>
                   <Input
@@ -741,17 +720,7 @@ export default function VehiclesPage() {
                     required
                   />
                 </div>
-                <div>
-                  <Label htmlFor="price">Precio</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({...formData, price: e.target.value})}
-                    required
-                  />
-                </div>
+
                 <div>
                   <Label htmlFor="vin">VIN (Número de Serie)</Label>
                   <Input
@@ -933,47 +902,7 @@ export default function VehiclesPage() {
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="fuelType">Combustible</Label>
-                  <select
-                    id="fuelType"
-                    value={formData.fuelType}
-                    onChange={(e) => setFormData({...formData, fuelType: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Seleccionar combustible...</option>
-                    <option value="GASOLINE">Gasolina</option>
-                    <option value="DIESEL">Diesel</option>
-                    <option value="ELECTRIC">Eléctrico</option>
-                    <option value="HYBRID">Híbrido</option>
-                    <option value="LPG">GLP</option>
-                    <option value="CNG">GNC</option>
-                    <option value="HYDROGEN">Hidrógeno</option>
-                    <option value="BIOFUEL">Biocombustible</option>
-                    <option value="SOLAR">Solar</option>
-                    <option value="WIND">Eólico</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="transmission">Transmisión</Label>
-                  <select
-                    id="transmission"
-                    value={formData.transmission}
-                    onChange={(e) => setFormData({...formData, transmission: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Seleccionar transmisión...</option>
-                    <option value="MANUAL">Manual</option>
-                    <option value="AUTOMATIC">Automático</option>
-                    <option value="CVT">CVT</option>
-                    <option value="SEMI_AUTOMATIC">Semi-automático</option>
-                    <option value="DCT">DCT</option>
-                    <option value="HYDRAULIC">Hidráulico</option>
-                    <option value="ELECTRIC_DRIVE">Tracción eléctrica</option>
-                  </select>
-                </div>
+
                 <div>
                   <Label htmlFor="status">Estado</Label>
                   <select
