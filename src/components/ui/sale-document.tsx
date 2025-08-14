@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Button } from './button'
-import { Card } from './card'
+import React, { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useCompanyConfig } from '@/hooks/useCompanyConfig'
 import { 
   FileText, 
   Download, 
@@ -62,6 +63,7 @@ interface SaleDocumentProps {
 export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: SaleDocumentProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [documentGenerated, setDocumentGenerated] = useState(false)
+  const { companyConfig } = useCompanyConfig()
 
   if (!isOpen) return null
 
@@ -94,29 +96,42 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         
         // Reemplazar variables del template con datos reales
         const variables = {
-          '{{saleNumber}}': sale.saleNumber,
+          '{{companyName}}': companyConfig?.name || 'Mi Concesionaria',
+          '{{companyAddress}}': 'Dirección de la empresa',
+          '{{companyCity}}': 'Ciudad',
+          '{{companyState}}': 'Provincia',
+          '{{companyCuit}}': 'CUIT de la empresa',
+          '{{companyLogoUrl}}': companyConfig?.logoUrl || '',
+          '{{documentNumber}}': sale.saleNumber,
+          '{{documentGeneratedAt}}': new Date().toLocaleDateString('es-AR'),
           '{{saleDate}}': new Date(sale.saleDate).toLocaleDateString('es-AR'),
           '{{vehicleBrand}}': sale.vehicle.brand,
           '{{vehicleModel}}': sale.vehicle.model,
           '{{vehicleYear}}': sale.vehicle.year,
-          '{{vehicleColor}}': sale.vehicle.color,
+          '{{vehicleColor}}': sale.vehicle.color || 'No especificado',
           '{{vehicleMileage}}': sale.vehicle.mileage.toLocaleString(),
           '{{vehicleType}}': sale.vehicle.vehicleType.name,
           '{{vehicleVin}}': sale.vehicle.vin || 'No especificado',
           '{{vehicleLicensePlate}}': sale.vehicle.licensePlate || 'No especificado',
-          '{{customerName}}': `${sale.customer.firstName} ${sale.customer.lastName}`,
+          '{{customerFirstName}}': sale.customer.firstName,
+          '{{customerLastName}}': sale.customer.lastName,
+          '{{customerFullName}}': `${sale.customer.firstName} ${sale.customer.lastName}`,
           '{{customerEmail}}': sale.customer.email || 'No especificado',
           '{{customerPhone}}': sale.customer.phone || 'No especificado',
-          '{{customerDocument}}': sale.customer.documentNumber || 'No especificado',
+          '{{customerDocumentNumber}}': sale.customer.documentNumber || 'No especificado',
+          '{{customerAddress}}': 'No especificado',
           '{{customerCity}}': sale.customer.city || 'No especificado',
           '{{customerState}}': sale.customer.state || 'No especificado',
-          '{{sellerName}}': `${sale.seller.firstName} ${sale.seller.lastName}`,
+          '{{sellerFirstName}}': sale.seller.firstName,
+          '{{sellerLastName}}': sale.seller.lastName,
+          '{{sellerFullName}}': `${sale.seller.firstName} ${sale.seller.lastName}`,
           '{{sellerEmail}}': sale.seller.email || 'No especificado',
           '{{sellerPhone}}': sale.seller.phone || 'No especificado',
           '{{sellerCommission}}': `${sale.seller.commissionRate}%`,
-          '{{totalAmount}}': `$${sale.totalAmount.toLocaleString('es-AR')}`,
-          '{{commission}}': `$${sale.commission.toLocaleString('es-AR')}`,
-          '{{notes}}': sale.notes || 'Sin notas adicionales',
+          '{{saleTotalAmount}}': `$${sale.totalAmount.toLocaleString('es-AR')}`,
+          '{{saleCommission}}': `$${sale.commission.toLocaleString('es-AR')}`,
+          '{{salePaymentMethod}}': 'Contado',
+          '{{saleNotes}}': sale.notes || 'Sin notas adicionales',
           '{{currentDate}}': new Date().toLocaleDateString('es-AR'),
           '{{currentTime}}': new Date().toLocaleTimeString('es-AR')
         }
