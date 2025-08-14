@@ -15,6 +15,7 @@ import {
   Calendar,
   MapPin
 } from 'lucide-react'
+import jsPDF from 'jspdf'
 
 interface SaleDocumentProps {
   sale: {
@@ -81,8 +82,122 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
   }
 
   const handleDownload = () => {
-    // Aquí implementaremos la descarga del PDF
-    console.log('Downloading document...')
+    // Generar y descargar el PDF del boleto
+    try {
+      const doc = new jsPDF()
+      
+      // Configuración del documento
+      doc.setFont('helvetica')
+      doc.setFontSize(20)
+      
+      // Título principal
+      doc.setFillColor(59, 130, 246) // Azul
+      doc.rect(20, 20, 170, 15, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.text('BOLETO DE COMPRA-VENTA', 105, 30, { align: 'center' })
+      
+      // Resetear color del texto
+      doc.setTextColor(0, 0, 0)
+      doc.setFontSize(12)
+      
+      // Número de venta
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text(`Venta #${sale.saleNumber}`, 20, 50)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(12)
+      
+      // Fecha
+      doc.text(`Fecha: ${new Date(sale.saleDate).toLocaleDateString('es-AR')}`, 20, 65)
+      
+      // Información del vehículo
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('INFORMACIÓN DEL VEHÍCULO', 20, 85)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(12)
+      
+      doc.text(`Marca: ${sale.vehicle.brand}`, 20, 100)
+      doc.text(`Modelo: ${sale.vehicle.model}`, 20, 110)
+      doc.text(`Año: ${sale.vehicle.year}`, 20, 120)
+      doc.text(`Color: ${sale.vehicle.color}`, 20, 130)
+      doc.text(`Kilometraje: ${sale.vehicle.mileage.toLocaleString()} km`, 20, 140)
+      doc.text(`Tipo: ${sale.vehicle.vehicleType.name}`, 20, 150)
+      
+      if (sale.vehicle.vin) {
+        doc.text(`VIN: ${sale.vehicle.vin}`, 20, 160)
+      }
+      if (sale.vehicle.licensePlate) {
+        doc.text(`Patente: ${sale.vehicle.licensePlate}`, 20, 170)
+      }
+      
+      // Información del cliente
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('INFORMACIÓN DEL CLIENTE', 20, 190)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(12)
+      
+      doc.text(`Nombre: ${sale.customer.firstName} ${sale.customer.lastName}`, 20, 205)
+      if (sale.customer.email) {
+        doc.text(`Email: ${sale.customer.email}`, 20, 215)
+      }
+      if (sale.customer.phone) {
+        doc.text(`Teléfono: ${sale.customer.phone}`, 20, 225)
+      }
+      if (sale.customer.documentNumber) {
+        doc.text(`DNI: ${sale.customer.documentNumber}`, 20, 235)
+      }
+      if (sale.customer.city) {
+        doc.text(`Ciudad: ${sale.customer.city}`, 20, 245)
+      }
+      if (sale.customer.state) {
+        doc.text(`Provincia: ${sale.customer.state}`, 20, 255)
+      }
+      
+      // Información del vendedor
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('INFORMACIÓN DEL VENDEDOR', 20, 275)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(12)
+      
+      doc.text(`Nombre: ${sale.seller.firstName} ${sale.seller.lastName}`, 20, 290)
+      if (sale.seller.email) {
+        doc.text(`Email: ${sale.seller.email}`, 20, 300)
+      }
+      if (sale.seller.phone) {
+        doc.text(`Teléfono: ${sale.seller.phone}`, 20, 310)
+      }
+      doc.text(`Comisión: ${sale.seller.commissionRate}%`, 20, 320)
+      
+      // Información de la venta
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.text('DETALLES DE LA VENTA', 20, 340)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(12)
+      
+      doc.text(`Monto Total: $${sale.totalAmount.toLocaleString('es-AR')}`, 20, 355)
+      doc.text(`Comisión: $${sale.commission.toLocaleString('es-AR')}`, 20, 365)
+      
+      if (sale.notes) {
+        doc.text(`Notas: ${sale.notes}`, 20, 375)
+      }
+      
+      // Pie de página
+      doc.setFontSize(10)
+      doc.setTextColor(128, 128, 128)
+      doc.text('Documento generado automáticamente por el sistema', 105, 400, { align: 'center' })
+      
+      // Descargar el PDF
+      const fileName = `boleto-venta-${sale.saleNumber}-${new Date().toISOString().split('T')[0]}.pdf`
+      doc.save(fileName)
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error)
+      alert('Error al generar el PDF. Por favor, inténtalo nuevamente.')
+    }
   }
 
   return (
