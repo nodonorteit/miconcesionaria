@@ -81,8 +81,118 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
     window.print()
   }
 
-  const handleDownload = () => {
-    // Generar y descargar el PDF del boleto
+  const handleDownload = async () => {
+    try {
+      // Primero intentar obtener el template personalizado
+      const templateResponse = await fetch(`/api/admin/document-templates/default?type=BOLETO_COMPRA_VENTA`)
+      
+      if (templateResponse.ok) {
+        const template = await templateResponse.json()
+        
+        // Renderizar el template con los datos de la venta
+        let htmlContent = template.content
+        
+        // Reemplazar variables del template con datos reales
+        const variables = {
+          '{{saleNumber}}': sale.saleNumber,
+          '{{saleDate}}': new Date(sale.saleDate).toLocaleDateString('es-AR'),
+          '{{vehicleBrand}}': sale.vehicle.brand,
+          '{{vehicleModel}}': sale.vehicle.model,
+          '{{vehicleYear}}': sale.vehicle.year,
+          '{{vehicleColor}}': sale.vehicle.color,
+          '{{vehicleMileage}}': sale.vehicle.mileage.toLocaleString(),
+          '{{vehicleType}}': sale.vehicle.vehicleType.name,
+          '{{vehicleVin}}': sale.vehicle.vin || 'No especificado',
+          '{{vehicleLicensePlate}}': sale.vehicle.licensePlate || 'No especificado',
+          '{{customerName}}': `${sale.customer.firstName} ${sale.customer.lastName}`,
+          '{{customerEmail}}': sale.customer.email || 'No especificado',
+          '{{customerPhone}}': sale.customer.phone || 'No especificado',
+          '{{customerDocument}}': sale.customer.documentNumber || 'No especificado',
+          '{{customerCity}}': sale.customer.city || 'No especificado',
+          '{{customerState}}': sale.customer.state || 'No especificado',
+          '{{sellerName}}': `${sale.seller.firstName} ${sale.seller.lastName}`,
+          '{{sellerEmail}}': sale.seller.email || 'No especificado',
+          '{{sellerPhone}}': sale.seller.phone || 'No especificado',
+          '{{sellerCommission}}': `${sale.seller.commissionRate}%`,
+          '{{totalAmount}}': `$${sale.totalAmount.toLocaleString('es-AR')}`,
+          '{{commission}}': `$${sale.commission.toLocaleString('es-AR')}`,
+          '{{notes}}': sale.notes || 'Sin notas adicionales',
+          '{{currentDate}}': new Date().toLocaleDateString('es-AR'),
+          '{{currentTime}}': new Date().toLocaleTimeString('es-AR')
+        }
+        
+        // Aplicar todas las variables
+        Object.entries(variables).forEach(([placeholder, value]) => {
+          htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), value)
+        })
+        
+        // Crear un elemento temporal para renderizar el HTML
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = htmlContent
+        tempDiv.style.position = 'absolute'
+        tempDiv.style.left = '-9999px'
+        tempDiv.style.top = '-9999px'
+        tempDiv.style.width = '800px'
+        tempDiv.style.padding = '20px'
+        tempDiv.style.fontFamily = 'Arial, sans-serif'
+        tempDiv.style.fontSize = '12px'
+        tempDiv.style.lineHeight = '1.4'
+        document.body.appendChild(tempDiv)
+        
+        // Generar PDF desde el HTML renderizado
+        const { jsPDF } = await import('jspdf')
+        const html2canvas = (await import('html2canvas')).default
+        
+        const canvas = await html2canvas(tempDiv, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: 800,
+          height: tempDiv.scrollHeight
+        })
+        
+        // Limpiar elemento temporal
+        document.body.removeChild(tempDiv)
+        
+        // Crear PDF
+        const imgData = canvas.toDataURL('image/png')
+        const pdf = new jsPDF('p', 'mm', 'a4')
+        const imgWidth = 210
+        const pageHeight = 295
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+        let heightLeft = imgHeight
+        
+        let position = 0
+        
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+        heightLeft -= pageHeight
+        
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight
+          pdf.addPage()
+          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+          heightLeft -= pageHeight
+        }
+        
+        // Descargar PDF
+        const fileName = `boleto-venta-${sale.saleNumber}-${new Date().toISOString().split('T')[0]}.pdf`
+        pdf.save(fileName)
+        
+      } else {
+        // Fallback: usar PDF básico si no hay template
+        console.log('No se encontró template personalizado, usando PDF básico...')
+        generateBasicPDF()
+      }
+      
+    } catch (error) {
+      console.error('Error generating PDF with template:', error)
+      console.log('Fallback: usando PDF básico...')
+      generateBasicPDF()
+    }
+  }
+  
+  const generateBasicPDF = () => {
+    // Función fallback para generar PDF básico (código anterior)
     try {
       const doc = new jsPDF()
       
@@ -162,12 +272,12 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(12)
       
-      doc.text(`Nombre: ${sale.seller.firstName} ${sale.seller.lastName}`, 20, 290)
-      if (sale.seller.email) {
-        doc.text(`Email: ${sale.seller.email}`, 20, 300)
+      doc.text(`Nombre: ${sale.customer.firstName} ${sale.customer.lastName}`, 20, 290)
+      if (sale.customer.email) {
+        doc.text(`Email: ${sale.customer.email}`, 20, 300)
       }
-      if (sale.seller.phone) {
-        doc.text(`Teléfono: ${sale.seller.phone}`, 20, 310)
+      if (sale.customer.phone) {
+        doc.text(`Teléfono: ${sale.customer.phone}`, 20, 310)
       }
       doc.text(`Comisión: ${sale.seller.commissionRate}%`, 20, 320)
       
@@ -195,7 +305,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
       doc.save(fileName)
       
     } catch (error) {
-      console.error('Error generating PDF:', error)
+      console.error('Error generating basic PDF:', error)
       alert('Error al generar el PDF. Por favor, inténtalo nuevamente.')
     }
   }
