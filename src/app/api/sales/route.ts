@@ -89,8 +89,7 @@ export async function POST(request: NextRequest) {
     await prisma.saleDocument.create({
       data: {
         saleId: sale.id,
-        documentNumber: `DOC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        content: '' // El contenido se generará cuando se renderice el template
+        documentNumber: `DOC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       }
     })
 
