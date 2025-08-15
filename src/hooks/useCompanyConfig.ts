@@ -4,13 +4,21 @@ interface CompanyConfig {
   name: string
   logoUrl: string
   description: string
+  cuit?: string
+  address?: string
+  city?: string
+  state?: string
 }
 
 export function useCompanyConfig() {
   const [companyConfig, setCompanyConfig] = useState<CompanyConfig>({
     name: '',
     logoUrl: '',
-    description: ''
+    description: '',
+    cuit: '',
+    address: '',
+    city: '',
+    state: ''
   })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
