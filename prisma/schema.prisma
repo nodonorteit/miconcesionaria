@@ -44,26 +44,36 @@ model VehicleType {
 }
 
 model Vehicle {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   brand       String
   model       String
   year        Int
   mileage     Int
-  price       Decimal? @db.Decimal(10, 2)
-  vin         String?  @unique
-  licensePlate String?
-  status      VehicleStatus @default(AVAILABLE)
+  price       Decimal?      @db.Decimal(10, 2)
   description String?
+  vin         String?       @unique
+  licensePlate String?      @unique
+  status      VehicleStatus @default(AVAILABLE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Nuevos campos para tipo de operación
+  operationType String?     // PURCHASE, COMMISSION, EXISTING
+  purchasePrice Decimal?    @db.Decimal(10, 2) // Precio de compra (si es compra)
+  sellerName   String?      // Nombre del vendedor (si es compra)
+  sellerDocument String?    // Documento del vendedor (si es compra)
+  sellerPhone  String?      // Teléfono del vendedor (si es compra)
+  commissionRate Decimal?   @db.Decimal(5, 2) // Porcentaje de comisión (si es consignación)
+  notes        String?      // Notas adicionales sobre la operación
+
+  // Relations
   vehicleTypeId String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  images        VehicleImage[]
+  sales         Sale[]
+  purchases     Purchase[]
 
-  vehicleType VehicleType @relation(fields: [vehicleTypeId], references: [id])
-  sales       Sale[]
-  purchases   Purchase[]
-  images      VehicleImage[]
-
-  @@map("Vehicle")
+  @@map("vehicles")
 }
 
 model VehicleImage {

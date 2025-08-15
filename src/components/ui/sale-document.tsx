@@ -94,8 +94,22 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         // Renderizar el template con los datos de la venta
         let htmlContent = template.content
         
-        // Reemplazar variables del template con datos reales
-        const variables = {
+        // Determinar si la concesionaria es compradora o vendedora
+        // Si la concesionaria es el vendedor, entonces el cliente es el comprador
+        // Si la concesionaria NO es el vendedor, entonces la concesionaria es el comprador
+        const isConcesionariaVendedora = sale.seller.firstName.toLowerCase().includes('concesionaria') || 
+                                        sale.seller.firstName.toLowerCase().includes('empresa') ||
+                                        sale.seller.firstName.toLowerCase().includes('s.a.') ||
+                                        sale.seller.firstName.toLowerCase().includes('s.r.l.') ||
+                                        sale.seller.firstName.toLowerCase().includes('sociedad') ||
+                                        sale.seller.lastName.toLowerCase().includes('concesionaria') ||
+                                        sale.seller.lastName.toLowerCase().includes('empresa') ||
+                                        sale.seller.lastName.toLowerCase().includes('s.a.') ||
+                                        sale.seller.lastName.toLowerCase().includes('s.r.l.') ||
+                                        sale.seller.lastName.toLowerCase().includes('sociedad')
+
+        // Variables base que siempre están disponibles
+        const baseVariables = {
           '{{companyName}}': companyConfig?.name || 'Mi Concesionaria',
           '{{companyAddress}}': 'Dirección de la empresa',
           '{{companyCity}}': 'Ciudad',
@@ -135,6 +149,44 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
           '{{currentDate}}': new Date().toLocaleDateString('es-AR'),
           '{{currentTime}}': new Date().toLocaleTimeString('es-AR')
         }
+
+        // Variables dinámicas según el rol de la concesionaria
+        const dynamicVariables = isConcesionariaVendedora ? {
+          // Concesionaria es VENDEDORA (vende al cliente)
+          '{{compradorName}}': sale.customer.firstName + ' ' + sale.customer.lastName,
+          '{{compradorDocument}}': sale.customer.documentNumber || 'No especificado',
+          '{{compradorAddress}}': 'No especificado',
+          '{{compradorCity}}': sale.customer.city || 'No especificado',
+          '{{compradorState}}': sale.customer.state || 'No especificado',
+          '{{vendedorName}}': companyConfig?.name || 'Mi Concesionaria',
+          '{{vendedorDocument}}': 'CUIT: ' + (companyConfig?.cuit || 'CUIT de la empresa'),
+          '{{vendedorAddress}}': 'Dirección de la empresa',
+          '{{vendedorCity}}': 'Ciudad',
+          '{{vendedorState}}': 'Provincia',
+          '{{vendedorCuit}}': companyConfig?.cuit || 'CUIT de la empresa',
+          '{{rolConcesionaria}}': 'VENDEDORA',
+          '{{tipoOperacion}}': 'VENTA',
+          '{{direccionOperacion}}': 'de la concesionaria hacia el cliente'
+        } : {
+          // Concesionaria es COMPRADORA (compra al cliente)
+          '{{compradorName}}': companyConfig?.name || 'Mi Concesionaria',
+          '{{compradorDocument}}': 'CUIT: ' + (companyConfig?.cuit || 'CUIT de la empresa'),
+          '{{compradorAddress}}': 'Dirección de la empresa',
+          '{{compradorCity}}': 'Ciudad',
+          '{{compradorState}}': 'Provincia',
+          '{{compradorCuit}}': companyConfig?.cuit || 'CUIT de la empresa',
+          '{{vendedorName}}': sale.customer.firstName + ' ' + sale.customer.lastName,
+          '{{vendedorDocument}}': sale.customer.documentNumber || 'No especificado',
+          '{{vendedorAddress}}': 'No especificado',
+          '{{vendedorCity}}': sale.customer.city || 'No especificado',
+          '{{vendedorState}}': sale.customer.state || 'No especificado',
+          '{{rolConcesionaria}}': 'COMPRADORA',
+          '{{tipoOperacion}}': 'COMPRA',
+          '{{direccionOperacion}}': 'del cliente hacia la concesionaria'
+        }
+
+        // Combinar todas las variables
+        const variables = { ...baseVariables, ...dynamicVariables }
         
         // Aplicar todas las variables
         Object.entries(variables).forEach(([placeholder, value]) => {

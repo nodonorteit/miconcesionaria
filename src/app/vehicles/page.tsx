@@ -110,7 +110,15 @@ export default function VehiclesPage() {
     licensePlate: '',
     status: 'AVAILABLE',
     vehicleTypeId: '',
-    images: [] as File[]
+    images: [] as File[],
+    // Nuevos campos para el tipo de operación
+    operationType: 'PURCHASE', // PURCHASE, COMMISSION, EXISTING
+    purchasePrice: '', // Precio de compra (si es compra)
+    sellerName: '', // Nombre del vendedor (si es compra)
+    sellerDocument: '', // Documento del vendedor (si es compra)
+    sellerPhone: '', // Teléfono del vendedor (si es compra)
+    commissionRate: '', // Porcentaje de comisión (si es comisión)
+    notes: '' // Notas adicionales
   })
   const [existingImages, setExistingImages] = useState<Array<{
     id: string
@@ -338,9 +346,8 @@ export default function VehiclesPage() {
     }
   }
 
-  const handleEdit = (vehicle: Vehicle) => {
+  const handleEdit = (vehicle: any) => {
     setEditingVehicle(vehicle)
-    setExistingImages(vehicle.images || [])
     setFormData({
       brand: vehicle.brand,
       model: vehicle.model,
@@ -352,7 +359,15 @@ export default function VehiclesPage() {
       licensePlate: vehicle.licensePlate || '',
       status: vehicle.status,
       vehicleTypeId: vehicle.vehicleTypeId,
-      images: []
+      images: [],
+      // Nuevos campos
+      operationType: vehicle.operationType || 'PURCHASE',
+      purchasePrice: vehicle.purchasePrice?.toString() || '',
+      sellerName: vehicle.sellerName || '',
+      sellerDocument: vehicle.sellerDocument || '',
+      sellerPhone: vehicle.sellerPhone || '',
+      commissionRate: vehicle.commissionRate?.toString() || '',
+      notes: vehicle.notes || ''
     })
     setShowForm(true)
   }
@@ -539,8 +554,18 @@ export default function VehiclesPage() {
       licensePlate: '',
       status: 'AVAILABLE',
       vehicleTypeId: '',
-      images: []
+      images: [],
+      // Nuevos campos
+      operationType: 'PURCHASE',
+      purchasePrice: '',
+      sellerName: '',
+      sellerDocument: '',
+      sellerPhone: '',
+      commissionRate: '',
+      notes: ''
     })
+    setEditingVehicle(null)
+    setShowForm(false)
   }
 
   // Función para eliminar imágenes existentes
@@ -676,16 +701,114 @@ export default function VehiclesPage() {
                     id="vehicleTypeId"
                     value={formData.vehicleTypeId}
                     onChange={(e) => setFormData({...formData, vehicleTypeId: e.target.value})}
-                    className="w-full p-2 border rounded"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option value="">Seleccionar tipo...</option>
-                    {vehicleTypes.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
+                    <option value="">Seleccionar tipo</option>
+                    {vehicleTypes.map(type => (
+                      <option key={type.id} value={type.id}>{type.name}</option>
                     ))}
                   </select>
+                </div>
+
+                {/* Nuevo campo: Tipo de Operación */}
+                <div>
+                  <Label htmlFor="operationType">Tipo de Operación</Label>
+                  <select
+                    id="operationType"
+                    value={formData.operationType}
+                    onChange={(e) => setFormData({...formData, operationType: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="PURCHASE">Compra de Vehículo</option>
+                    <option value="COMMISSION">Vehículo en Consignación</option>
+                    <option value="EXISTING">Vehículo Existente</option>
+                  </select>
+                </div>
+
+                {/* Campos específicos para COMPRA */}
+                {formData.operationType === 'PURCHASE' && (
+                  <>
+                    <div>
+                      <Label htmlFor="purchasePrice">Precio de Compra</Label>
+                      <Input
+                        id="purchasePrice"
+                        type="number"
+                        step="0.01"
+                        value={formData.purchasePrice}
+                        onChange={(e) => setFormData({...formData, purchasePrice: e.target.value})}
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sellerName">Nombre del Vendedor</Label>
+                      <Input
+                        id="sellerName"
+                        type="text"
+                        value={formData.sellerName}
+                        onChange={(e) => setFormData({...formData, sellerName: e.target.value})}
+                        placeholder="Nombre completo del vendedor"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sellerDocument">Documento del Vendedor</Label>
+                      <Input
+                        id="sellerDocument"
+                        type="text"
+                        value={formData.sellerDocument}
+                        onChange={(e) => setFormData({...formData, sellerDocument: e.target.value})}
+                        placeholder="DNI, CUIT, etc."
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sellerPhone">Teléfono del Vendedor</Label>
+                      <Input
+                        id="sellerPhone"
+                        type="tel"
+                        value={formData.sellerPhone}
+                        onChange={(e) => setFormData({...formData, sellerPhone: e.target.value})}
+                        placeholder="Teléfono de contacto"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Campos específicos para COMISIÓN */}
+                {formData.operationType === 'COMMISSION' && (
+                  <>
+                    <div>
+                      <Label htmlFor="commissionRate">Porcentaje de Comisión</Label>
+                      <Input
+                        id="commissionRate"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        max="100"
+                        value={formData.commissionRate}
+                        onChange={(e) => setFormData({...formData, commissionRate: e.target.value})}
+                        placeholder="0.00"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Campo de notas para todos los tipos */}
+                <div>
+                  <Label htmlFor="notes">Notas Adicionales</Label>
+                  <textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    placeholder="Notas sobre la operación, condiciones especiales, etc."
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="brand">Marca</Label>

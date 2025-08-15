@@ -99,106 +99,64 @@ export async function GET(request: NextRequest) {
 // POST - Crear un nuevo vehículo
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔄 Creando nuevo vehículo...')
-    console.log('📋 Headers recibidos:', Object.fromEntries(request.headers.entries()))
-    
-    const contentType = request.headers.get('content-type') || ''
+    const contentType = request.headers.get('content-type')
     console.log('📋 Content-Type detectado:', contentType)
     
     let vehicleData: any = {}
     let images: File[] = []
     
-    if (contentType.includes('application/json')) {
-      // Manejar JSON
-      try {
-        const text = await request.text()
-        console.log('📄 Request body (JSON):', text.substring(0, 200) + '...')
-        
-        if (!text || text.trim() === '') {
-          console.error('❌ Request body está vacío')
-          return NextResponse.json(
-            { error: 'Request body is empty' },
-            { status: 400 }
-          )
-        }
-        
-        vehicleData = JSON.parse(text)
-        console.log('✅ JSON parseado correctamente:', Object.keys(vehicleData))
-      } catch (parseError) {
-        console.error('❌ Error parsing JSON:', parseError)
-        return NextResponse.json(
-          { error: 'Invalid JSON format' },
-          { status: 400 }
-        )
+    if (contentType?.includes('multipart/form-data')) {
+      // Manejar FormData (formulario tradicional)
+      const formData = await request.formData()
+      console.log('📋 FormData recibido')
+      
+      // Extraer datos del formulario
+      vehicleData = {
+        brand: formData.get('brand') as string,
+        model: formData.get('model') as string,
+        year: formData.get('year') as string,
+        mileage: formData.get('mileage') as string,
+        price: formData.get('price') as string,
+        description: formData.get('description') as string,
+        vin: formData.get('vin') as string,
+        licensePlate: formData.get('licensePlate') as string,
+        status: formData.get('status') as string,
+        vehicleTypeId: formData.get('vehicleTypeId') as string,
+        // Nuevos campos
+        operationType: formData.get('operationType') as string,
+        purchasePrice: formData.get('purchasePrice') as string,
+        sellerName: formData.get('sellerName') as string,
+        sellerDocument: formData.get('sellerDocument') as string,
+        sellerPhone: formData.get('sellerPhone') as string,
+        commissionRate: formData.get('commissionRate') as string,
+        notes: formData.get('notes') as string
       }
-    } else if (contentType.includes('multipart/form-data')) {
-      // Manejar FormData
-      try {
-        const formData = await request.formData()
-        
-        // Extraer datos del formulario
-        vehicleData = {
-          brand: formData.get('brand') as string,
-          model: formData.get('model') as string,
-          year: formData.get('year') as string,
-          mileage: formData.get('mileage') as string,
-          price: formData.get('price') as string,
-          description: formData.get('description') as string,
-          vin: formData.get('vin') as string,
-          licensePlate: formData.get('licensePlate') as string,
-          status: formData.get('status') as string,
-          vehicleTypeId: formData.get('vehicleTypeId') as string
-        }
-        
-        images = formData.getAll('images') as File[]
-        console.log('✅ FormData procesado correctamente:', Object.keys(vehicleData))
-        console.log('📸 Imágenes encontradas:', images.length)
-        
-        // Log detallado de cada imagen
-        images.forEach((image, index) => {
-          console.log(`📸 Imagen ${index + 1}:`, {
-            name: image.name,
-            size: image.size,
-            type: image.type,
-            lastModified: image.lastModified
-          })
+
+      // Validar campos requeridos
+      if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.mileage || !vehicleData.vehicleTypeId) {
+        console.error('❌ Campos requeridos faltantes:', {
+          brand: !!vehicleData.brand,
+          model: !!vehicleData.model,
+          year: !!vehicleData.year,
+          mileage: !!vehicleData.mileage,
+          vehicleTypeId: !!vehicleData.vehicleTypeId
         })
-      } catch (formError) {
-        console.error('❌ Error processing FormData:', formError)
-        return NextResponse.json(
-          { error: 'Invalid form data' },
-          { status: 400 }
-        )
+        return NextResponse.json({ error: 'Campos requeridos faltantes' }, { status: 400 })
       }
-    } else {
-      console.error('❌ Content-Type no soportado:', contentType)
-      return NextResponse.json(
-        { error: 'Unsupported content type. Use application/json or multipart/form-data' },
-        { status: 400 }
-      )
-    }
 
-    // Validar campos requeridos
-    if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.mileage || !vehicleData.vehicleTypeId) {
-      console.error('❌ Campos requeridos faltantes:', {
-        brand: !!vehicleData.brand,
-        model: !!vehicleData.model,
-        year: !!vehicleData.year,
-        mileage: !!vehicleData.mileage,
-        price: !!vehicleData.price,
-        vehicleTypeId: !!vehicleData.vehicleTypeId
-      })
-      return NextResponse.json(
-        { error: 'Todos los campos requeridos deben estar completos' },
-        { status: 400 }
-      )
-    }
+      // Validar campos específicos según el tipo de operación
+      if (vehicleData.operationType === 'PURCHASE') {
+        if (!vehicleData.purchasePrice || !vehicleData.sellerName || !vehicleData.sellerDocument) {
+          return NextResponse.json({ error: 'Para compras se requiere precio de compra, nombre y documento del vendedor' }, { status: 400 })
+        }
+      } else if (vehicleData.operationType === 'COMMISSION') {
+        if (!vehicleData.commissionRate) {
+          return NextResponse.json({ error: 'Para consignaciones se requiere el porcentaje de comisión' }, { status: 400 })
+        }
+      }
 
-    console.log('📋 Datos del vehículo a crear:', vehicleData)
-
-    // Crear el vehículo
-    const vehicle = await prisma.vehicle.create({
-      data: {
+      // Crear el vehículo
+      const data = {
         brand: vehicleData.brand,
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
@@ -208,125 +166,134 @@ export async function POST(request: NextRequest) {
         vin: vehicleData.vin || null,
         licensePlate: vehicleData.licensePlate || null,
         status: (vehicleData.status || 'AVAILABLE') as any,
-        vehicleTypeId: vehicleData.vehicleTypeId
-      },
-      include: {
-        vehicleType: true,
-        images: true
+        vehicleTypeId: vehicleData.vehicleTypeId,
+        // Nuevos campos
+        operationType: vehicleData.operationType,
+        purchasePrice: vehicleData.purchasePrice ? parseFloat(vehicleData.purchasePrice) : null,
+        sellerName: vehicleData.sellerName || null,
+        sellerDocument: vehicleData.sellerDocument || null,
+        sellerPhone: vehicleData.sellerPhone || null,
+        commissionRate: vehicleData.commissionRate ? parseFloat(vehicleData.commissionRate) : null,
+        notes: vehicleData.notes || null
       }
-    })
 
-    console.log('✅ Vehículo creado:', vehicle.id)
+      const vehicle = await prisma.vehicle.create({
+        data
+      })
 
-    // Procesar imágenes si existen
-    if (images.length > 0) {
-      console.log('🖼️ Iniciando procesamiento de imágenes...')
-      try {
-        // Crear directorio de uploads si no existe
-        const uploadsDir = join(process.cwd(), 'uploads')  // En Docker, esto es /app/uploads
-        console.log('📁 Directorio de uploads a usar:', uploadsDir)
-        
-        // Verificar si el directorio existe y tiene permisos
-        try {
-          await mkdir(uploadsDir, { recursive: true })
-          console.log('✅ Directorio de uploads creado/verificado:', uploadsDir)
-        } catch (mkdirError) {
-          console.error('❌ Error creando directorio de uploads:', mkdirError)
-          // Continuar sin crear el directorio si ya existe
+      // Si es una COMPRA, crear el movimiento de egreso
+      if (vehicleData.operationType === 'PURCHASE' && vehicleData.purchasePrice) {
+        const expenseData = {
+          description: `Compra de vehículo: ${vehicleData.brand} ${vehicleData.model} ${vehicleData.year}`,
+          amount: parseFloat(vehicleData.purchasePrice),
+          type: 'WORKSHOP' as any, // Usar WORKSHOP como tipo por defecto
+          workshopId: null,
+          sellerId: null,
+          receiptPath: null
         }
 
-        for (let i = 0; i < images.length; i++) {
-          const image = images[i]
-          console.log(`🖼️ Procesando imagen ${i + 1}/${images.length}:`, image.name)
-          
-          if (image.size > 0) {
-            try {
-              const bytes = await image.arrayBuffer()
-              const buffer = Buffer.from(bytes)
-              console.log(`📊 Buffer creado: ${buffer.length} bytes`)
-              
-              // Generar nombre único para la imagen
-              const timestamp = Date.now()
-              const filename = `${vehicle.id}_${timestamp}_${i}_${image.name}`
-              const filepath = join(uploadsDir, filename)
-              console.log(`📝 Nombre del archivo: ${filename}`)
-              console.log(`📁 Ruta completa: ${filepath}`)
-              
-              // Guardar archivo
-              console.log('💾 Guardando archivo en disco...')
-              await writeFile(filepath, buffer)
-              console.log('✅ Archivo guardado en disco exitosamente')
-              
-              // Guardar referencia en la base de datos
-              console.log('💾 Guardando referencia en BD...')
-              await prisma.vehicleImage.create({
-                data: {
-                  path: `/uploads/${filename}`,
-                  filename: filename,
-                  isPrimary: i === 0,
-                  vehicleId: vehicle.id
-                }
-              })
-              
-              console.log('✅ Imagen procesada completamente:', filename)
-            } catch (imageError) {
-              console.error(`❌ Error procesando imagen ${i + 1}:`, imageError)
-              // Continuar con la siguiente imagen
-            }
-          } else {
-            console.log(`⚠️ Imagen ${i + 1} tiene tamaño 0, saltando...`)
+        await prisma.expense.create({
+          data: expenseData
+        })
+
+        console.log(`✅ Egreso creado por compra de vehículo: $${vehicleData.purchasePrice}`)
+      }
+
+      return NextResponse.json(vehicle)
+    } else if (contentType?.includes('application/json')) {
+      // Manejar JSON (API calls)
+      try {
+        const text = await request.text()
+        console.log('📋 Texto recibido:', text.substring(0, 200))
+        
+        const vehicleData = JSON.parse(text)
+        console.log('✅ JSON parseado correctamente:', Object.keys(vehicleData))
+
+        // Validar campos requeridos
+        if (!vehicleData.brand || !vehicleData.model || !vehicleData.year || !vehicleData.mileage || !vehicleData.vehicleTypeId) {
+          console.error('❌ Campos requeridos faltantes:', {
+            brand: !!vehicleData.brand,
+            model: !!vehicleData.model,
+            year: !!vehicleData.year,
+            mileage: !!vehicleData.mileage,
+            vehicleTypeId: !!vehicleData.vehicleTypeId
+          })
+          return NextResponse.json({ error: 'Campos requeridos faltantes' }, { status: 400 })
+        }
+
+        // Validar campos específicos según el tipo de operación
+        if (vehicleData.operationType === 'PURCHASE') {
+          if (!vehicleData.purchasePrice || !vehicleData.sellerName || !vehicleData.sellerDocument) {
+            return NextResponse.json({ error: 'Para compras se requiere precio de compra, nombre y documento del vendedor' }, { status: 400 })
+          }
+        } else if (vehicleData.operationType === 'COMMISSION') {
+          if (!vehicleData.commissionRate) {
+            return NextResponse.json({ error: 'Para consignaciones se requiere el porcentaje de comisión' }, { status: 400 })
           }
         }
-      } catch (imageError) {
-        console.error('❌ Error procesando imágenes:', imageError)
-        // Continuar sin las imágenes si hay error
+
+        // Crear el vehículo
+        const data = {
+          brand: vehicleData.brand,
+          model: vehicleData.model,
+          year: parseInt(vehicleData.year),
+          mileage: parseInt(vehicleData.mileage),
+          price: vehicleData.price ? parseFloat(vehicleData.price) : null,
+          description: vehicleData.description || null,
+          vin: vehicleData.vin || null,
+          licensePlate: vehicleData.licensePlate || null,
+          status: (vehicleData.status || 'AVAILABLE') as any,
+          vehicleTypeId: vehicleData.vehicleTypeId,
+          // Nuevos campos
+          operationType: vehicleData.operationType,
+          purchasePrice: vehicleData.purchasePrice ? parseFloat(vehicleData.purchasePrice) : null,
+          sellerName: vehicleData.sellerName || null,
+          sellerDocument: vehicleData.sellerDocument || null,
+          sellerPhone: vehicleData.sellerPhone || null,
+          commissionRate: vehicleData.commissionRate ? parseFloat(vehicleData.commissionRate) : null,
+          notes: vehicleData.notes || null
+        }
+
+        const vehicle = await prisma.vehicle.create({
+          data
+        })
+
+        // Si es una COMPRA, crear el movimiento de egreso
+        if (vehicleData.operationType === 'PURCHASE' && vehicleData.purchasePrice) {
+          const expenseData = {
+            description: `Compra de vehículo: ${vehicleData.brand} ${vehicleData.model} ${vehicleData.year}`,
+            amount: parseFloat(vehicleData.purchasePrice),
+            type: 'WORKSHOP' as any, // Usar WORKSHOP como tipo por defecto
+            workshopId: null,
+            sellerId: null,
+            receiptPath: null
+          }
+
+          await prisma.expense.create({
+            data: expenseData
+          })
+
+          console.log(`✅ Egreso creado por compra de vehículo: $${vehicleData.purchasePrice}`)
+        }
+
+        return NextResponse.json(vehicle)
+      } catch (parseError) {
+        console.error('❌ Error parsing JSON:', parseError)
+        return NextResponse.json(
+          { error: 'Invalid JSON format' },
+          { status: 400 }
+        )
       }
+    } else {
+      return NextResponse.json(
+        { error: 'Unsupported content type' },
+        { status: 400 }
+      )
     }
-
-    // Obtener el vehículo con las imágenes
-    const vehicleWithImages = await prisma.vehicle.findUnique({
-      where: { id: vehicle.id },
-      include: {
-        vehicleType: true,
-        images: true
-      }
-    })
-
-    console.log('✅ Vehículo creado exitosamente con imágenes')
-    return NextResponse.json(vehicleWithImages, { status: 201 })
   } catch (error) {
-    console.error('❌ Error creating vehicle:', error)
-    
-    // Manejar errores específicos de Prisma
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
-      // Error de constraint único
-      const field = (error as any).meta?.target?.[0] || 'campo'
-      return NextResponse.json(
-        { 
-          error: `El ${field} ya existe en la base de datos. Por favor, usa un valor diferente.`,
-          details: `Error de duplicado en: ${field}`
-        }, 
-        { status: 400 }
-      )
-    }
-    
-    // Otros errores de Prisma
-    if (error && typeof error === 'object' && 'code' in error && (error as any).code?.startsWith('P')) {
-      return NextResponse.json(
-        { 
-          error: 'Error en la base de datos. Por favor, verifica los datos e intenta nuevamente.',
-          details: (error as any).message || 'Error de Prisma desconocido'
-        }, 
-        { status: 400 }
-      )
-    }
-    
-    // Error genérico
+    console.error('Error creating vehicle:', error)
     return NextResponse.json(
-      { 
-        error: 'Error interno del servidor. Por favor, intenta nuevamente.',
-        details: error instanceof Error ? error.message : 'Error desconocido'
-      }, 
+      { error: 'Error creating vehicle' },
       { status: 500 }
     )
   }
