@@ -27,6 +27,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { id, name, type, content, variables, isActive, isDefault } = body
 
+    // Validar y limpiar el campo variables
+    let cleanVariables = variables
+    if (variables && typeof variables === 'object') {
+      // Asegurar que variables sea un objeto JSON válido
+      try {
+        // Convertir a string y de vuelta para validar JSON
+        cleanVariables = JSON.parse(JSON.stringify(variables))
+      } catch (jsonError) {
+        console.error('Error parsing variables JSON:', jsonError)
+        return NextResponse.json(
+          { error: 'Campo variables debe ser un objeto JSON válido' },
+          { status: 400 }
+        )
+      }
+    } else if (variables && typeof variables === 'string') {
+      // Si es string, intentar parsearlo
+      try {
+        cleanVariables = JSON.parse(variables)
+      } catch (jsonError) {
+        console.error('Error parsing variables string:', jsonError)
+        return NextResponse.json(
+          { error: 'Campo variables debe ser un objeto JSON válido' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Si es el template por defecto, desactivar otros del mismo tipo
     if (isDefault) {
       await prisma.documentTemplate.updateMany({
@@ -47,7 +74,7 @@ export async function POST(request: NextRequest) {
           name,
           type,
           content,
-          variables,
+          variables: cleanVariables,
           isActive,
           isDefault
         }
@@ -60,7 +87,7 @@ export async function POST(request: NextRequest) {
           name,
           type,
           content,
-          variables,
+          variables: cleanVariables,
           isActive,
           isDefault
         }
