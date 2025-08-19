@@ -73,7 +73,7 @@ model Vehicle {
   sales         Sale[]
   purchases     Purchase[]
 
-  @@map("vehicles")
+  @@map("Vehicle")
 }
 
 model VehicleImage {
@@ -432,4 +432,19 @@ enum PurchaseStatus {
   PENDING
   COMPLETED
   CANCELLED
+} 
+
+model CompanyConfig {
+  id          String   @id @default(autoincrement())
+  name        String
+  logoUrl     String?
+  description String?
+  address     String?
+  city        String?
+  state       String?
+  cuit        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("company_config")
 } 
