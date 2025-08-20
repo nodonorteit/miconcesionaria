@@ -120,6 +120,113 @@ export default function DocumentTemplatesPage() {
     setPreviewTemplate(template)
   }
 
+  const processTemplateWithSampleData = (content: string): string => {
+    // Datos de ejemplo para el preview
+    const sampleData = {
+      company: {
+        name: 'Mi Concesionaria S.A.',
+        logoUrl: '/logo.svg',
+        address: 'Av. Corrientes 1234',
+        city: 'Buenos Aires',
+        state: 'Buenos Aires',
+        cuit: '30-12345678-9'
+      },
+      customer: {
+        firstName: 'Juan',
+        lastName: 'Pérez',
+        address: 'Calle Falsa 123',
+        city: 'Córdoba',
+        state: 'Córdoba',
+        documentNumber: '12345678'
+      },
+      vehicle: {
+        brand: 'Toyota',
+        model: 'Corolla',
+        year: '2020',
+        color: 'Blanco',
+        vin: '1HGBH41JXMN109186',
+        licensePlate: 'ABC123',
+        type: 'Sedán',
+        mileage: '45000'
+      },
+      sale: {
+        totalAmount: 25000000,
+        paymentMethod: 'Transferencia Bancaria',
+        deliveryDate: '2025-01-15',
+        notes: 'Vehículo en excelente estado, sin accidentes',
+        date: '2025-01-10'
+      },
+      document: {
+        number: 'BOL-001',
+        generatedAt: '2025-01-10'
+      }
+    }
+
+    // Funciones de formato
+    const formatCurrency = (amount: number): string => {
+      return new Intl.NumberFormat('es-AR', {
+        style: 'currency',
+        currency: 'ARS',
+        minimumFractionDigits: 0
+      }).format(amount)
+    }
+
+    const formatDate = (dateString: string): string => {
+      return new Date(dateString).toLocaleDateString('es-AR')
+    }
+
+    // Procesar el template con Handlebars-like syntax
+    let processedContent = content
+
+    // Reemplazar variables de company
+    processedContent = processedContent.replace(/\{\{company\.(\w+)\}\}/g, (match, field) => {
+      return sampleData.company[field as keyof typeof sampleData.company] || match
+    })
+
+    // Reemplazar variables de customer
+    processedContent = processedContent.replace(/\{\{customer\.(\w+)\}\}/g, (match, field) => {
+      return sampleData.customer[field as keyof typeof sampleData.customer] || match
+    })
+
+    // Reemplazar variables de vehicle
+    processedContent = processedContent.replace(/\{\{vehicle\.(\w+)\}\}/g, (match, field) => {
+      return sampleData.vehicle[field as keyof typeof sampleData.vehicle] || match
+    })
+
+    // Reemplazar variables de sale
+    processedContent = processedContent.replace(/\{\{sale\.(\w+)\}\}/g, (match, field) => {
+      return sampleData.sale[field as keyof typeof sampleData.sale] || match
+    })
+
+    // Reemplazar variables de document
+    processedContent = processedContent.replace(/\{\{document\.(\w+)\}\}/g, (match, field) => {
+      return sampleData.document[field as keyof typeof sampleData.document] || match
+    })
+
+    // Reemplazar funciones de formato
+    processedContent = processedContent.replace(/\{\{formatCurrency\s+sale\.(\w+)\}\}/g, (match, field) => {
+      const amount = sampleData.sale[field as keyof typeof sampleData.sale]
+      return typeof amount === 'number' ? formatCurrency(amount) : match
+    })
+
+    processedContent = processedContent.replace(/\{\{formatDate\s+sale\.(\w+)\}\}/g, (match, field) => {
+      const date = sampleData.sale[field as keyof typeof sampleData.sale]
+      return typeof date === 'string' ? formatDate(date) : match
+    })
+
+    processedContent = processedContent.replace(/\{\{formatDate\s+document\.(\w+)\}\}/g, (match, field) => {
+      const date = sampleData.document[field as keyof typeof sampleData.document]
+      return typeof date === 'string' ? formatDate(date) : match
+    })
+
+    // Procesar condicionales simples
+    processedContent = processedContent.replace(/\{\{#if\s+company\.logoUrl\}\}(.*?)\{\{\/if\}\}/gs, (match, content) => {
+      return sampleData.company.logoUrl ? content : ''
+    })
+
+    return processedContent
+  }
+
   if (showEditor) {
     return (
       <div className="container mx-auto p-6">
@@ -174,7 +281,7 @@ export default function DocumentTemplatesPage() {
           </CardHeader>
           <CardContent>
             <div className="border rounded-md p-4 bg-gray-50 max-h-96 overflow-auto">
-              <div dangerouslySetInnerHTML={{ __html: previewTemplate.content }} />
+              <div dangerouslySetInnerHTML={{ __html: processTemplateWithSampleData(previewTemplate.content) }} />
             </div>
           </CardContent>
         </Card>
@@ -195,7 +302,6 @@ export default function DocumentTemplatesPage() {
 
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Templates de Documentos</h1>
           <p className="text-gray-600">Gestiona los templates para generar documentos como boletos de compra-venta</p>
         </div>
         <Button onClick={handleNewTemplate} className="flex items-center gap-2">
