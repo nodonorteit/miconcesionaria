@@ -225,7 +225,7 @@ export default function DocumentTemplatesPage() {
     })
 
     // Procesar condicionales simples
-    processedContent = processedContent.replace(/\{\{#if\s+company\.logoUrl\}\}(.*?)\{\{\/if\}\}/gs, (match, content) => {
+    processedContent = processedContent.replace(/\{\{#if\s+company\.logoUrl\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
       return sampleData.company.logoUrl ? content : ''
     })
 
