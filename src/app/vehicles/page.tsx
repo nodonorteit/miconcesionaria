@@ -556,7 +556,7 @@ export default function VehiclesPage() {
       vehicleTypeId: '',
       images: [],
       // Nuevos campos
-      operationType: 'PURCHASE',
+      operationType: 'EXISTING',
       purchasePrice: '',
       sellerName: '',
       sellerDocument: '',
@@ -721,17 +721,17 @@ export default function VehiclesPage() {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   >
-                    <option value="PURCHASE">Compra de Vehículo</option>
+                    <option value="EXISTING">Vehículo del Inventario</option>
                     <option value="COMMISSION">Vehículo en Consignación</option>
-                    <option value="EXISTING">Vehículo Existente</option>
+                    <option value="PURCHASE">Vehículo para Comprar</option>
                   </select>
                 </div>
 
-                {/* Campos específicos para COMPRA */}
+                {/* Campos específicos para COMPRA (solo cuando se va a comprar un vehículo) */}
                 {formData.operationType === 'PURCHASE' && (
                   <>
                     <div>
-                      <Label htmlFor="purchasePrice">Precio de Compra</Label>
+                      <Label htmlFor="purchasePrice">Precio de Compra Estimado</Label>
                       <Input
                         id="purchasePrice"
                         type="number"
@@ -741,17 +741,23 @@ export default function VehiclesPage() {
                         placeholder="0.00"
                         required
                       />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Precio estimado para comprar el vehículo
+                      </p>
                     </div>
                     <div>
-                      <Label htmlFor="sellerName">Nombre del Vendedor</Label>
+                      <Label htmlFor="sellerName">Información del Vendedor</Label>
                       <Input
                         id="sellerName"
                         type="text"
                         value={formData.sellerName}
                         onChange={(e) => setFormData({...formData, sellerName: e.target.value})}
-                        placeholder="Nombre completo del vendedor"
+                        placeholder="Nombre o empresa del vendedor"
                         required
                       />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Datos del vendedor para la futura compra
+                      </p>
                     </div>
                     <div>
                       <Label htmlFor="sellerDocument">Documento del Vendedor</Label>
@@ -794,8 +800,21 @@ export default function VehiclesPage() {
                         placeholder="0.00"
                         required
                       />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Porcentaje de comisión por vender el vehículo del cliente
+                      </p>
                     </div>
                   </>
+                )}
+
+                {/* Campos específicos para INVENTARIO PROPIO */}
+                {formData.operationType === 'EXISTING' && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+                      <strong>Vehículo del Inventario:</strong> Este vehículo ya pertenece a la concesionaria 
+                      y se agregará directamente al inventario disponible para la venta.
+                    </p>
+                  </div>
                 )}
 
                 {/* Campo de notas para todos los tipos */}

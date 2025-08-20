@@ -121,6 +121,8 @@ export default function DocumentTemplatesPage() {
   }
 
   const processTemplateWithSampleData = (content: string): string => {
+    console.log('🔍 [Preview] Procesando template con contenido:', content.substring(0, 200) + '...')
+    
     // Datos de ejemplo para el preview
     const sampleData = {
       company: {
@@ -228,6 +230,9 @@ export default function DocumentTemplatesPage() {
     processedContent = processedContent.replace(/\{\{#if\s+company\.logoUrl\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, content) => {
       return sampleData.company.logoUrl ? content : ''
     })
+
+    console.log('✅ [Preview] Template procesado. Longitud final:', processedContent.length)
+    console.log('🔍 [Preview] Primeros 300 caracteres:', processedContent.substring(0, 300))
 
     return processedContent
   }
