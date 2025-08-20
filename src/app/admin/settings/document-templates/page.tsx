@@ -180,27 +180,32 @@ export default function DocumentTemplatesPage() {
 
     // Reemplazar variables de company
     processedContent = processedContent.replace(/\{\{company\.(\w+)\}\}/g, (match, field) => {
-      return sampleData.company[field as keyof typeof sampleData.company] || match
+      const value = sampleData.company[field as keyof typeof sampleData.company]
+      return value !== undefined ? String(value) : match
     })
 
     // Reemplazar variables de customer
     processedContent = processedContent.replace(/\{\{customer\.(\w+)\}\}/g, (match, field) => {
-      return sampleData.customer[field as keyof typeof sampleData.customer] || match
+      const value = sampleData.customer[field as keyof typeof sampleData.customer]
+      return value !== undefined ? String(value) : match
     })
 
     // Reemplazar variables de vehicle
     processedContent = processedContent.replace(/\{\{vehicle\.(\w+)\}\}/g, (match, field) => {
-      return sampleData.vehicle[field as keyof typeof sampleData.vehicle] || match
+      const value = sampleData.vehicle[field as keyof typeof sampleData.vehicle]
+      return value !== undefined ? String(value) : match
     })
 
     // Reemplazar variables de sale
     processedContent = processedContent.replace(/\{\{sale\.(\w+)\}\}/g, (match, field) => {
-      return sampleData.sale[field as keyof typeof sampleData.sale] || match
+      const value = sampleData.sale[field as keyof typeof sampleData.sale]
+      return value !== undefined ? String(value) : match
     })
 
     // Reemplazar variables de document
     processedContent = processedContent.replace(/\{\{document\.(\w+)\}\}/g, (match, field) => {
-      return sampleData.document[field as keyof typeof sampleData.document] || match
+      const value = sampleData.document[field as keyof typeof sampleData.document]
+      return value !== undefined ? String(value) : match
     })
 
     // Reemplazar funciones de formato
