@@ -117,6 +117,10 @@ export default function DocumentTemplatesPage() {
   }
 
   const handlePreview = (template: DocumentTemplateWithTimestamps) => {
+    console.log('🔍 [Preview] Abriendo preview del template:', template.name);
+    console.log('🔍 [Preview] Tipo del template:', template.type);
+    console.log('🔍 [Preview] Contenido del template:', template.content.substring(0, 200) + '...');
+    console.log('🔍 [Preview] Variables del template:', template.variables);
     setPreviewTemplate(template)
   }
 
@@ -290,7 +294,7 @@ export default function DocumentTemplatesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-md p-4 bg-gray-50 max-h-96 overflow-auto">
+            <div className="border rounded-md p-4 bg-gray-50 max-h-96 overflow-auto" data-testid="preview-container">
               <div dangerouslySetInnerHTML={{ __html: processTemplateWithSampleData(previewTemplate.content) }} />
             </div>
           </CardContent>
