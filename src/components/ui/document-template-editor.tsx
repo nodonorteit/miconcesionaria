@@ -180,6 +180,8 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 </body>
 </html>`
 
+
+
 const DEFAULT_VARIABLES = {
   company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit'],
   customer: ['firstName', 'lastName', 'address', 'city', 'state', 'documentNumber'],
