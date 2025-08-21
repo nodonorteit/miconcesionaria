@@ -26,7 +26,84 @@ if [ ! -f "docker-compose.staging.yml" ]; then
     exit 1
 fi
 
-echo "📦 Actualizando imagen de staging..."
+# Función para limpiar imágenes antiguas
+cleanup_old_images() {
+    echo "🧹 Limpiando imágenes antiguas de MiConcesionaria (Staging)..."
+    
+    # Obtener el nombre de la imagen actual
+    IMAGE_NAME=$(grep "image:" docker-compose.staging.yml | head -1 | awk '{print $2}' | tr -d '"')
+    
+    if [ -n "$IMAGE_NAME" ]; then
+        echo "🔍 Buscando imágenes antiguas de: $IMAGE_NAME"
+        
+        # Buscar imágenes con el mismo nombre pero diferentes tags
+        OLD_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}" | grep "$(echo $IMAGE_NAME | cut -d: -f1)" | grep -v "$IMAGE_NAME" || true)
+        
+        if [ -n "$OLD_IMAGES" ]; then
+            echo "🗑️ Eliminando imágenes antiguas:"
+            echo "$OLD_IMAGES"
+            
+            # Extraer IDs de las imágenes antiguas
+            OLD_IMAGE_IDS=$(echo "$OLD_IMAGES" | awk '{print $2}')
+            
+            for IMAGE_ID in $OLD_IMAGE_IDS; do
+                echo "🗑️ Eliminando imagen: $IMAGE_ID"
+                docker rmi -f "$IMAGE_ID" 2>/dev/null || echo "⚠️ No se pudo eliminar imagen $IMAGE_ID (puede estar en uso)"
+            done
+        else
+            echo "✅ No se encontraron imágenes antiguas para eliminar"
+        fi
+        
+        # Limpiar imágenes huérfanas (dangling)
+        DANGLING_IMAGES=$(docker images -f "dangling=true" -q)
+        if [ -n "$DANGLING_IMAGES" ]; then
+            echo "🧹 Limpiando imágenes huérfanas..."
+            docker rmi "$DANGLING_IMAGES" 2>/dev/null || echo "⚠️ No se pudieron eliminar todas las imágenes huérfanas"
+        fi
+    else
+        echo "⚠️ No se pudo determinar el nombre de la imagen del docker-compose"
+    fi
+}
+
+# Función para verificar espacio en disco
+check_disk_space() {
+    echo "💾 Verificando espacio en disco..."
+    DISK_USAGE=$(df -h . | tail -1 | awk '{print $5}' | sed 's/%//')
+    if [ "$DISK_USAGE" -gt 80 ]; then
+        echo "⚠️ ADVERTENCIA: El disco está al ${DISK_USAGE}% de capacidad"
+        echo "🧹 Considera limpiar espacio antes del despliegue"
+    else
+        echo "✅ Espacio en disco OK: ${DISK_USAGE}% usado"
+    fi
+}
+
+# Función para hacer backup de la configuración actual
+backup_current_config() {
+    echo "💾 Haciendo backup de la configuración actual..."
+    BACKUP_DIR="backups/staging_$(date +%Y%m%d_%H%M%S)"
+    mkdir -p "$BACKUP_DIR"
+    
+    # Backup del docker-compose actual
+    cp docker-compose.staging.yml "$BACKUP_DIR/"
+    
+    # Backup de variables de entorno si existen
+    if [ -f ".env.staging" ]; then
+        cp .env.staging "$BACKUP_DIR/"
+    fi
+    
+    echo "✅ Backup guardado en: $BACKUP_DIR"
+}
+
+echo "🔍 Verificando estado actual..."
+check_disk_space
+
+echo "💾 Preparando backup..."
+backup_current_config
+
+echo "🧹 Limpieza de imágenes anteriores..."
+cleanup_old_images
+
+echo "📦 Descargando nueva imagen de staging..."
 docker-compose -f docker-compose.staging.yml pull
 
 echo "🔄 Deteniendo contenedores de staging existentes..."
@@ -36,11 +113,18 @@ echo "🚀 Iniciando servicios de staging..."
 docker-compose -f docker-compose.staging.yml up -d
 
 echo "⏳ Esperando que los servicios estén listos..."
-sleep 10
+sleep 15
 
 echo "🔍 Verificando estado de los servicios..."
 docker-compose -f docker-compose.staging.yml ps
 
+echo "📊 Verificando logs de inicio..."
+docker-compose -f docker-compose.staging.yml logs --tail=20
+
+echo "🧹 Limpieza final de imágenes no utilizadas..."
+docker image prune -f
+
 echo "✅ Despliegue de STAGING completado!"
 echo "🌐 La aplicación debería estar disponible en: https://miconcesionaria.staging.nodonorte.com"
-echo "📊 Para ver los logs: docker-compose -f docker-compose.staging.yml logs -f" 
+echo "📊 Para ver los logs: docker-compose -f docker-compose.staging.yml logs -f"
+echo "💾 Backup guardado en: $BACKUP_DIR" 
