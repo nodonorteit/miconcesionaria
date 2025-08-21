@@ -100,14 +100,14 @@ check_disk_space
 echo "💾 Preparando backup..."
 backup_current_config
 
+echo "🔄 Deteniendo contenedores de staging existentes..."
+docker-compose -f docker-compose.staging.yml down
+
 echo "🧹 Limpieza de imágenes anteriores..."
 cleanup_old_images
 
 echo "📦 Descargando nueva imagen de staging..."
 docker-compose -f docker-compose.staging.yml pull
-
-echo "🔄 Deteniendo contenedores de staging existentes..."
-docker-compose -f docker-compose.staging.yml down
 
 echo "🚀 Iniciando servicios de staging..."
 docker-compose -f docker-compose.staging.yml up -d

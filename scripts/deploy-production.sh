@@ -100,14 +100,14 @@ check_disk_space
 echo "💾 Preparando backup..."
 backup_current_config
 
+echo "🔄 Deteniendo contenedores de producción existentes..."
+docker-compose -f docker-compose.prod.yml down
+
 echo "🧹 Limpieza de imágenes anteriores..."
 cleanup_old_images
 
 echo "📦 Descargando nueva imagen de producción..."
 docker-compose -f docker-compose.prod.yml pull
-
-echo "🔄 Deteniendo contenedores de producción existentes..."
-docker-compose -f docker-compose.prod.yml down
 
 echo "🚀 Iniciando servicios de producción..."
 docker-compose -f docker-compose.prod.yml up -d
