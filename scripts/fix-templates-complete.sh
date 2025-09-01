@@ -26,6 +26,10 @@ fi
 echo "🔧 Arreglando fechas inválidas en document_templates..."
 mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/fix-document-templates-dates.sql
 
+# 5. Actualizar sintaxis de variables
+echo "🔧 Actualizando sintaxis de variables en el template..."
+mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/update-template-syntax.sql
+
 # 5. Verificar que se arregló
 echo "✅ Verificando que se arreglaron las fechas..."
 mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria -e "
