@@ -235,7 +235,13 @@ export default function DocumentTemplateEditor({
 
     setLoading(true)
     try {
-      await onSave(formData)
+      // Asegurar que el ID se mantenga si existe
+      const templateToSave = {
+        ...formData,
+        id: template?.id || formData.id || undefined
+      }
+      
+      await onSave(templateToSave)
       toast.success('Template guardado correctamente')
     } catch (error) {
       toast.error('Error al guardar el template')
