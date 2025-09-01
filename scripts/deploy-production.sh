@@ -36,17 +36,18 @@ cleanup_old_images() {
     if [ -n "$IMAGE_NAME" ]; then
         echo "🔍 Buscando imágenes antiguas de: $IMAGE_NAME"
         
-        # Buscar imágenes con el mismo nombre pero diferentes tags
-        OLD_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}" | grep "$(echo $IMAGE_NAME | cut -d: -f1)" | grep -v "$IMAGE_NAME" || true)
+        # Buscar TODAS las imágenes de MiConcesionaria (incluyendo la actual)
+        ALL_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}" | grep "$(echo $IMAGE_NAME | cut -d: -f1)" || true)
         
-        if [ -n "$OLD_IMAGES" ]; then
-            echo "🗑️ Eliminando imágenes antiguas:"
-            echo "$OLD_IMAGES"
+        if [ -n "$ALL_IMAGES" ]; then
+            echo "📋 Todas las imágenes encontradas:"
+            echo "$ALL_IMAGES"
+            echo ""
             
-            # Extraer IDs de las imágenes antiguas
-            OLD_IMAGE_IDS=$(echo "$OLD_IMAGES" | awk '{print $2}')
+            # Extraer IDs de TODAS las imágenes
+            ALL_IMAGE_IDS=$(echo "$ALL_IMAGES" | awk '{print $2}')
             
-            for IMAGE_ID in $OLD_IMAGE_IDS; do
+            for IMAGE_ID in $ALL_IMAGE_IDS; do
                 echo "🗑️ Eliminando imagen: $IMAGE_ID"
                 # Intentar eliminar con force, ignorar errores
                 docker rmi -f "$IMAGE_ID" 2>/dev/null || {
@@ -55,7 +56,7 @@ cleanup_old_images() {
                 }
             done
         else
-            echo "✅ No se encontraron imágenes antiguas para eliminar"
+            echo "✅ No se encontraron imágenes de MiConcesionaria para eliminar"
         fi
         
         # Limpiar imágenes huérfanas (dangling)
