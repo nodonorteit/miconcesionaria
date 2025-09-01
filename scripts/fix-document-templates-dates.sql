@@ -187,15 +187,15 @@ SELECT
 </head>
 <body>
     <div class="header">
-        <div class="company-name">{{companyName}}</div>
-        <div>{{companyAddress}}</div>
-        <div>{{companyCity}} - {{companyState}}</div>
-        <div>CUIT: {{companyCuit}}</div>
+        <div class="company-name">{{company.name}}</div>
+        <div>{{company.address}}</div>
+        <div>{{company.city}} - {{company.state}}</div>
+        <div>CUIT: {{company.cuit}}</div>
     </div>
 
-    <div class="document-title">BOLETO DE COMPRA-VENTA N° {{documentNumber}}</div>
+    <div class="document-title">BOLETO DE COMPRA-VENTA N° {{document.number}}</div>
     <div style="text-align: right; margin-bottom: 20px; font-weight: bold;">
-        Fecha: {{saleDate}}
+        Fecha: {{sale.date}}
     </div>
 
     <div class="section">
@@ -204,19 +204,19 @@ SELECT
             <div>
                 <div class="field">
                     <div class="field-label">COMPRADOR:</div>
-                    <div class="field-value">{{compradorName}}</div>
-                    <div class="field-value">{{compradorAddress}}</div>
-                    <div class="field-value">{{compradorCity}} - {{compradorState}}</div>
-                    <div class="field-value">Doc: {{compradorDocument}}</div>
+                    <div class="field-value">{{company.name}}</div>
+                    <div class="field-value">{{company.address}}</div>
+                    <div class="field-value">{{company.city}} - {{company.state}}</div>
+                    <div class="field-value">CUIT: {{company.cuit}}</div>
                 </div>
             </div>
             <div>
                 <div class="field">
                     <div class="field-label">VENDEDOR:</div>
-                    <div class="field-value">{{vendedorName}}</div>
-                    <div class="field-value">{{vendedorAddress}}</div>
-                    <div class="field-value">{{vendedorCity}} {{vendedorState}}</div>
-                    <div class="field-value">Doc: {{vendedorDocument}}</div>
+                    <div class="field-value">{{customer.firstName}} {{customer.lastName}}</div>
+                    <div class="field-value">{{customer.address}}</div>
+                    <div class="field-value">{{customer.city}} {{customer.state}}</div>
+                    <div class="field-value">Doc: {{customer.documentNumber}}</div>
                 </div>
             </div>
         </div>
@@ -227,35 +227,35 @@ SELECT
         <div class="grid">
             <div class="field">
                 <div class="field-label">Marca:</div>
-                <div class="field-value">{{vehicleBrand}}</div>
+                <div class="field-value">{{vehicle.brand}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Modelo:</div>
-                <div class="field-value">{{vehicleModel}}</div>
+                <div class="field-value">{{vehicle.model}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Año:</div>
-                <div class="field-value">{{vehicleYear}}</div>
+                <div class="field-value">{{vehicle.year}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Color:</div>
-                <div class="field-value">{{vehicleColor}}</div>
+                <div class="field-value">{{vehicle.color}}</div>
             </div>
             <div class="field">
                 <div class="field-label">VIN:</div>
-                <div class="field-value">{{vehicleVin}}</div>
+                <div class="field-value">{{vehicle.vin}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Patente:</div>
-                <div class="field-value">{{vehicleLicensePlate}}</div>
+                <div class="field-value">{{vehicle.licensePlate}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Tipo:</div>
-                <div class="field-value">{{vehicleType}}</div>
+                <div class="field-value">{{vehicle.type}}</div>
             </div>
             <div class="field">
                 <div class="field-label">Kilometraje:</div>
-                <div class="field-value">{{vehicleMileage}} km</div>
+                <div class="field-value">{{vehicle.mileage}} km</div>
             </div>
         </div>
     </div>
@@ -266,17 +266,17 @@ SELECT
             <div>
                 <div class="field">
                     <div class="field-label">Precio Total:</div>
-                    <div class="price-highlight">{{saleTotalAmount}}</div>
+                    <div class="price-highlight">{{sale.totalAmount}}</div>
                 </div>
             </div>
             <div>
                 <div class="field">
                     <div class="field-label">Forma de Pago:</div>
-                    <div class="field-value">{{salePaymentMethod}}</div>
+                    <div class="field-value">{{sale.paymentMethod}}</div>
                 </div>
                 <div class="field">
                     <div class="field-label">Fecha de Entrega:</div>
-                    <div class="field-value">{{saleDate}}</div>
+                    <div class="field-value">{{sale.deliveryDate}}</div>
                 </div>
             </div>
         </div>
@@ -295,21 +295,21 @@ SELECT
     <div class="signatures">
         <div class="signature-box">
             <div style="font-weight: bold; margin-bottom: 10px;">COMPRADOR</div>
-            <div>{{compradorName}}</div>
+            <div>{{company.name}}</div>
             <div class="signature-line"></div>
             <div style="font-size: 12px; color: #6b7280;">Firma</div>
         </div>
         <div class="signature-box">
             <div style="font-weight: bold; margin-bottom: 10px;">VENDEDOR</div>
-            <div>{{vendedorName}}</div>
+            <div>{{customer.firstName}} {{customer.lastName}}</div>
             <div class="signature-line"></div>
             <div style="font-size: 12px; color: #6b7280;">Firma</div>
         </div>
     </div>
 
     <div style="margin-top: 40px; padding: 20px; background-color: #f9fafb; border-radius: 8px; font-size: 14px; border: 1px solid #e5e7eb;">
-        <p><strong>Observaciones:</strong> {{saleNotes}}</p>
-        <p>Documento generado el {{documentGeneratedAt}}</p>
+        <p><strong>Observaciones:</strong> {{sale.notes}}</p>
+        <p>Documento generado el {{document.generatedAt}}</p>
     </div>
 </body>
 </html>',
