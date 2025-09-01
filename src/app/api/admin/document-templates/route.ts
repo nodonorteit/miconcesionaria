@@ -66,10 +66,13 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    if (id) {
+    // Limpiar el ID: convertir string vacío a undefined
+    const cleanId = id && id.trim() !== '' ? id : undefined
+
+    if (cleanId) {
       // Actualizar template existente
       const updatedTemplate = await prisma.documentTemplate.update({
-        where: { id },
+        where: { id: cleanId },
         data: {
           name,
           type,
