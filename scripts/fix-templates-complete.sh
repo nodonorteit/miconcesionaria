@@ -30,6 +30,10 @@ mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/fix-docu
 echo "🔧 Actualizando sintaxis de variables en el template..."
 mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/update-template-syntax.sql
 
+# 6. Arreglar templates duplicados
+echo "🔧 Arreglando templates duplicados..."
+mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria < scripts/fix-template-duplicates.sql
+
 # 5. Verificar que se arregló
 echo "✅ Verificando que se arreglaron las fechas..."
 mysql -u miconcesionaria -p'!FVsxr?pmm34xm2N' miconcesionaria -e "
