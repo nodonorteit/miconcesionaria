@@ -48,7 +48,11 @@ cleanup_old_images() {
             
             for IMAGE_ID in $OLD_IMAGE_IDS; do
                 echo "🗑️ Eliminando imagen: $IMAGE_ID"
-                docker rmi -f "$IMAGE_ID" 2>/dev/null || echo "⚠️ No se pudo eliminar imagen $IMAGE_ID (puede estar en uso)"
+                # Intentar eliminar con force, ignorar errores
+                docker rmi -f "$IMAGE_ID" 2>/dev/null || {
+                    echo "⚠️ No se pudo eliminar imagen $IMAGE_ID, intentando sin force..."
+                    docker rmi "$IMAGE_ID" 2>/dev/null || echo "⚠️ Imagen $IMAGE_ID en uso, se omitirá"
+                }
             done
         else
             echo "✅ No se encontraron imágenes antiguas para eliminar"
@@ -102,6 +106,16 @@ backup_current_config
 
 echo "🔄 Deteniendo contenedores de producción existentes..."
 docker-compose -f docker-compose.prod.yml down
+
+echo "⏳ Esperando que los contenedores se detengan completamente..."
+sleep 5
+
+echo "🔍 Verificando que no hay contenedores corriendo..."
+if docker ps | grep -q "miconcesionaria"; then
+    echo "⚠️ Aún hay contenedores corriendo, forzando detención..."
+    docker-compose -f docker-compose.prod.yml down --remove-orphans
+    sleep 3
+fi
 
 echo "🧹 Limpieza de imágenes anteriores..."
 cleanup_old_images
