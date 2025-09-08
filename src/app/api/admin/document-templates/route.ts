@@ -70,12 +70,40 @@ export async function POST(request: NextRequest) {
     const cleanId = id && id.trim() !== '' ? id : undefined
 
     if (cleanId) {
+      // Verificar que el template existe antes de actualizar
+      const existingTemplate = await prisma.documentTemplate.findUnique({
+        where: { id: cleanId }
+      })
+
+      if (!existingTemplate) {
+        return NextResponse.json(
+          { error: 'Template no encontrado' },
+          { status: 404 }
+        )
+      }
+
+      // Verificar si ya existe otro template con el mismo nombre (excluyendo el actual)
+      const duplicateTemplate = await prisma.documentTemplate.findFirst({
+        where: {
+          name: name.trim(),
+          type: type.trim(),
+          id: { not: cleanId }
+        }
+      })
+
+      if (duplicateTemplate) {
+        return NextResponse.json(
+          { error: `Ya existe un template con el nombre "${name}" y tipo "${type}"` },
+          { status: 400 }
+        )
+      }
+
       // Actualizar template existente
       const updatedTemplate = await prisma.documentTemplate.update({
         where: { id: cleanId },
         data: {
-          name,
-          type,
+          name: name.trim(),
+          type: type.trim(),
           content,
           variables: cleanVariables,
           isActive,
@@ -84,11 +112,26 @@ export async function POST(request: NextRequest) {
       })
       return NextResponse.json(updatedTemplate)
     } else {
+      // Verificar si ya existe un template con el mismo nombre y tipo
+      const duplicateTemplate = await prisma.documentTemplate.findFirst({
+        where: {
+          name: name.trim(),
+          type: type.trim()
+        }
+      })
+
+      if (duplicateTemplate) {
+        return NextResponse.json(
+          { error: `Ya existe un template con el nombre "${name}" y tipo "${type}"` },
+          { status: 400 }
+        )
+      }
+
       // Crear nuevo template
       const newTemplate = await prisma.documentTemplate.create({
         data: {
-          name,
-          type,
+          name: name.trim(),
+          type: type.trim(),
           content,
           variables: cleanVariables,
           isActive,

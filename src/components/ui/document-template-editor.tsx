@@ -238,12 +238,22 @@ export default function DocumentTemplateEditor({
       // Asegurar que el ID se mantenga si existe
       const templateToSave = {
         ...formData,
-        id: template?.id || formData.id || undefined
+        id: template?.id || undefined
       }
       
+      console.log('💾 [Save] Guardando template:', {
+        isEditing: !!template?.id,
+        templateId: template?.id,
+        templateName: formData.name,
+        templateType: formData.type
+      })
+      
       await onSave(templateToSave)
-      toast.success('Template guardado correctamente')
+      
+      const action = template?.id ? 'actualizado' : 'creado'
+      toast.success(`Template ${action} correctamente`)
     } catch (error) {
+      console.error('❌ [Save] Error al guardar template:', error)
       toast.error('Error al guardar el template')
     } finally {
       setLoading(false)
@@ -278,14 +288,31 @@ export default function DocumentTemplateEditor({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          {template ? 'Editar Template' : 'Nuevo Template'}
+          {template?.id ? `Editar Template: ${template.name}` : 'Nuevo Template'}
         </CardTitle>
         <CardDescription>
-          Configura el template del documento. Usa variables como {'{company.name}'} para datos dinámicos.
+          {template?.id 
+            ? `Modificando el template existente. Los cambios se aplicarán al template actual.`
+            : 'Configura el template del documento. Usa variables como {'{company.name}'} para datos dinámicos.'
+          }
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Información básica */}
+        {template?.id && (
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+            <div className="flex items-center gap-2 text-blue-800">
+              <FileText className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Editando template existente (ID: {template.id})
+              </span>
+            </div>
+            <p className="text-xs text-blue-600 mt-1">
+              Los cambios se aplicarán al template actual, no se creará uno nuevo.
+            </p>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name">Nombre del Template *</Label>
