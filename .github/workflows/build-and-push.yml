@@ -41,16 +41,19 @@ jobs:
         SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
         
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
+          TAG="latest"
           echo "tag=latest" >> $GITHUB_OUTPUT
           echo "environment=production" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:latest" >> $GITHUB_OUTPUT
           echo "timestamp_tag=miconcesionaria:$TIMESTAMP-$SHORT_SHA" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
+          TAG="staging"
           echo "tag=staging" >> $GITHUB_OUTPUT
           echo "environment=staging" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:staging" >> $GITHUB_OUTPUT
           echo "timestamp_tag=miconcesionaria:$TIMESTAMP-$SHORT_SHA" >> $GITHUB_OUTPUT
         else
+          TAG="dev"
           echo "tag=dev" >> $GITHUB_OUTPUT
           echo "environment=development" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:dev" >> $GITHUB_OUTPUT
@@ -58,8 +61,8 @@ jobs:
         fi
         
         echo "🏷️ Tags configurados:"
-        echo "  - Main tag: ${{ steps.set-tag.outputs.image_name }}"
-        echo "  - Timestamp tag: ${{ steps.set-tag.outputs.timestamp_tag }}"
+        echo "  - Main tag: miconcesionaria:$TAG"
+        echo "  - Timestamp tag: miconcesionaria:$TIMESTAMP-$SHORT_SHA"
 
     - name: Build Docker image
       run: |
