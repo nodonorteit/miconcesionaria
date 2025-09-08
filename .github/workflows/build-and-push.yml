@@ -8,6 +8,7 @@ on:
       - 'docker-compose.prod.yml'
   pull_request:
     branches: [ master, main, staging ]
+  workflow_dispatch:  # Permitir ejecución manual
 
 env:
   REGISTRY: swr.sa-argentina-1.myhuaweicloud.com
@@ -20,7 +21,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     
     steps:
     - name: Checkout code
@@ -28,34 +29,60 @@ jobs:
 
     - name: Log in to Huawei Cloud SWR
       run: |
+        echo "🔐 Logging in to Huawei Cloud SWR..."
         echo "${{ secrets.HUAWEI_SECRET_ACCESS_KEY }}" | docker login -u "${{ secrets.HUAWEI_ACCESS_KEY_ID }}" --password-stdin swr.sa-argentina-1.myhuaweicloud.com
+        echo "✅ Login successful"
 
     - name: Set image tag and environment
       id: set-tag
       run: |
+        # Crear timestamp único
+        TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+        SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+        
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "tag=latest" >> $GITHUB_OUTPUT
           echo "environment=production" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:latest" >> $GITHUB_OUTPUT
+          echo "timestamp_tag=miconcesionaria:$TIMESTAMP-$SHORT_SHA" >> $GITHUB_OUTPUT
         elif [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
           echo "tag=staging" >> $GITHUB_OUTPUT
           echo "environment=staging" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:staging" >> $GITHUB_OUTPUT
+          echo "timestamp_tag=miconcesionaria:$TIMESTAMP-$SHORT_SHA" >> $GITHUB_OUTPUT
         else
           echo "tag=dev" >> $GITHUB_OUTPUT
           echo "environment=development" >> $GITHUB_OUTPUT
           echo "image_name=miconcesionaria:dev" >> $GITHUB_OUTPUT
+          echo "timestamp_tag=miconcesionaria:$TIMESTAMP-$SHORT_SHA" >> $GITHUB_OUTPUT
         fi
+        
+        echo "🏷️ Tags configurados:"
+        echo "  - Main tag: ${{ steps.set-tag.outputs.image_name }}"
+        echo "  - Timestamp tag: ${{ steps.set-tag.outputs.timestamp_tag }}"
 
     - name: Build Docker image
       run: |
         echo "🏗️ Construyendo imagen: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}"
         docker build -t ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }} .
+        
+        # También crear tag con timestamp
+        echo "🏷️ Creando tag con timestamp: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.timestamp_tag }}"
+        docker tag ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }} ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.timestamp_tag }}
+        
+        # Mostrar información de la imagen
+        echo "📋 Información de la imagen construida:"
+        docker images | grep miconcesionaria
 
     - name: Push Docker image
       run: |
-        echo "🚀 Subiendo imagen: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}"
+        echo "🚀 Subiendo imagen principal: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}"
         docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.image_name }}
+        
+        echo "🚀 Subiendo imagen con timestamp: ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.timestamp_tag }}"
+        docker push ${{ env.REGISTRY }}/${{ env.ORGANIZATION }}/${{ steps.set-tag.outputs.timestamp_tag }}
+        
+        echo "✅ Imágenes subidas exitosamente"
 
     # MariaDB image removed - using native MariaDB on server
 
