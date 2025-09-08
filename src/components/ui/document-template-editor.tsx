@@ -293,7 +293,7 @@ export default function DocumentTemplateEditor({
         <CardDescription>
           {template?.id 
             ? `Modificando el template existente. Los cambios se aplicarán al template actual.`
-            : 'Configura el template del documento. Usa variables como {'{company.name}'} para datos dinámicos.'
+            : 'Configura el template del documento. Usa variables como {company.name} para datos dinámicos.'
           }
         </CardDescription>
       </CardHeader>
