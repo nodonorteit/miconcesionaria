@@ -244,13 +244,21 @@ export default function DocumentTemplateEditor({
 
     setLoading(true)
     try {
-      // Asegurar que el ID se mantenga si existe
+      // Asegurar que el ID se mantenga si existe (limpiar strings vacíos)
+      const cleanFormDataId = (formData.id && typeof formData.id === 'string' && formData.id.trim() !== '') ? formData.id.trim() : undefined
+      const cleanTemplateId = (template?.id && typeof template.id === 'string' && template.id.trim() !== '') ? template.id.trim() : undefined
+      
       const templateToSave = {
         ...formData,
-        id: formData.id || template?.id || undefined
+        id: cleanFormDataId || cleanTemplateId || undefined
       }
       
       console.log('💾 [Save] Template final a enviar:', {
+        originalFormDataId: formData.id,
+        originalTemplateId: template?.id,
+        cleanFormDataId: cleanFormDataId,
+        cleanTemplateId: cleanTemplateId,
+        finalId: templateToSave.id,
         templateToSave: templateToSave,
         hasId: !!templateToSave.id,
         idValue: templateToSave.id,

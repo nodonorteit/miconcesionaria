@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Limpiar el ID: convertir string vacío a undefined
-    const cleanId = id && id.trim() !== '' ? id : undefined
+    // Limpiar el ID: convertir string vacío, null, undefined a undefined
+    const cleanId = (id && typeof id === 'string' && id.trim() !== '') ? id.trim() : undefined
     
     console.log('🔍 [API] Procesando ID:', {
       originalId: id,
