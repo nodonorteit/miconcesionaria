@@ -247,7 +247,7 @@ export default function DocumentTemplateEditor({
       // Asegurar que el ID se mantenga si existe
       const templateToSave = {
         ...formData,
-        id: template?.id || undefined
+        id: formData.id || template?.id || undefined
       }
       
       console.log('💾 [Save] Template final a enviar:', {
