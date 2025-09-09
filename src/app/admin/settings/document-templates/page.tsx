@@ -112,12 +112,15 @@ export default function DocumentTemplatesPage() {
   }
 
   const handleEditTemplate = (template: DocumentTemplateWithTimestamps) => {
-    console.log('🔧 [Edit] Iniciando edición del template:', {
+    console.log('🔧 [Edit] Template recibido desde la lista:', {
       id: template.id,
+      idType: typeof template.id,
+      idValue: template.id,
       name: template.name,
       type: template.type,
       hasId: !!template.id,
-      templateObject: template
+      templateObject: template,
+      templateKeys: Object.keys(template)
     })
     
     // Convertir explícitamente a DocumentTemplate manteniendo el ID
@@ -429,7 +432,14 @@ export default function DocumentTemplatesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleEditTemplate(template)}
+                      onClick={() => {
+                        console.log('🔘 [Button] Click en editar template:', {
+                          templateId: template.id,
+                          templateName: template.name,
+                          templateObject: template
+                        })
+                        handleEditTemplate(template)
+                      }}
                       className="flex-1"
                     >
                       <Edit className="h-4 w-4 mr-1" />
