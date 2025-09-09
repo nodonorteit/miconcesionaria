@@ -110,7 +110,7 @@ export default function DocumentTemplatesPage() {
     setShowEditor(true)
   }
 
-  const handleEditTemplate = (template: DocumentTemplate) => {
+  const handleEditTemplate = (template: DocumentTemplateWithTimestamps) => {
     console.log('🔧 [Edit] Iniciando edición del template:', {
       id: template.id,
       name: template.name,
@@ -118,7 +118,20 @@ export default function DocumentTemplatesPage() {
       hasId: !!template.id,
       templateObject: template
     })
-    setEditingTemplate(template)
+    
+    // Convertir explícitamente a DocumentTemplate manteniendo el ID
+    const templateForEdit: DocumentTemplate = {
+      id: template.id, // Asegurar que el ID se mantenga
+      name: template.name,
+      type: template.type,
+      content: template.content,
+      variables: template.variables,
+      isActive: template.isActive,
+      isDefault: template.isDefault
+    }
+    
+    console.log('🔧 [Edit] Template convertido para edición:', templateForEdit)
+    setEditingTemplate(templateForEdit)
     setShowEditor(true)
   }
 
