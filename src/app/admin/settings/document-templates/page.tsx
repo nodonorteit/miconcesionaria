@@ -72,6 +72,7 @@ export default function DocumentTemplatesPage() {
         toast.success('Template guardado correctamente')
       } else {
         const error = await response.json()
+        console.error('❌ [Save] Error del servidor:', error)
         toast.error(error.error || 'Error al guardar template')
       }
     } catch (error) {

@@ -93,26 +93,38 @@ export async function POST(request: NextRequest) {
       })
 
       if (!existingTemplate) {
+        console.log('❌ [API] Template no encontrado con ID:', cleanId)
         return NextResponse.json(
           { error: 'Template no encontrado' },
           { status: 404 }
         )
       }
-
-      // Verificar si ya existe otro template con el mismo nombre (excluyendo el actual)
-      const duplicateTemplate = await prisma.documentTemplate.findFirst({
-        where: {
-          name: name.trim(),
-          type: type.trim(),
-          id: { not: cleanId }
-        }
+      
+      console.log('✅ [API] Template encontrado:', {
+        id: existingTemplate.id,
+        name: existingTemplate.name,
+        newName: name.trim(),
+        nameChanged: existingTemplate.name !== name.trim()
       })
 
-      if (duplicateTemplate) {
-        return NextResponse.json(
-          { error: `Ya existe un template con el nombre "${name}" y tipo "${type}"` },
-          { status: 400 }
-        )
+      // Verificar si ya existe otro template con el mismo nombre (excluyendo el actual)
+      // Solo verificar si el nombre cambió
+      if (existingTemplate.name !== name.trim()) {
+        const duplicateTemplate = await prisma.documentTemplate.findFirst({
+          where: {
+            name: name.trim(),
+            type: type.trim(),
+            id: { not: cleanId }
+          }
+        })
+
+        if (duplicateTemplate) {
+          console.log('❌ [API] Template duplicado encontrado:', duplicateTemplate)
+          return NextResponse.json(
+            { error: `Ya existe un template con el nombre "${name}" y tipo "${type}"` },
+            { status: 400 }
+          )
+        }
       }
 
       // Actualizar template existente
