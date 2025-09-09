@@ -26,6 +26,16 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { id, name, type, content, variables, isActive, isDefault } = body
+    
+    console.log('🔍 [API] Recibiendo datos del template:', {
+      id: id,
+      name: name,
+      type: type,
+      hasId: !!id,
+      idType: typeof id,
+      idValue: id,
+      bodyKeys: Object.keys(body)
+    })
 
     // Validar y limpiar el campo variables
     let cleanVariables = variables
@@ -68,6 +78,13 @@ export async function POST(request: NextRequest) {
 
     // Limpiar el ID: convertir string vacío a undefined
     const cleanId = id && id.trim() !== '' ? id : undefined
+    
+    console.log('🔍 [API] Procesando ID:', {
+      originalId: id,
+      cleanId: cleanId,
+      willUpdate: !!cleanId,
+      willCreate: !cleanId
+    })
 
     if (cleanId) {
       // Verificar que el template existe antes de actualizar

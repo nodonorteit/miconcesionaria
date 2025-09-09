@@ -208,9 +208,18 @@ export default function DocumentTemplateEditor({
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    console.log('🎯 [Editor] useEffect ejecutado con template:', {
+      template: template,
+      hasTemplate: !!template,
+      templateId: template?.id,
+      templateName: template?.name
+    })
+    
     if (template) {
+      console.log('🎯 [Editor] Configurando formData con template existente:', template)
       setFormData(template)
     } else {
+      console.log('🎯 [Editor] Configurando formData con valores por defecto')
       setFormData({
         name: '',
         type: 'BOLETO_COMPRA_VENTA',

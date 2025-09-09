@@ -48,6 +48,15 @@ export default function DocumentTemplatesPage() {
 
   const handleSaveTemplate = async (template: DocumentTemplate) => {
     try {
+      console.log('💾 [Save] Guardando template desde página:', {
+        id: template.id,
+        name: template.name,
+        type: template.type,
+        hasId: !!template.id,
+        isEditing: !!template.id,
+        templateObject: template
+      })
+      
       const response = await fetch('/api/admin/document-templates', {
         method: 'POST',
         headers: {
@@ -102,6 +111,13 @@ export default function DocumentTemplatesPage() {
   }
 
   const handleEditTemplate = (template: DocumentTemplate) => {
+    console.log('🔧 [Edit] Iniciando edición del template:', {
+      id: template.id,
+      name: template.name,
+      type: template.type,
+      hasId: !!template.id,
+      templateObject: template
+    })
     setEditingTemplate(template)
     setShowEditor(true)
   }
