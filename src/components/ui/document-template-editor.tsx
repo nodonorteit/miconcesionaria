@@ -250,11 +250,23 @@ export default function DocumentTemplateEditor({
         id: template?.id || undefined
       }
       
+      console.log('💾 [Save] Template final a enviar:', {
+        templateToSave: templateToSave,
+        hasId: !!templateToSave.id,
+        idValue: templateToSave.id,
+        idType: typeof templateToSave.id
+      })
+      
       console.log('💾 [Save] Guardando template:', {
         isEditing: !!template?.id,
         templateId: template?.id,
+        templateIdType: typeof template?.id,
+        formDataId: formData.id,
+        formDataIdType: typeof formData.id,
         templateName: formData.name,
-        templateType: formData.type
+        templateType: formData.type,
+        templateObject: template,
+        formDataObject: formData
       })
       
       await onSave(templateToSave)

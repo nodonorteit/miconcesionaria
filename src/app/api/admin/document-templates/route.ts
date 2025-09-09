@@ -81,9 +81,13 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 [API] Procesando ID:', {
       originalId: id,
+      originalIdType: typeof id,
+      originalIdValue: id,
       cleanId: cleanId,
+      cleanIdType: typeof cleanId,
       willUpdate: !!cleanId,
-      willCreate: !cleanId
+      willCreate: !cleanId,
+      bodyReceived: body
     })
 
     if (cleanId) {
