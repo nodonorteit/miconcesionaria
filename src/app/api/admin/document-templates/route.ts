@@ -107,25 +107,8 @@ export async function POST(request: NextRequest) {
         nameChanged: existingTemplate.name !== name.trim()
       })
 
-      // Verificar si ya existe otro template con el mismo nombre (excluyendo el actual)
-      // Solo verificar si el nombre cambió
-      if (existingTemplate.name !== name.trim()) {
-        const duplicateTemplate = await prisma.documentTemplate.findFirst({
-          where: {
-            name: name.trim(),
-            type: type.trim(),
-            id: { not: cleanId }
-          }
-        })
-
-        if (duplicateTemplate) {
-          console.log('❌ [API] Template duplicado encontrado:', duplicateTemplate)
-          return NextResponse.json(
-            { error: `Ya existe un template con el nombre "${name}" y tipo "${type}"` },
-            { status: 400 }
-          )
-        }
-      }
+      // NO verificar duplicados al editar - es una edición, puede mantener el mismo nombre
+      console.log('✅ [API] Editando template existente - no se verifica duplicados')
 
       // Actualizar template existente
       const updatedTemplate = await prisma.documentTemplate.update({
