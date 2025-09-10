@@ -34,6 +34,15 @@ export default function DocumentTemplatesPage() {
       const response = await fetch('/api/admin/document-templates')
       if (response.ok) {
         const data = await response.json()
+        console.log('📋 [Load] Templates cargados desde la API:', {
+          count: data.length,
+          templates: data.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            hasId: !!t.id,
+            idType: typeof t.id
+          }))
+        })
         setTemplates(data)
       } else {
         toast.error('Error al cargar templates')

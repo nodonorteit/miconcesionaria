@@ -11,6 +11,16 @@ export async function GET() {
       ]
     })
     
+    console.log('📋 [API GET] Templates obtenidos de la base de datos:', {
+      count: templates.length,
+      templates: templates.map(t => ({
+        id: t.id,
+        name: t.name,
+        hasId: !!t.id,
+        idType: typeof t.id
+      }))
+    })
+    
     return NextResponse.json(templates)
   } catch (error) {
     console.error('Error fetching document templates:', error)
