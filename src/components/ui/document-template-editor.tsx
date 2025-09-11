@@ -32,8 +32,10 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
     <title>Boleto de Compra-Venta</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .company-logo { max-width: 200px; height: auto; }
+        .header { margin-bottom: 30px; }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .company-logo { max-width: 120px; height: auto; }
+        .company-info { text-align: center; flex: 1; }
         .company-name { font-size: 24px; font-weight: bold; margin: 10px 0; }
         .document-title { font-size: 20px; font-weight: bold; margin: 20px 0; }
         .section { margin: 20px 0; }
@@ -50,13 +52,17 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 </head>
 <body>
     <div class="header">
-        {{#if company.logoUrl}}
-        <img src="{{company.logoUrl}}" alt="Logo" class="company-logo">
-        {{/if}}
-        <div class="company-name">{{company.name}}</div>
-        <div>{{company.address}}</div>
-        <div>{{company.city}} - {{company.state}}</div>
-        <div>CUIT: {{company.cuit}}</div>
+        <div class="header-top">
+            {{#if company.logoUrl}}
+            <img src="{{company.logoUrl}}" alt="Logo" class="company-logo">
+            {{/if}}
+            <div class="company-info">
+                <div class="company-name">{{company.name}}</div>
+                <div>{{company.address}}</div>
+                <div>{{company.city}} - {{company.state}}</div>
+                <div>CUIT: {{company.cuit}}</div>
+            </div>
+        </div>
     </div>
 
     <div class="document-title">BOLETO DE COMPRA-VENTA N° {{document.number}}</div>
