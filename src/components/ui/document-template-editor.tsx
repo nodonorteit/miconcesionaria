@@ -291,9 +291,17 @@ export default function DocumentTemplateEditor({
         forcedIdType: typeof forcedId
       })
       
+      // Crear el template asegurando que el ID esté presente
       const templateToSave = {
-        ...formData,
-        id: forcedId
+        name: formData.name,
+        type: formData.type,
+        content: formData.content,
+        variables: formData.variables,
+        isActive: formData.isActive,
+        isDefault: formData.isDefault,
+        id: forcedId, // Asegurar que el ID esté presente
+        ...(formData.createdAt && { createdAt: formData.createdAt }),
+        ...(formData.updatedAt && { updatedAt: formData.updatedAt })
       }
       
       console.log('💾 [Save] Template final a enviar:', {
@@ -307,7 +315,9 @@ export default function DocumentTemplateEditor({
         hasId: !!forcedId,
         idValue: forcedId,
         idType: typeof forcedId,
-        isEditing: !!forcedId
+        isEditing: !!forcedId,
+        templateToSaveKeys: Object.keys(templateToSave),
+        templateToSaveStringified: JSON.stringify(templateToSave)
       })
       
       console.log('💾 [Save] Guardando template:', {
