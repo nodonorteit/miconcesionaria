@@ -202,7 +202,8 @@ export default function DocumentTemplateEditor({
     content: '',
     variables: {},
     isActive: true,
-    isDefault: false
+    isDefault: false,
+    id: undefined
   })
   const [previewMode, setPreviewMode] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -212,12 +213,33 @@ export default function DocumentTemplateEditor({
       template: template,
       hasTemplate: !!template,
       templateId: template?.id,
-      templateName: template?.name
+      templateName: template?.name,
+      templateIdType: typeof template?.id,
+      templateIdValue: template?.id
     })
     
     if (template) {
-      console.log('🎯 [Editor] Configurando formData con template existente:', template)
-      setFormData(template)
+      console.log('🎯 [Editor] Configurando formData con template existente:', {
+        ...template,
+        hasId: !!template.id,
+        idType: typeof template.id,
+        idValue: template.id
+      })
+      
+      // Asegurar que el ID se mantenga explícitamente
+      const templateWithId = {
+        ...template,
+        id: template.id // Forzar que el ID se mantenga
+      }
+      
+      console.log('🎯 [Editor] Template con ID forzado:', {
+        ...templateWithId,
+        hasId: !!templateWithId.id,
+        idType: typeof templateWithId.id,
+        idValue: templateWithId.id
+      })
+      
+      setFormData(templateWithId)
     } else {
       console.log('🎯 [Editor] Configurando formData con valores por defecto')
       setFormData({
@@ -248,9 +270,23 @@ export default function DocumentTemplateEditor({
       const cleanFormDataId = (formData.id && typeof formData.id === 'string' && formData.id.trim() !== '') ? formData.id.trim() : undefined
       const cleanTemplateId = (template?.id && typeof template.id === 'string' && template.id.trim() !== '') ? template.id.trim() : undefined
       
+      // Priorizar el ID del template original si existe, sino usar el del formData
+      const finalId = cleanTemplateId || cleanFormDataId || undefined
+      
+      console.log('🔍 [Save] IDs disponibles:', {
+        formDataId: formData.id,
+        formDataIdType: typeof formData.id,
+        templateId: template?.id,
+        templateIdType: typeof template?.id,
+        cleanFormDataId: cleanFormDataId,
+        cleanTemplateId: cleanTemplateId,
+        finalId: finalId,
+        finalIdType: typeof finalId
+      })
+      
       const templateToSave = {
         ...formData,
-        id: cleanFormDataId || cleanTemplateId || undefined
+        id: finalId
       }
       
       console.log('💾 [Save] Template final a enviar:', {
@@ -258,11 +294,12 @@ export default function DocumentTemplateEditor({
         originalTemplateId: template?.id,
         cleanFormDataId: cleanFormDataId,
         cleanTemplateId: cleanTemplateId,
-        finalId: templateToSave.id,
+        finalId: finalId,
         templateToSave: templateToSave,
-        hasId: !!templateToSave.id,
-        idValue: templateToSave.id,
-        idType: typeof templateToSave.id
+        hasId: !!finalId,
+        idValue: finalId,
+        idType: typeof finalId,
+        isEditing: !!finalId
       })
       
       console.log('💾 [Save] Guardando template:', {
@@ -307,7 +344,8 @@ export default function DocumentTemplateEditor({
       setFormData(prev => ({
         ...prev,
         content: DEFAULT_TEMPLATE,
-        variables: DEFAULT_VARIABLES
+        variables: DEFAULT_VARIABLES,
+        id: prev.id // Mantener el ID al cargar el template por defecto
       }))
     }
   }
@@ -339,6 +377,12 @@ export default function DocumentTemplateEditor({
             <p className="text-xs text-blue-600 mt-1">
               Los cambios se aplicarán al template actual, no se creará uno nuevo.
             </p>
+            {/* Campo oculto para mantener el ID */}
+            <input 
+              type="hidden" 
+              value={template.id} 
+              onChange={() => {}} 
+            />
           </div>
         )}
         
@@ -348,7 +392,11 @@ export default function DocumentTemplateEditor({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                name: e.target.value,
+                id: prev.id // Mantener el ID en todas las actualizaciones
+              }))}
               placeholder="Ej: Boleto Estándar"
             />
           </div>
@@ -357,7 +405,11 @@ export default function DocumentTemplateEditor({
             <Input
               id="type"
               value={formData.type}
-              onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                type: e.target.value,
+                id: prev.id // Mantener el ID en todas las actualizaciones
+              }))}
               placeholder="BOLETO_COMPRA_VENTA"
             />
           </div>
@@ -369,7 +421,11 @@ export default function DocumentTemplateEditor({
             <Switch
               id="active"
               checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                isActive: checked,
+                id: prev.id // Mantener el ID en todas las actualizaciones
+              }))}
             />
             <Label htmlFor="active">Template Activo</Label>
           </div>
@@ -377,7 +433,11 @@ export default function DocumentTemplateEditor({
             <Switch
               id="default"
               checked={formData.isDefault}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isDefault: checked }))}
+              onCheckedChange={(checked) => setFormData(prev => ({ 
+                ...prev, 
+                isDefault: checked,
+                id: prev.id // Mantener el ID en todas las actualizaciones
+              }))}
             />
             <Label htmlFor="default">Template por Defecto</Label>
           </div>
@@ -437,7 +497,11 @@ export default function DocumentTemplateEditor({
           ) : (
             <textarea
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e) => setFormData(prev => ({ 
+                ...prev, 
+                content: e.target.value,
+                id: prev.id // Mantener el ID en todas las actualizaciones
+              }))}
               className="w-full h-96 p-3 border rounded-md font-mono text-sm resize-none"
               placeholder="Ingresa el HTML del template..."
             />

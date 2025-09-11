@@ -59,11 +59,14 @@ export default function DocumentTemplatesPage() {
     try {
       console.log('💾 [Save] Guardando template desde página:', {
         id: template.id,
+        idType: typeof template.id,
+        idValue: template.id,
         name: template.name,
         type: template.type,
         hasId: !!template.id,
         isEditing: !!template.id,
-        templateObject: template
+        templateObject: template,
+        templateKeys: Object.keys(template)
       })
       
       const response = await fetch('/api/admin/document-templates', {
@@ -140,10 +143,17 @@ export default function DocumentTemplatesPage() {
       content: template.content,
       variables: template.variables,
       isActive: template.isActive,
-      isDefault: template.isDefault
+      isDefault: template.isDefault,
+      createdAt: template.createdAt,
+      updatedAt: template.updatedAt
     }
     
-    console.log('🔧 [Edit] Template convertido para edición:', templateForEdit)
+    console.log('🔧 [Edit] Template convertido para edición:', {
+      ...templateForEdit,
+      hasId: !!templateForEdit.id,
+      idType: typeof templateForEdit.id,
+      idValue: templateForEdit.id
+    })
     setEditingTemplate(templateForEdit)
     setShowEditor(true)
   }

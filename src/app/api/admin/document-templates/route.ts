@@ -97,7 +97,9 @@ export async function POST(request: NextRequest) {
       cleanIdType: typeof cleanId,
       willUpdate: !!cleanId,
       willCreate: !cleanId,
-      bodyReceived: body
+      bodyReceived: body,
+      isEditing: !!cleanId,
+      isCreating: !cleanId
     })
 
     if (cleanId) {
