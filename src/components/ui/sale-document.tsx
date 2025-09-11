@@ -91,107 +91,70 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
       if (templateResponse.ok) {
         const template = await templateResponse.json()
         
-        // Renderizar el template con los datos de la venta
-        let htmlContent = template.content
+        // Usar el renderizador de templates correcto
+        const { renderTemplate } = await import('@/lib/template-renderer')
         
-        // Determinar si la concesionaria es compradora o vendedora
-        // Si la concesionaria es el vendedor, entonces el cliente es el comprador
-        // Si la concesionaria NO es el vendedor, entonces la concesionaria es el comprador
-        const isConcesionariaVendedora = sale.seller.firstName.toLowerCase().includes('concesionaria') || 
-                                        sale.seller.firstName.toLowerCase().includes('empresa') ||
-                                        sale.seller.firstName.toLowerCase().includes('s.a.') ||
-                                        sale.seller.firstName.toLowerCase().includes('s.r.l.') ||
-                                        sale.seller.firstName.toLowerCase().includes('sociedad') ||
-                                        sale.seller.lastName.toLowerCase().includes('concesionaria') ||
-                                        sale.seller.lastName.toLowerCase().includes('empresa') ||
-                                        sale.seller.lastName.toLowerCase().includes('s.a.') ||
-                                        sale.seller.lastName.toLowerCase().includes('s.r.l.') ||
-                                        sale.seller.lastName.toLowerCase().includes('sociedad')
-
-        // Variables base que siempre están disponibles
-        const baseVariables = {
-          '{{companyName}}': companyConfig?.name || 'Mi Concesionaria',
-          '{{companyAddress}}': 'Dirección de la empresa',
-          '{{companyCity}}': 'Ciudad',
-          '{{companyState}}': 'Provincia',
-          '{{companyCuit}}': 'CUIT de la empresa',
-          '{{companyLogoUrl}}': companyConfig?.logoUrl || '',
-          '{{documentNumber}}': sale.saleNumber,
-          '{{documentGeneratedAt}}': new Date().toLocaleDateString('es-AR'),
-          '{{saleDate}}': new Date(sale.saleDate).toLocaleDateString('es-AR'),
-          '{{vehicleBrand}}': sale.vehicle.brand,
-          '{{vehicleModel}}': sale.vehicle.model,
-          '{{vehicleYear}}': sale.vehicle.year,
-          '{{vehicleColor}}': sale.vehicle.color || 'No especificado',
-          '{{vehicleMileage}}': sale.vehicle.mileage.toLocaleString(),
-          '{{vehicleType}}': sale.vehicle.vehicleType.name,
-          '{{vehicleVin}}': sale.vehicle.vin || 'No especificado',
-          '{{vehicleLicensePlate}}': sale.vehicle.licensePlate || 'No especificado',
-          '{{customerFirstName}}': sale.customer.firstName,
-          '{{customerLastName}}': sale.customer.lastName,
-          '{{customerFullName}}': `${sale.customer.firstName} ${sale.customer.lastName}`,
-          '{{customerEmail}}': sale.customer.email || 'No especificado',
-          '{{customerPhone}}': sale.customer.phone || 'No especificado',
-          '{{customerDocumentNumber}}': sale.customer.documentNumber || 'No especificado',
-          '{{customerAddress}}': 'No especificado',
-          '{{customerCity}}': sale.customer.city || 'No especificado',
-          '{{customerState}}': sale.customer.state || 'No especificado',
-          '{{sellerFirstName}}': sale.seller.firstName,
-          '{{sellerLastName}}': sale.seller.lastName,
-          '{{sellerFullName}}': `${sale.seller.firstName} ${sale.seller.lastName}`,
-          '{{sellerEmail}}': sale.seller.email || 'No especificado',
-          '{{sellerPhone}}': sale.seller.phone || 'No especificado',
-          '{{sellerCommission}}': `${sale.seller.commissionRate}%`,
-          '{{saleTotalAmount}}': `$${sale.totalAmount.toLocaleString('es-AR')}`,
-          '{{saleCommission}}': `$${sale.commission.toLocaleString('es-AR')}`,
-          '{{salePaymentMethod}}': 'Contado',
-          '{{saleNotes}}': sale.notes || 'Sin notas adicionales',
-          '{{currentDate}}': new Date().toLocaleDateString('es-AR'),
-          '{{currentTime}}': new Date().toLocaleTimeString('es-AR')
+        // Preparar los datos para el renderizador
+        const saleData = {
+          id: sale.id,
+          saleNumber: sale.saleNumber,
+          saleDate: sale.saleDate || sale.createdAt,
+          totalAmount: sale.totalAmount,
+          commission: sale.commission,
+          notes: sale.notes,
+          paymentMethod: sale.paymentMethod || 'CONTADO',
+          deliveryDate: sale.deliveryDate,
+          vehicle: {
+            id: sale.vehicle.id,
+            brand: sale.vehicle.brand,
+            model: sale.vehicle.model,
+            year: sale.vehicle.year,
+            color: sale.vehicle.color,
+            mileage: sale.vehicle.mileage,
+            vin: sale.vehicle.vin,
+            licensePlate: sale.vehicle.licensePlate,
+            vehicleType: {
+              name: sale.vehicle.vehicleType?.name || 'Automóvil'
+            }
+          },
+          customer: {
+            id: sale.customer.id,
+            firstName: sale.customer.firstName,
+            lastName: sale.customer.lastName,
+            email: sale.customer.email,
+            phone: sale.customer.phone,
+            documentNumber: sale.customer.documentNumber,
+            city: sale.customer.city,
+            state: sale.customer.state,
+            address: sale.customer.address
+          },
+          seller: {
+            id: sale.seller.id,
+            firstName: sale.seller.firstName,
+            lastName: sale.seller.lastName,
+            email: sale.seller.email,
+            phone: sale.seller.phone,
+            commissionRate: sale.seller.commissionRate
+          }
         }
-
-        // Variables dinámicas según el rol de la concesionaria
-        const dynamicVariables = isConcesionariaVendedora ? {
-          // Concesionaria es VENDEDORA (vende al cliente)
-          '{{compradorName}}': sale.customer.firstName + ' ' + sale.customer.lastName,
-          '{{compradorDocument}}': sale.customer.documentNumber || 'No especificado',
-          '{{compradorAddress}}': 'No especificado',
-          '{{compradorCity}}': sale.customer.city || 'No especificado',
-          '{{compradorState}}': sale.customer.state || 'No especificado',
-          '{{vendedorName}}': companyConfig?.name || 'Mi Concesionaria',
-          '{{vendedorDocument}}': 'CUIT: ' + (companyConfig?.cuit || 'CUIT de la empresa'),
-          '{{vendedorAddress}}': 'Dirección de la empresa',
-          '{{vendedorCity}}': 'Ciudad',
-          '{{vendedorState}}': 'Provincia',
-          '{{vendedorCuit}}': companyConfig?.cuit || 'CUIT de la empresa',
-          '{{rolConcesionaria}}': 'VENDEDORA',
-          '{{tipoOperacion}}': 'VENTA',
-          '{{direccionOperacion}}': 'de la concesionaria hacia el cliente'
-        } : {
-          // Concesionaria es COMPRADORA (compra al cliente)
-          '{{compradorName}}': companyConfig?.name || 'Mi Concesionaria',
-          '{{compradorDocument}}': 'CUIT: ' + (companyConfig?.cuit || 'CUIT de la empresa'),
-          '{{compradorAddress}}': 'Dirección de la empresa',
-          '{{compradorCity}}': 'Ciudad',
-          '{{compradorState}}': 'Provincia',
-          '{{compradorCuit}}': companyConfig?.cuit || 'CUIT de la empresa',
-          '{{vendedorName}}': sale.customer.firstName + ' ' + sale.customer.lastName,
-          '{{vendedorDocument}}': sale.customer.documentNumber || 'No especificado',
-          '{{vendedorAddress}}': 'No especificado',
-          '{{vendedorCity}}': sale.customer.city || 'No especificado',
-          '{{vendedorState}}': sale.customer.state || 'No especificado',
-          '{{rolConcesionaria}}': 'COMPRADORA',
-          '{{tipoOperacion}}': 'COMPRA',
-          '{{direccionOperacion}}': 'del cliente hacia la concesionaria'
-        }
-
-        // Combinar todas las variables
-        const variables = { ...baseVariables, ...dynamicVariables }
         
-        // Aplicar todas las variables
-        Object.entries(variables).forEach(([placeholder, value]) => {
-          htmlContent = htmlContent.replace(new RegExp(placeholder, 'g'), value)
-        })
+        const companyConfigData = {
+          name: companyConfig?.name || 'Mi Concesionaria',
+          logoUrl: companyConfig?.logoUrl || '',
+          description: companyConfig?.description || '',
+          address: companyConfig?.address || '',
+          city: companyConfig?.city || '',
+          state: companyConfig?.state || '',
+          cuit: companyConfig?.cuit || ''
+        }
+        
+        // Renderizar el template usando el sistema correcto
+        const htmlContent = renderTemplate(
+          template,
+          saleData,
+          companyConfigData,
+          `DOC-${Date.now()}`
+        )
         
         // Crear un elemento temporal para renderizar el HTML
         const tempDiv = document.createElement('div')
