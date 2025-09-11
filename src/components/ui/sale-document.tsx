@@ -27,6 +27,7 @@ interface SaleDocumentProps {
     commission: number
     notes?: string
     vehicle: {
+      id: string
       brand: string
       model: string
       year: number
@@ -39,6 +40,7 @@ interface SaleDocumentProps {
       }
     }
     customer: {
+      id: string
       firstName: string
       lastName: string
       email?: string
@@ -46,8 +48,10 @@ interface SaleDocumentProps {
       documentNumber?: string
       city?: string
       state?: string
+      address?: string
     }
     seller: {
+      id: string
       firstName: string
       lastName: string
       email?: string
