@@ -289,6 +289,9 @@ export default function DocumentTemplateEditor({
       })
       
       // Crear el template con el ID del formData (que ya debería estar correcto)
+      // Si el formData.id está vacío pero el template.id existe, usar el template.id
+      const finalId = (formData.id && formData.id.trim() !== '') ? formData.id : template?.id
+      
       const templateToSave = {
         name: formData.name,
         type: formData.type,
@@ -296,7 +299,7 @@ export default function DocumentTemplateEditor({
         variables: formData.variables,
         isActive: formData.isActive,
         isDefault: formData.isDefault,
-        id: formData.id, // Usar directamente el ID del formData
+        id: finalId, // Usar el ID final (formData.id o template.id como fallback)
         ...(formData.createdAt && { createdAt: formData.createdAt }),
         ...(formData.updatedAt && { updatedAt: formData.updatedAt })
       }
@@ -304,6 +307,8 @@ export default function DocumentTemplateEditor({
       console.log('💾 [Save] Template final a enviar:', {
         formDataId: formData.id,
         templateId: template?.id,
+        finalId: finalId,
+        finalIdType: typeof finalId,
         templateToSave: templateToSave,
         hasId: !!templateToSave.id,
         idValue: templateToSave.id,
