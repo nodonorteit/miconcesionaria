@@ -98,7 +98,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         const saleData = {
           id: sale.id,
           saleNumber: sale.saleNumber,
-          saleDate: sale.saleDate || sale.createdAt,
+          saleDate: sale.saleDate || new Date().toISOString(),
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           notes: sale.notes,
