@@ -185,8 +185,8 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 const DEFAULT_VARIABLES = {
   company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit'],
   customer: ['firstName', 'lastName', 'address', 'city', 'state', 'documentNumber'],
-  vehicle: ['brand', 'model', 'year', 'color', 'vin', 'licensePlate', 'type', 'mileage'],
-  sale: ['totalAmount', 'paymentMethod', 'deliveryDate', 'notes'],
+  vehicle: ['brand', 'model', 'year', 'color', 'vin', 'licensePlate', 'type', 'mileage', 'engineNumber'],
+  sale: ['totalAmount', 'paymentMethod', 'deliveryDate', 'notes', 'date'],
   document: ['number', 'generatedAt']
 }
 
