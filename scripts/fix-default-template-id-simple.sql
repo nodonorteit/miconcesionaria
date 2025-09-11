@@ -13,11 +13,11 @@ SELECT
     END as estado_id,
     createdAt,
     updatedAt
-FROM DocumentTemplate 
+FROM document_templates 
 WHERE type = 'BOLETO_COMPRA_VENTA';
 
 -- Generar un nuevo ID para el template con ID vacío usando una función simple
-UPDATE DocumentTemplate 
+UPDATE document_templates 
 SET id = CONCAT(
     'cm', 
     SUBSTRING(REPLACE(REPLACE(REPLACE(TO_BASE64(SHA2(CONCAT(NOW(), RAND()), 256)), '+', ''), '/', ''), '=', ''), 1, 20)
@@ -36,5 +36,5 @@ SELECT
     END as estado_id,
     createdAt,
     updatedAt
-FROM DocumentTemplate 
+FROM document_templates 
 WHERE type = 'BOLETO_COMPRA_VENTA';
