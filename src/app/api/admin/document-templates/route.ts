@@ -93,28 +93,97 @@ export async function POST(request: NextRequest) {
     // Limpiar el ID: convertir string vacío, null, undefined a undefined
     const cleanId = (id && typeof id === 'string' && id.trim() !== '') ? id.trim() : undefined
     
-    // Si el ID está vacío pero tenemos name y type, intentar encontrar el template por esos campos
+    // Si el ID está vacío, necesitamos una estrategia diferente
     let templateId = cleanId
-    if (!templateId && name && type) {
-      console.log('🔍 [API] ID vacío detectado, buscando template por name y type:', {
-        name: name.trim(),
-        type: type.trim()
-      })
+    if (!templateId) {
+      console.log('🔍 [API] ID vacío detectado, buscando template existente...')
       
-      const existingTemplate = await prisma.documentTemplate.findFirst({
-        where: {
+      // Estrategia 1: Si tenemos createdAt y updatedAt, buscar por esos campos
+      if (body.createdAt && body.updatedAt) {
+        console.log('🔍 [API] Buscando por timestamps:', {
+          createdAt: body.createdAt,
+          updatedAt: body.updatedAt
+        })
+        
+        const existingTemplate = await prisma.documentTemplate.findFirst({
+          where: {
+            createdAt: new Date(body.createdAt),
+            updatedAt: new Date(body.updatedAt)
+          }
+        })
+        
+        if (existingTemplate) {
+          templateId = existingTemplate.id
+          console.log('✅ [API] Template encontrado por timestamps:', {
+            foundId: templateId,
+            templateName: existingTemplate.name,
+            templateType: existingTemplate.type
+          })
+        }
+      }
+      
+      // Estrategia 2: Si no encontramos por timestamps, buscar por name/type (solo si no cambió el nombre)
+      if (!templateId && name && type) {
+        console.log('🔍 [API] Buscando por name/type como fallback:', {
           name: name.trim(),
           type: type.trim()
-        }
-      })
-      
-      if (existingTemplate) {
-        templateId = existingTemplate.id
-        console.log('✅ [API] Template encontrado por name/type:', {
-          foundId: templateId,
-          templateName: existingTemplate.name,
-          templateType: existingTemplate.type
         })
+        
+        const existingTemplate = await prisma.documentTemplate.findFirst({
+          where: {
+            name: name.trim(),
+            type: type.trim()
+          }
+        })
+        
+        if (existingTemplate) {
+          templateId = existingTemplate.id
+          console.log('✅ [API] Template encontrado por name/type:', {
+            foundId: templateId,
+            templateName: existingTemplate.name,
+            templateType: existingTemplate.type
+          })
+        }
+      }
+      
+      // Estrategia 3: Si aún no encontramos, buscar el template con ID vacío del mismo tipo
+      if (!templateId && type) {
+        console.log('🔍 [API] Buscando template con ID vacío del mismo tipo:', {
+          type: type.trim()
+        })
+        
+        const existingTemplate = await prisma.documentTemplate.findFirst({
+          where: {
+            type: type.trim(),
+            id: '' // Buscar específicamente templates con ID vacío
+          }
+        })
+        
+        if (existingTemplate) {
+          // Si encontramos un template con ID vacío, necesitamos generar un nuevo ID
+          // y actualizar el template existente
+          console.log('✅ [API] Template encontrado con ID vacío, generando nuevo ID:', {
+            templateName: existingTemplate.name,
+            templateType: existingTemplate.type
+          })
+          
+          // Actualizar el template existente con un nuevo ID generado
+          const updatedTemplate = await prisma.documentTemplate.update({
+            where: {
+              id: '' // Actualizar el template con ID vacío
+            },
+            data: {
+              name: name.trim(),
+              type: type.trim(),
+              content,
+              variables: cleanVariables,
+              isActive,
+              isDefault
+            }
+          })
+          
+          return NextResponse.json(updatedTemplate)
+        }
       }
     }
     
