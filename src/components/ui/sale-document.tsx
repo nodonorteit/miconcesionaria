@@ -102,8 +102,8 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           notes: sale.notes,
-          paymentMethod: sale.paymentMethod || 'CONTADO',
-          deliveryDate: sale.deliveryDate,
+          paymentMethod: 'CONTADO',
+          deliveryDate: undefined,
           vehicle: {
             id: sale.vehicle.id,
             brand: sale.vehicle.brand,
