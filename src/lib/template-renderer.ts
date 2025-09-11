@@ -107,6 +107,7 @@ export function renderTemplate(
     '{{vehicle.licensePlate}}': saleData.vehicle.licensePlate || '---',
     '{{vehicle.type}}': saleData.vehicle.vehicleType.name,
     '{{vehicle.mileage}}': saleData.vehicle.mileage.toLocaleString(),
+    '{{vehicle.engineNumber}}': saleData.vehicle.vin || '---', // Usar VIN como número de motor si no hay campo específico
     
     // Sale
     '{{sale.totalAmount}}': formatCurrency(saleData.totalAmount),
