@@ -233,11 +233,13 @@ export default function DocumentTemplateEditor({
       templateName: template?.name,
       templateIdType: typeof template?.id,
       templateIdValue: template?.id,
+      templateKeys: template ? Object.keys(template) : [],
       formDataId: formData.id,
       formDataIdType: typeof formData.id,
       formDataIdValue: formData.id,
       formDataObject: formData,
-      templateObject: template
+      templateObject: template,
+      templateStringified: template ? JSON.stringify(template) : 'null'
     })
     
     // El estado ya se inicializa correctamente, solo necesitamos actualizar si el template cambia
@@ -290,7 +292,20 @@ export default function DocumentTemplateEditor({
       
       // Crear el template con el ID del formData (que ya debería estar correcto)
       // Si el formData.id está vacío pero el template.id existe, usar el template.id
-      const finalId = (formData.id && formData.id.trim() !== '') ? formData.id : template?.id
+      // Si ambos están vacíos, intentar obtener el ID del template original desde el prop
+      let finalId = (formData.id && formData.id.trim() !== '') ? formData.id : template?.id
+      
+      // Si aún está vacío, intentar obtener el ID del template original
+      if (!finalId || finalId.trim() === '') {
+        console.log('⚠️ [Save] ID vacío detectado, intentando obtener ID del template original:', {
+          formDataId: formData.id,
+          templateId: template?.id,
+          templateProp: template
+        })
+        
+        // El template debería tener el ID correcto desde el prop
+        finalId = template?.id || undefined
+      }
       
       const templateToSave = {
         name: formData.name,
