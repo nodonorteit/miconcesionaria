@@ -273,6 +273,10 @@ export default function DocumentTemplateEditor({
       // Priorizar el ID del template original si existe, sino usar el del formData
       const finalId = cleanTemplateId || cleanFormDataId || undefined
       
+      // Si estamos editando un template existente, FORZAR que tenga ID
+      const isEditingExistingTemplate = !!template && !!template.id
+      const forcedId = isEditingExistingTemplate ? template.id : finalId
+      
       console.log('🔍 [Save] IDs disponibles:', {
         formDataId: formData.id,
         formDataIdType: typeof formData.id,
@@ -281,12 +285,15 @@ export default function DocumentTemplateEditor({
         cleanFormDataId: cleanFormDataId,
         cleanTemplateId: cleanTemplateId,
         finalId: finalId,
-        finalIdType: typeof finalId
+        finalIdType: typeof finalId,
+        isEditingExistingTemplate: isEditingExistingTemplate,
+        forcedId: forcedId,
+        forcedIdType: typeof forcedId
       })
       
       const templateToSave = {
         ...formData,
-        id: finalId
+        id: forcedId
       }
       
       console.log('💾 [Save] Template final a enviar:', {
@@ -295,11 +302,12 @@ export default function DocumentTemplateEditor({
         cleanFormDataId: cleanFormDataId,
         cleanTemplateId: cleanTemplateId,
         finalId: finalId,
+        forcedId: forcedId,
         templateToSave: templateToSave,
-        hasId: !!finalId,
-        idValue: finalId,
-        idType: typeof finalId,
-        isEditing: !!finalId
+        hasId: !!forcedId,
+        idValue: forcedId,
+        idType: typeof forcedId,
+        isEditing: !!forcedId
       })
       
       console.log('💾 [Save] Guardando template:', {
