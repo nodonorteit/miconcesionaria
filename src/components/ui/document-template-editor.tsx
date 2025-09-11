@@ -196,14 +196,31 @@ export default function DocumentTemplateEditor({
   onCancel, 
   onDelete 
 }: DocumentTemplateEditorProps) {
-  const [formData, setFormData] = useState<DocumentTemplate>({
-    name: '',
-    type: 'BOLETO_COMPRA_VENTA',
-    content: '',
-    variables: {},
-    isActive: true,
-    isDefault: false,
-    id: undefined
+  const [formData, setFormData] = useState<DocumentTemplate>(() => {
+    // Inicializar con el template si existe, sino con valores por defecto
+    if (template) {
+      return {
+        id: template.id,
+        name: template.name,
+        type: template.type,
+        content: template.content,
+        variables: template.variables,
+        isActive: template.isActive,
+        isDefault: template.isDefault,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }
+    }
+    
+    return {
+      name: '',
+      type: 'BOLETO_COMPRA_VENTA',
+      content: DEFAULT_TEMPLATE,
+      variables: DEFAULT_VARIABLES,
+      isActive: true,
+      isDefault: false,
+      id: undefined
+    }
   })
   const [previewMode, setPreviewMode] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -215,40 +232,29 @@ export default function DocumentTemplateEditor({
       templateId: template?.id,
       templateName: template?.name,
       templateIdType: typeof template?.id,
-      templateIdValue: template?.id
+      templateIdValue: template?.id,
+      formDataId: formData.id,
+      formDataIdType: typeof formData.id
     })
     
-    if (template) {
-      console.log('🎯 [Editor] Configurando formData con template existente:', {
-        ...template,
-        hasId: !!template.id,
-        idType: typeof template.id,
-        idValue: template.id
+    // El estado ya se inicializa correctamente, solo necesitamos actualizar si el template cambia
+    if (template && formData.id !== template.id) {
+      console.log('🎯 [Editor] Actualizando formData con nuevo template:', {
+        oldId: formData.id,
+        newId: template.id,
+        template: template
       })
       
-      // Asegurar que el ID se mantenga explícitamente
-      const templateWithId = {
-        ...template,
-        id: template.id // Forzar que el ID se mantenga
-      }
-      
-      console.log('🎯 [Editor] Template con ID forzado:', {
-        ...templateWithId,
-        hasId: !!templateWithId.id,
-        idType: typeof templateWithId.id,
-        idValue: templateWithId.id
-      })
-      
-      setFormData(templateWithId)
-    } else {
-      console.log('🎯 [Editor] Configurando formData con valores por defecto')
       setFormData({
-        name: '',
-        type: 'BOLETO_COMPRA_VENTA',
-        content: DEFAULT_TEMPLATE,
-        variables: DEFAULT_VARIABLES,
-        isActive: true,
-        isDefault: false
+        id: template.id,
+        name: template.name,
+        type: template.type,
+        content: template.content,
+        variables: template.variables,
+        isActive: template.isActive,
+        isDefault: template.isDefault,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
       })
     }
   }, [template])
@@ -266,32 +272,16 @@ export default function DocumentTemplateEditor({
 
     setLoading(true)
     try {
-      // Asegurar que el ID se mantenga si existe (limpiar strings vacíos)
-      const cleanFormDataId = (formData.id && typeof formData.id === 'string' && formData.id.trim() !== '') ? formData.id.trim() : undefined
-      const cleanTemplateId = (template?.id && typeof template.id === 'string' && template.id.trim() !== '') ? template.id.trim() : undefined
-      
-      // Priorizar el ID del template original si existe, sino usar el del formData
-      const finalId = cleanTemplateId || cleanFormDataId || undefined
-      
-      // Si estamos editando un template existente, FORZAR que tenga ID
-      const isEditingExistingTemplate = !!template && !!template.id
-      const forcedId = isEditingExistingTemplate ? template.id : finalId
-      
-      console.log('🔍 [Save] IDs disponibles:', {
+      console.log('🔍 [Save] Estado actual del formData:', {
         formDataId: formData.id,
         formDataIdType: typeof formData.id,
+        formDataKeys: Object.keys(formData),
         templateId: template?.id,
         templateIdType: typeof template?.id,
-        cleanFormDataId: cleanFormDataId,
-        cleanTemplateId: cleanTemplateId,
-        finalId: finalId,
-        finalIdType: typeof finalId,
-        isEditingExistingTemplate: isEditingExistingTemplate,
-        forcedId: forcedId,
-        forcedIdType: typeof forcedId
+        isEditing: !!formData.id
       })
       
-      // Crear el template asegurando que el ID esté presente
+      // Crear el template con el ID del formData (que ya debería estar correcto)
       const templateToSave = {
         name: formData.name,
         type: formData.type,
@@ -299,23 +289,19 @@ export default function DocumentTemplateEditor({
         variables: formData.variables,
         isActive: formData.isActive,
         isDefault: formData.isDefault,
-        id: forcedId, // Asegurar que el ID esté presente
+        id: formData.id, // Usar directamente el ID del formData
         ...(formData.createdAt && { createdAt: formData.createdAt }),
         ...(formData.updatedAt && { updatedAt: formData.updatedAt })
       }
       
       console.log('💾 [Save] Template final a enviar:', {
-        originalFormDataId: formData.id,
-        originalTemplateId: template?.id,
-        cleanFormDataId: cleanFormDataId,
-        cleanTemplateId: cleanTemplateId,
-        finalId: finalId,
-        forcedId: forcedId,
+        formDataId: formData.id,
+        templateId: template?.id,
         templateToSave: templateToSave,
-        hasId: !!forcedId,
-        idValue: forcedId,
-        idType: typeof forcedId,
-        isEditing: !!forcedId,
+        hasId: !!templateToSave.id,
+        idValue: templateToSave.id,
+        idType: typeof templateToSave.id,
+        isEditing: !!templateToSave.id,
         templateToSaveKeys: Object.keys(templateToSave),
         templateToSaveStringified: JSON.stringify(templateToSave)
       })
