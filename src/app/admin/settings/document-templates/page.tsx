@@ -69,6 +69,14 @@ export default function DocumentTemplatesPage() {
         templateKeys: Object.keys(template)
       })
       
+      console.log('📤 [Save] Enviando template a la API:', {
+        templateToSend: template,
+        templateStringified: JSON.stringify(template),
+        hasIdInTemplate: 'id' in template,
+        templateIdValue: template.id,
+        templateIdType: typeof template.id
+      })
+      
       const response = await fetch('/api/admin/document-templates', {
         method: 'POST',
         headers: {
