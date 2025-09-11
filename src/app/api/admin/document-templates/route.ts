@@ -93,27 +93,54 @@ export async function POST(request: NextRequest) {
     // Limpiar el ID: convertir string vacío, null, undefined a undefined
     const cleanId = (id && typeof id === 'string' && id.trim() !== '') ? id.trim() : undefined
     
+    // Si el ID está vacío pero tenemos name y type, intentar encontrar el template por esos campos
+    let templateId = cleanId
+    if (!templateId && name && type) {
+      console.log('🔍 [API] ID vacío detectado, buscando template por name y type:', {
+        name: name.trim(),
+        type: type.trim()
+      })
+      
+      const existingTemplate = await prisma.documentTemplate.findFirst({
+        where: {
+          name: name.trim(),
+          type: type.trim()
+        }
+      })
+      
+      if (existingTemplate) {
+        templateId = existingTemplate.id
+        console.log('✅ [API] Template encontrado por name/type:', {
+          foundId: templateId,
+          templateName: existingTemplate.name,
+          templateType: existingTemplate.type
+        })
+      }
+    }
+    
     console.log('🔍 [API] Procesando ID:', {
       originalId: id,
       originalIdType: typeof id,
       originalIdValue: id,
       cleanId: cleanId,
       cleanIdType: typeof cleanId,
-      willUpdate: !!cleanId,
-      willCreate: !cleanId,
+      templateId: templateId,
+      templateIdType: typeof templateId,
+      willUpdate: !!templateId,
+      willCreate: !templateId,
       bodyReceived: body,
-      isEditing: !!cleanId,
-      isCreating: !cleanId
+      isEditing: !!templateId,
+      isCreating: !templateId
     })
 
-    if (cleanId) {
+    if (templateId) {
       // Verificar que el template existe antes de actualizar
       const existingTemplate = await prisma.documentTemplate.findUnique({
-        where: { id: cleanId }
+        where: { id: templateId }
       })
 
       if (!existingTemplate) {
-        console.log('❌ [API] Template no encontrado con ID:', cleanId)
+        console.log('❌ [API] Template no encontrado con ID:', templateId)
         return NextResponse.json(
           { error: 'Template no encontrado' },
           { status: 404 }
@@ -132,7 +159,7 @@ export async function POST(request: NextRequest) {
 
       // Actualizar template existente
       const updatedTemplate = await prisma.documentTemplate.update({
-        where: { id: cleanId },
+        where: { id: templateId },
         data: {
           name: name.trim(),
           type: type.trim(),
