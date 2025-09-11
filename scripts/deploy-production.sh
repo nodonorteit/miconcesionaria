@@ -26,29 +26,29 @@ if [ ! -f "docker-compose.prod.yml" ]; then
     exit 1
 fi
 
-# Función para limpiar imágenes antiguas
+# Función para limpiar imágenes antiguas de PRODUCCIÓN únicamente
 cleanup_old_images() {
-    echo "🧹 Limpiando imágenes antiguas de MiConcesionaria..."
+    echo "🧹 Limpiando imágenes antiguas de PRODUCCIÓN únicamente..."
     
-    # Obtener el nombre de la imagen actual
+    # Obtener el nombre completo de la imagen de producción
     IMAGE_NAME=$(grep "image:" docker-compose.prod.yml | head -1 | awk '{print $2}' | tr -d '"')
     
     if [ -n "$IMAGE_NAME" ]; then
-        echo "🔍 Buscando imágenes antiguas de: $IMAGE_NAME"
+        echo "🔍 Buscando imágenes antiguas de PRODUCCIÓN: $IMAGE_NAME"
         
-        # Buscar TODAS las imágenes de MiConcesionaria (incluyendo la actual)
-        ALL_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}" | grep "$(echo $IMAGE_NAME | cut -d: -f1)" || true)
+        # Buscar SOLO las imágenes de producción (con tag :latest)
+        PROD_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}" | grep ":latest" | grep "$(echo $IMAGE_NAME | cut -d: -f1)" || true)
         
-        if [ -n "$ALL_IMAGES" ]; then
-            echo "📋 Todas las imágenes encontradas:"
-            echo "$ALL_IMAGES"
+        if [ -n "$PROD_IMAGES" ]; then
+            echo "📋 Imágenes de PRODUCCIÓN encontradas:"
+            echo "$PROD_IMAGES"
             echo ""
             
-            # Extraer IDs de TODAS las imágenes
-            ALL_IMAGE_IDS=$(echo "$ALL_IMAGES" | awk '{print $2}')
+            # Extraer IDs de las imágenes de producción
+            PROD_IMAGE_IDS=$(echo "$PROD_IMAGES" | awk '{print $2}')
             
-            for IMAGE_ID in $ALL_IMAGE_IDS; do
-                echo "🗑️ Eliminando imagen: $IMAGE_ID"
+            for IMAGE_ID in $PROD_IMAGE_IDS; do
+                echo "🗑️ Eliminando imagen de PRODUCCIÓN: $IMAGE_ID"
                 # Intentar eliminar con force, ignorar errores
                 docker rmi -f "$IMAGE_ID" 2>/dev/null || {
                     echo "⚠️ No se pudo eliminar imagen $IMAGE_ID, intentando sin force..."
@@ -56,7 +56,7 @@ cleanup_old_images() {
                 }
             done
         else
-            echo "✅ No se encontraron imágenes de MiConcesionaria para eliminar"
+            echo "✅ No se encontraron imágenes de PRODUCCIÓN para eliminar"
         fi
         
         # Limpiar imágenes huérfanas (dangling)
@@ -65,6 +65,8 @@ cleanup_old_images() {
             echo "🧹 Limpiando imágenes huérfanas..."
             docker rmi "$DANGLING_IMAGES" 2>/dev/null || echo "⚠️ No se pudieron eliminar todas las imágenes huérfanas"
         fi
+        
+        echo "✅ Limpieza de imágenes de PRODUCCIÓN completada"
     else
         echo "⚠️ No se pudo determinar el nombre de la imagen del docker-compose"
     fi
@@ -124,6 +126,22 @@ cleanup_old_images
 echo "📦 Descargando nueva imagen de producción..."
 docker-compose -f docker-compose.prod.yml pull
 
+# Verificar que se descargó la imagen más reciente
+echo "🔍 Verificando imagen descargada..."
+IMAGE_NAME=$(grep "image:" docker-compose.prod.yml | head -1 | awk '{print $2}' | tr -d '"')
+if [ -n "$IMAGE_NAME" ]; then
+    echo "📋 Imagen de producción actual:"
+    docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}" | grep "$IMAGE_NAME" || echo "⚠️ No se encontró la imagen $IMAGE_NAME"
+    
+    # Verificar que la imagen existe localmente
+    if docker images -q "$IMAGE_NAME" | grep -q .; then
+        echo "✅ Imagen de producción descargada correctamente: $IMAGE_NAME"
+    else
+        echo "❌ ERROR: No se pudo descargar la imagen de producción: $IMAGE_NAME"
+        exit 1
+    fi
+fi
+
 echo "🚀 Iniciando servicios de producción..."
 docker-compose -f docker-compose.prod.yml up -d
 
@@ -135,6 +153,17 @@ docker-compose -f docker-compose.prod.yml ps
 
 echo "📊 Verificando logs de inicio..."
 docker-compose -f docker-compose.prod.yml logs --tail=20
+
+echo "🔍 Verificando imagen final en uso..."
+CONTAINER_ID=$(docker-compose -f docker-compose.prod.yml ps -q app)
+if [ -n "$CONTAINER_ID" ]; then
+    echo "📋 Imagen utilizada por el contenedor de producción:"
+    docker inspect "$CONTAINER_ID" --format='{{.Config.Image}}' | head -1
+    echo "📋 Detalles de la imagen:"
+    docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}" | grep "$(docker inspect "$CONTAINER_ID" --format='{{.Config.Image}}' | head -1)"
+else
+    echo "⚠️ No se pudo obtener el ID del contenedor de producción"
+fi
 
 echo "🧹 Limpieza final de imágenes no utilizadas..."
 docker image prune -f
