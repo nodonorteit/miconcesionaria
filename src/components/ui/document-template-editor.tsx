@@ -234,7 +234,10 @@ export default function DocumentTemplateEditor({
       templateIdType: typeof template?.id,
       templateIdValue: template?.id,
       formDataId: formData.id,
-      formDataIdType: typeof formData.id
+      formDataIdType: typeof formData.id,
+      formDataIdValue: formData.id,
+      formDataObject: formData,
+      templateObject: template
     })
     
     // El estado ya se inicializa correctamente, solo necesitamos actualizar si el template cambia
@@ -275,10 +278,14 @@ export default function DocumentTemplateEditor({
       console.log('🔍 [Save] Estado actual del formData:', {
         formDataId: formData.id,
         formDataIdType: typeof formData.id,
+        formDataIdValue: formData.id,
         formDataKeys: Object.keys(formData),
         templateId: template?.id,
         templateIdType: typeof template?.id,
-        isEditing: !!formData.id
+        templateIdValue: template?.id,
+        isEditing: !!formData.id,
+        formDataObject: formData,
+        templateObject: template
       })
       
       // Crear el template con el ID del formData (que ya debería estar correcto)
