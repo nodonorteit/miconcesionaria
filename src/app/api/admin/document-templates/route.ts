@@ -17,7 +17,11 @@ export async function GET() {
         id: t.id,
         name: t.name,
         hasId: !!t.id,
-        idType: typeof t.id
+        idType: typeof t.id,
+        idValue: t.id,
+        isIdEmpty: t.id === '',
+        isIdUndefined: t.id === undefined,
+        isIdNull: t.id === null
       }))
     })
     
