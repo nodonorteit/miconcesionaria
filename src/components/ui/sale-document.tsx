@@ -152,12 +152,23 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
           cuit: companyConfig?.cuit || ''
         }
         
+        // Obtener el documento real de la base de datos
+        const documentResponse = await fetch(`/api/sales/documents?saleId=${sale.id}`)
+        let documentNumber = `DOC-${Date.now()}`
+        
+        if (documentResponse.ok) {
+          const documents = await documentResponse.json()
+          if (documents.length > 0) {
+            documentNumber = documents[0].documentNumber
+          }
+        }
+        
         // Renderizar el template usando el sistema correcto
         const htmlContent = renderTemplate(
           template,
           saleData,
           companyConfigData,
-          `DOC-${Date.now()}`
+          documentNumber
         )
         
         // Crear un elemento temporal para renderizar el HTML
