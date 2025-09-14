@@ -72,13 +72,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(existingDocument)
     }
 
-    // Generar número de documento en formato AAAAMMDDHHMM
+    // Generar número de documento en formato AAAAMMDDH
     const now = new Date()
     const documentNumber = now.getFullYear().toString() +
       (now.getMonth() + 1).toString().padStart(2, '0') +
       now.getDate().toString().padStart(2, '0') +
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0')
+      now.getHours().toString().padStart(2, '0')
 
     // Crear el documento de venta
     const document = await prisma.saleDocument.create({
