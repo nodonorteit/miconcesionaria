@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener todos los documentos de venta
-export async function GET() {
+// GET - Obtener documentos de venta (todos o por saleId)
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const saleId = searchParams.get('saleId')
+
+    const whereClause = saleId ? { saleId } : {}
+
     const documents = await prisma.saleDocument.findMany({
+      where: whereClause,
       include: {
         sale: {
           include: {
