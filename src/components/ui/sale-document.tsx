@@ -153,15 +153,23 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         }
         
         // Obtener el documento real de la base de datos
+        console.log('🔍 [DEBUG] Obteniendo documento para saleId:', sale.id)
         const documentResponse = await fetch(`/api/sales/documents?saleId=${sale.id}`)
         let documentNumber = `DOC-${Date.now()}`
         
         if (documentResponse.ok) {
           const documents = await documentResponse.json()
+          console.log('🔍 [DEBUG] Documentos obtenidos:', documents)
           if (documents.length > 0) {
+            console.log('🔍 [DEBUG] Documento encontrado:', documents[0])
+            console.log('🔍 [DEBUG] documentNumber del documento:', documents[0].documentNumber)
             documentNumber = documents[0].documentNumber
           }
+        } else {
+          console.log('🔍 [DEBUG] Error en respuesta:', documentResponse.status, documentResponse.statusText)
         }
+        
+        console.log('🔍 [DEBUG] documentNumber final a usar:', documentNumber)
         
         // Renderizar el template usando el sistema correcto
         const htmlContent = renderTemplate(

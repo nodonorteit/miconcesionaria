@@ -59,6 +59,7 @@ export function renderTemplate(
   companyConfig: CompanyConfig,
   documentNumber: string
 ): string {
+  console.log('🔍 [TEMPLATE] documentNumber recibido:', documentNumber)
   let html = template.content
 
   // Función para formatear moneda
