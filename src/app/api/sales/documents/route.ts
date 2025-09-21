@@ -78,29 +78,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(existingDocument)
     }
 
-    // Generar número de documento en formato AAAAMMDD con manejo de duplicados
-    const now = new Date()
-    const baseDocumentNumber = now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0')
+    // Generar número de documento incremental
+    // Obtener el último número de documento y incrementar
+    const lastDocument = await prisma.saleDocument.findFirst({
+      orderBy: { documentNumber: 'desc' },
+      select: { documentNumber: true }
+    })
 
-    // Verificar si ya existe un documento con este número base
-    let documentNumber = baseDocumentNumber
-    let counter = 1
-    
-    while (true) {
-      const existingDocument = await prisma.saleDocument.findUnique({
-        where: { documentNumber }
-      })
-      
-      if (!existingDocument) {
-        break // El número está disponible
-      }
-      
-      // Si existe, agregar contador
-      documentNumber = baseDocumentNumber + counter.toString().padStart(2, '0')
-      counter++
+    let nextNumber = 1
+    if (lastDocument && lastDocument.documentNumber.match(/^\d+$/)) {
+      nextNumber = parseInt(lastDocument.documentNumber) + 1
     }
+
+    const documentNumber = nextNumber.toString().padStart(10, '0')
 
     // Crear el documento de venta
     const document = await prisma.saleDocument.create({
