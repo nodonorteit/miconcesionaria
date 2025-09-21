@@ -508,7 +508,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
               )}
               <div>
                 <label className="text-sm font-medium text-gray-600">Comisión</label>
-                <p className="text-gray-900">{sale.seller.commissionRate}%</p>
+                <p className="text-gray-900">${sale.commission}</p>
               </div>
             </div>
           </Card>
