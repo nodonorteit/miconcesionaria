@@ -141,7 +141,10 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
             lastName: sale.seller.lastName,
             email: sale.seller.email,
             phone: sale.seller.phone,
-            commissionRate: sale.seller.commissionRate
+            documentNumber: sale.seller.documentNumber,
+            city: sale.seller.city,
+            state: sale.seller.state,
+            address: sale.seller.address
           }
         }
         
