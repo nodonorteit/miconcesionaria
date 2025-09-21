@@ -56,7 +56,10 @@ interface SaleDocumentProps {
       lastName: string
       email?: string
       phone?: string
-      commissionRate: number
+      documentNumber?: string
+      city?: string
+      state?: string
+      address?: string
     }
   }
   isOpen: boolean

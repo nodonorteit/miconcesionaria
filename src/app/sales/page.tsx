@@ -47,7 +47,9 @@ interface Sale {
     lastName: string
     email?: string
     phone?: string
-    commissionRate: number
+    documentNumber?: string
+    city?: string
+    state?: string
   }
   createdAt: string
   updatedAt: string
@@ -68,18 +70,11 @@ interface Customer {
   lastName: string
 }
 
-interface Seller {
-  id: string
-  firstName: string
-  lastName: string
-  commissionRate: number
-}
 
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
@@ -102,7 +97,6 @@ export default function SalesPage() {
     fetchSales()
     fetchVehicles()
     fetchCustomers()
-    fetchSellers()
   }, [])
 
   const fetchSales = async () => {
@@ -145,17 +139,6 @@ export default function SalesPage() {
     }
   }
 
-  const fetchSellers = async () => {
-    try {
-      const response = await fetch('/api/sellers')
-      if (response.ok) {
-        const data = await response.json()
-        setSellers(data)
-      }
-    } catch (error) {
-      console.error('Error fetching sellers:', error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
