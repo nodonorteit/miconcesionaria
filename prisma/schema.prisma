@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
 }
 
@@ -23,19 +23,19 @@ model User {
 
   // Relations
   commissions Commission[]
-  payments   Payment[]
+  payments    Payment[]
 
   @@map("User")
 }
 
 model VehicleType {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String          @id @default(cuid())
+  name        String          @unique
   category    VehicleCategory @default(AUTOMOTIVE)
   description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   // Relations
   vehicles Vehicle[]
@@ -44,31 +44,31 @@ model VehicleType {
 }
 
 model Vehicle {
-  id          String        @id @default(cuid())
-  brand       String
-  model       String
-  year        Int
-  mileage     Int
-  price       Decimal?      @db.Decimal(10, 2)
-  description String?
-  vin         String?       @unique
-  licensePlate String?      @unique
-  status      VehicleStatus @default(AVAILABLE)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  brand        String
+  model        String
+  year         Int
+  mileage      Int
+  price        Decimal?      @db.Decimal(10, 2)
+  description  String?
+  vin          String?       @unique
+  licensePlate String?       @unique
+  status       VehicleStatus @default(AVAILABLE)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
   // Nuevos campos para tipo de operación
-  operationType String?     // PURCHASE, COMMISSION, EXISTING
-  purchasePrice Decimal?    @db.Decimal(10, 2) // Precio de compra (si es compra)
-  sellerName   String?      // Nombre del vendedor (si es compra)
-  sellerDocument String?    // Documento del vendedor (si es compra)
-  sellerPhone  String?      // Teléfono del vendedor (si es compra)
-  commissionRate Decimal?   @db.Decimal(5, 2) // Porcentaje de comisión (si es consignación)
-  notes        String?      // Notas adicionales sobre la operación
+  operationType  String? // PURCHASE, COMMISSION, EXISTING
+  purchasePrice  Decimal? @db.Decimal(10, 2) // Precio de compra (si es compra)
+  sellerName     String? // Nombre del vendedor (si es compra)
+  sellerDocument String? // Documento del vendedor (si es compra)
+  sellerPhone    String? // Teléfono del vendedor (si es compra)
+  commissionRate Decimal? @db.Decimal(5, 2) // Porcentaje de comisión (si es consignación)
+  notes          String? // Notas adicionales sobre la operación
 
   // Relations
   vehicleTypeId String
-  vehicleType   VehicleType @relation(fields: [vehicleTypeId], references: [id])
+  vehicleType   VehicleType    @relation(fields: [vehicleTypeId], references: [id])
   images        VehicleImage[]
   sales         Sale[]
   purchases     Purchase[]
@@ -90,22 +90,22 @@ model VehicleImage {
 }
 
 model Customer {
-  id            String      @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String?     @unique
-  phone         String?
-  documentNumber String?    @unique
-  city          String?
-  state         String?
-  address       String?
-  isActive      Boolean     @default(true)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id             String   @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String?  @unique
+  phone          String?
+  documentNumber String?  @unique
+  city           String?
+  state          String?
+  address        String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  salesAsBuyer  Sale[] @relation("CustomerAsBuyer")
-  salesAsSeller Sale[] @relation("CustomerAsSeller")
+  salesAsBuyer  Sale[]     @relation("CustomerAsBuyer")
+  salesAsSeller Sale[]     @relation("CustomerAsSeller")
   purchases     Purchase[] @relation("CustomerAsSeller")
   payments      Payment[]
 
@@ -113,53 +113,50 @@ model Customer {
 }
 
 model Seller {
-  id        String   @id @default(cuid())
-  firstName String
-  lastName  String
-  email     String   @unique
-  phone     String?
-  commissionRate Decimal @db.Decimal(5, 2) @default(0.05) // 5% default
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  firstName      String
+  lastName       String
+  email          String   @unique
+  phone          String?
+  commissionRate Decimal  @default(0.05) @db.Decimal(5, 2) // 5% default
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
-  sales       Sale[]
   commissions Commission[]
-
-  // Relations
-  expenses Expense[]
+  expenses    Expense[]
 
   @@map("sellers")
 }
 
 model Provider {
-  id          String   @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  taxId       String?  @unique
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  taxId     String?  @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("providers")
 }
 
 model Workshop {
-  id          String   @id @default(cuid())
-  name        String
-  email       String?
-  phone       String?
-  address     String?
-  city        String?
-  state       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   expenses Expense[]
@@ -168,64 +165,64 @@ model Workshop {
 }
 
 model Sale {
-  id          String   @id @default(cuid())
-  saleNumber  String   @unique
-  saleDate    DateTime @default(now())
+  id          String     @id @default(cuid())
+  saleNumber  String     @unique
+  saleDate    DateTime   @default(now())
   vehicleId   String
-  customerId  String   // Comprador
-  sellerId    String   // Vendedor (ahora es un Customer)
-  totalAmount Decimal  @db.Decimal(10, 2)
-  commission  Decimal  @db.Decimal(10, 2)
+  customerId  String // Comprador
+  sellerId    String // Vendedor (ahora es un Customer)
+  totalAmount Decimal    @db.Decimal(10, 2)
+  commission  Decimal    @db.Decimal(10, 2)
   status      SaleStatus @default(PENDING)
   notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
-  customer    Customer @relation("CustomerAsBuyer", fields: [customerId], references: [id])
-  seller      Customer @relation("CustomerAsSeller", fields: [sellerId], references: [id])
-  documents   SaleDocument[]
-  payments    Payment[]
-  receipts    Receipt[]
+  vehicle   Vehicle        @relation(fields: [vehicleId], references: [id])
+  customer  Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
+  seller    Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
+  documents SaleDocument[]
+  payments  Payment[]
+  receipts  Receipt[]
 
   @@map("sales")
 }
 
 model Payment {
-  id          String   @id @default(cuid())
-  amount      Decimal  @db.Decimal(10, 2)
-  paymentDate DateTime @default(now())
+  id            String        @id @default(cuid())
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentDate   DateTime      @default(now())
   paymentMethod PaymentMethod
-  reference   String?
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  reference     String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   // Relations
-  saleId      String
-  sale        Sale @relation(fields: [saleId], references: [id])
-  customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
-  userId      String
-  user        User @relation(fields: [userId], references: [id])
+  saleId     String
+  sale       Sale     @relation(fields: [saleId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
 
   @@map("payments")
 }
 
 model Commission {
-  id          String   @id @default(cuid())
-  amount      Decimal  @db.Decimal(10, 2)
-  commissionDate DateTime @default(now())
-  status      CommissionStatus @default(PENDING)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String           @id @default(cuid())
+  amount         Decimal          @db.Decimal(10, 2)
+  commissionDate DateTime         @default(now())
+  status         CommissionStatus @default(PENDING)
+  notes          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 
   // Relations
-  sellerId    String
-  seller      Seller @relation(fields: [sellerId], references: [id])
-  userId      String
-  user        User @relation(fields: [userId], references: [id])
+  sellerId String
+  seller   Seller @relation(fields: [sellerId], references: [id])
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
 
   @@map("commissions")
 }
@@ -250,59 +247,59 @@ model Expense {
 }
 
 model Receipt {
-  id          String   @id @default(cuid())
-  receiptNumber String @unique
-  receiptDate DateTime @default(now())
-  amount      Decimal  @db.Decimal(10, 2)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  receiptNumber String   @unique
+  receiptDate   DateTime @default(now())
+  amount        Decimal  @db.Decimal(10, 2)
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
-  saleId      String
-  sale        Sale @relation(fields: [saleId], references: [id])
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id])
 
   @@map("receipts")
 }
 
 model PurchaseTicket {
-  id          String   @id @default(cuid())
-  ticketNumber String  @unique
-  issueDate   DateTime @default(now())
-  vehicleInfo String
-  sellerInfo  String
-  buyerInfo   String
-  price       Decimal  @db.Decimal(10, 2)
-  status      TicketStatus @default(PENDING)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String       @id @default(cuid())
+  ticketNumber String       @unique
+  issueDate    DateTime     @default(now())
+  vehicleInfo  String
+  sellerInfo   String
+  buyerInfo    String
+  price        Decimal      @db.Decimal(10, 2)
+  status       TicketStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@map("purchase_tickets")
 }
 
 model SaleDocument {
-  id          String   @id @default(cuid())
-  documentNumber String @unique
-  saleId      String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  documentNumber String   @unique
+  saleId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
 
   @@map("sale_documents")
 }
 
 model DocumentTemplate {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  type        String   // BOLETO_COMPRA_VENTA, RECIBO, COMPRA_VEHICULO, etc.
-  content     String   // HTML del template
-  variables   Json     // Variables disponibles en el template
-  isActive    Boolean  @default(true)
-  isDefault   Boolean  @default(false) // Template por defecto para el tipo
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  type      String // BOLETO_COMPRA_VENTA, RECIBO, COMPRA_VEHICULO, etc.
+  content   String // HTML del template
+  variables Json // Variables disponibles en el template
+  isActive  Boolean  @default(true)
+  isDefault Boolean  @default(false) // Template por defecto para el tipo
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   purchaseDocuments PurchaseDocument[]
 
@@ -317,14 +314,14 @@ enum UserRole {
 }
 
 enum VehicleCategory {
-  AUTOMOTIVE      // Autos, camionetas, SUVs
-  MOTORCYCLE      // Motos, scooters, cuatriciclos
-  COMMERCIAL      // Camiones, furgones, vans comerciales
-  AGRICULTURAL    // Tractores, cosechadoras, implementos agrícolas
-  MARINE          // Barcos, lanchas, yates, motos de agua
-  CONSTRUCTION    // Excavadoras, grúas, maquinaria pesada
-  RECREATIONAL    // Caravanas, motorhomes, trailers
-  SPECIALTY       // Vehículos especiales, militares, etc.
+  AUTOMOTIVE // Autos, camionetas, SUVs
+  MOTORCYCLE // Motos, scooters, cuatriciclos
+  COMMERCIAL // Camiones, furgones, vans comerciales
+  AGRICULTURAL // Tractores, cosechadoras, implementos agrícolas
+  MARINE // Barcos, lanchas, yates, motos de agua
+  CONSTRUCTION // Excavadoras, grúas, maquinaria pesada
+  RECREATIONAL // Caravanas, motorhomes, trailers
+  SPECIALTY // Vehículos especiales, militares, etc.
 }
 
 enum FuelType {
@@ -390,41 +387,41 @@ enum ExpenseType {
   WORKSHOP
   PARTS
   COMMISSION
-} 
+}
 
 model Purchase {
-  id          String   @id @default(cuid())
-  purchaseNumber String @unique
-  purchaseDate DateTime @default(now())
-  vehicleId   String
-  sellerId    String  // El cliente que vende el vehículo
-  totalAmount Decimal @db.Decimal(10, 2)
-  commission  Decimal @db.Decimal(10, 2) @default(0)
-  status      PurchaseStatus @default(PENDING)
-  notes       String?
-  paymentMethod String @default("CONTADO")
-  deliveryDate DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String         @id @default(cuid())
+  purchaseNumber String         @unique
+  purchaseDate   DateTime       @default(now())
+  vehicleId      String
+  sellerId       String // El cliente que vende el vehículo
+  totalAmount    Decimal        @db.Decimal(10, 2)
+  commission     Decimal        @default(0) @db.Decimal(10, 2)
+  status         PurchaseStatus @default(PENDING)
+  notes          String?
+  paymentMethod  String         @default("CONTADO")
+  deliveryDate   DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
-  seller      Customer @relation("CustomerAsSeller", fields: [sellerId], references: [id])
-  documents   PurchaseDocument[]
+  vehicle   Vehicle            @relation(fields: [vehicleId], references: [id])
+  seller    Customer           @relation("CustomerAsSeller", fields: [sellerId], references: [id])
+  documents PurchaseDocument[]
 
   @@map("purchases")
 }
 
 model PurchaseDocument {
-  id          String   @id @default(cuid())
-  documentNumber String @unique
-  purchaseId  String
-  templateId  String?
-  content     String   // HTML del documento generado
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  documentNumber String   @unique
+  purchaseId     String
+  templateId     String?
+  content        String // HTML del documento generado
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  purchase    Purchase @relation(fields: [purchaseId], references: [id])
-  template    DocumentTemplate? @relation(fields: [templateId], references: [id])
+  purchase Purchase          @relation(fields: [purchaseId], references: [id])
+  template DocumentTemplate? @relation(fields: [templateId], references: [id])
 
   @@map("purchase_documents")
 }
@@ -433,7 +430,7 @@ enum PurchaseStatus {
   PENDING
   COMPLETED
   CANCELLED
-} 
+}
 
 model CompanyConfig {
   id          Int      @id @default(autoincrement())
@@ -448,4 +445,4 @@ model CompanyConfig {
   updatedAt   DateTime @updatedAt
 
   @@map("company_config")
-} 
+}
