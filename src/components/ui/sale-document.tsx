@@ -338,7 +338,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
       if (sale.customer.phone) {
         doc.text(`Teléfono: ${sale.customer.phone}`, 20, 310)
       }
-      doc.text(`Comisión: ${sale.seller.commissionRate}%`, 20, 320)
+      doc.text(`Comisión: $${sale.commission}`, 20, 320)
       
       // Información de la venta
       doc.setFontSize(14)
