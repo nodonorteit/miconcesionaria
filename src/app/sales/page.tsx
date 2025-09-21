@@ -289,14 +289,15 @@ export default function SalesPage() {
   }
 
   const handleSellerChange = (sellerId: string) => {
-    const seller = sellers.find(s => s.id === sellerId)
+    // Ahora sellerId es en realidad un customerId
     const vehicle = vehicles.find(v => v.id === formData.vehicleId)
-    if (seller && vehicle) {
-      const commission = (vehicle.price * seller.commissionRate / 100)
+    if (vehicle) {
+      // Para simplificar, establecer comisión en 0 por defecto
+      // El usuario puede modificar manualmente si es necesario
       setFormData({
         ...formData,
         sellerId,
-        commission: commission.toFixed(2)
+        commission: '0'
       })
     }
   }
@@ -426,23 +427,6 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="customerId">Cliente</Label>
-                  <select
-                    id="customerId"
-                    value={formData.customerId}
-                    onChange={(e) => setFormData({...formData, customerId: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Seleccionar cliente</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.firstName} {customer.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
                   <Label htmlFor="sellerId">Vendedor</Label>
                   <select
                     id="sellerId"
@@ -452,9 +436,26 @@ export default function SalesPage() {
                     required
                   >
                     <option value="">Seleccionar vendedor</option>
-                    {sellers.map((seller) => (
-                      <option key={seller.id} value={seller.id}>
-                        {seller.firstName} {seller.lastName}
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.firstName} {customer.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="customerId">Comprador</Label>
+                  <select
+                    id="customerId"
+                    value={formData.customerId}
+                    onChange={(e) => setFormData({...formData, customerId: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="">Seleccionar comprador</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.firstName} {customer.lastName}
                       </option>
                     ))}
                   </select>

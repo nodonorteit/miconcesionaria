@@ -104,7 +104,8 @@ model Customer {
   updatedAt     DateTime    @updatedAt
 
   // Relations
-  sales         Sale[]
+  salesAsBuyer  Sale[] @relation("CustomerAsBuyer")
+  salesAsSeller Sale[] @relation("CustomerAsSeller")
   purchases     Purchase[] @relation("CustomerAsSeller")
   payments      Payment[]
 
@@ -171,8 +172,8 @@ model Sale {
   saleNumber  String   @unique
   saleDate    DateTime @default(now())
   vehicleId   String
-  customerId  String
-  sellerId    String
+  customerId  String   // Comprador
+  sellerId    String   // Vendedor (ahora es un Customer)
   totalAmount Decimal  @db.Decimal(10, 2)
   commission  Decimal  @db.Decimal(10, 2)
   status      SaleStatus @default(PENDING)
@@ -181,8 +182,8 @@ model Sale {
   updatedAt   DateTime @updatedAt
 
   vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
-  customer    Customer @relation(fields: [customerId], references: [id])
-  seller      Seller   @relation(fields: [sellerId], references: [id])
+  customer    Customer @relation("CustomerAsBuyer", fields: [customerId], references: [id])
+  seller      Customer @relation("CustomerAsSeller", fields: [sellerId], references: [id])
   documents   SaleDocument[]
   payments    Payment[]
   receipts    Receipt[]
