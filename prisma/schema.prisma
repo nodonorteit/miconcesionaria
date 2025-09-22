@@ -112,7 +112,7 @@ model Customer {
   @@map("Client")
 }
 
-model Seller {
+model Commissionist {
   id             String   @id @default(cuid())
   firstName      String
   lastName       String
@@ -124,10 +124,11 @@ model Seller {
   updatedAt      DateTime @updatedAt
 
   // Relations
+  sales       Sale[]
   commissions Commission[]
   expenses    Expense[]
 
-  @@map("sellers")
+  @@map("commissionists")
 }
 
 model Provider {
@@ -165,25 +166,27 @@ model Workshop {
 }
 
 model Sale {
-  id          String     @id @default(cuid())
-  saleNumber  String     @unique
-  saleDate    DateTime   @default(now())
-  vehicleId   String
-  customerId  String // Comprador
-  sellerId    String // Vendedor (ahora es un Customer)
-  totalAmount Decimal    @db.Decimal(10, 2)
-  commission  Decimal    @db.Decimal(10, 2)
-  status      SaleStatus @default(PENDING)
-  notes       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  saleNumber      String     @unique
+  saleDate        DateTime   @default(now())
+  vehicleId       String
+  customerId      String // Comprador
+  sellerId        String // Vendedor (Customer)
+  commissionistId String? // Comisionista (opcional)
+  totalAmount     Decimal    @db.Decimal(10, 2)
+  commission      Decimal    @db.Decimal(10, 2)
+  status          SaleStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  vehicle   Vehicle        @relation(fields: [vehicleId], references: [id])
-  customer  Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
-  seller    Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
-  documents SaleDocument[]
-  payments  Payment[]
-  receipts  Receipt[]
+  vehicle      Vehicle        @relation(fields: [vehicleId], references: [id])
+  customer     Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
+  seller       Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
+  commissionist Commissionist? @relation(fields: [commissionistId], references: [id])
+  documents    SaleDocument[]
+  payments     Payment[]
+  receipts     Receipt[]
 
   @@map("sales")
 }
@@ -219,10 +222,10 @@ model Commission {
   updatedAt      DateTime         @updatedAt
 
   // Relations
-  sellerId String
-  seller   Seller @relation(fields: [sellerId], references: [id])
-  userId   String
-  user     User   @relation(fields: [userId], references: [id])
+  commissionistId String
+  commissionist   Commissionist @relation(fields: [commissionistId], references: [id])
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
 
   @@map("commissions")
 }
@@ -233,15 +236,15 @@ model Expense {
   amount      Decimal     @db.Decimal(10, 2)
   description String
   workshopId  String?
-  sellerId    String?
+  commissionistId String?
   receiptPath String?
   isActive    Boolean     @default(true)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   // Relations
-  workshop Workshop? @relation(fields: [workshopId], references: [id])
-  seller   Seller?   @relation(fields: [sellerId], references: [id])
+  workshop      Workshop?      @relation(fields: [workshopId], references: [id])
+  commissionist Commissionist? @relation(fields: [commissionistId], references: [id])
 
   @@map("expenses")
 }

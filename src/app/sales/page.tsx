@@ -51,6 +51,14 @@ interface Sale {
     city?: string
     state?: string
   }
+  commissionist?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+    phone?: string
+    commissionRate: number
+  }
   createdAt: string
   updatedAt: string
 }
@@ -70,11 +78,22 @@ interface Customer {
   lastName: string
 }
 
+interface Commissionist {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  commissionRate: number
+  isActive: boolean
+}
+
 
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([])
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [commissionists, setCommissionists] = useState<Commissionist[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingSale, setEditingSale] = useState<Sale | null>(null)
@@ -87,6 +106,7 @@ export default function SalesPage() {
     vehicleId: '',
     customerId: '',
     sellerId: '',
+    commissionistId: '',
     totalAmount: '',
     commission: '',
     status: 'PENDING',
@@ -97,6 +117,7 @@ export default function SalesPage() {
     fetchSales()
     fetchVehicles()
     fetchCustomers()
+    fetchCommissionists()
   }, [])
 
   const fetchSales = async () => {
@@ -136,6 +157,18 @@ export default function SalesPage() {
       }
     } catch (error) {
       console.error('Error fetching customers:', error)
+    }
+  }
+
+  const fetchCommissionists = async () => {
+    try {
+      const response = await fetch('/api/commissionists')
+      if (response.ok) {
+        const data = await response.json()
+        setCommissionists(data.filter((commissionist: Commissionist) => commissionist.isActive))
+      }
+    } catch (error) {
+      console.error('Error fetching commissionists:', error)
     }
   }
 
@@ -183,6 +216,7 @@ export default function SalesPage() {
       vehicleId: sale.vehicle.id,
       customerId: sale.customer.id,
       sellerId: sale.seller.id,
+      commissionistId: sale.commissionist?.id || '',
       totalAmount: sale.totalAmount.toString(),
       commission: sale.commission.toString(),
       status: sale.status,
@@ -290,6 +324,7 @@ export default function SalesPage() {
       vehicleId: '',
       customerId: '',
       sellerId: '',
+      commissionistId: '',
       totalAmount: '',
       commission: '',
       status: 'PENDING',
@@ -439,6 +474,22 @@ export default function SalesPage() {
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.firstName} {customer.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="commissionistId">Comisionista (Opcional)</Label>
+                  <select
+                    id="commissionistId"
+                    value={formData.commissionistId}
+                    onChange={(e) => setFormData({...formData, commissionistId: e.target.value})}
+                    className="w-full p-2 border rounded"
+                  >
+                    <option value="">Seleccionar comisionista</option>
+                    {commissionists.map((commissionist) => (
+                      <option key={commissionist.id} value={commissionist.id}>
+                        {commissionist.firstName} {commissionist.lastName} ({commissionist.commissionRate}% comisión)
                       </option>
                     ))}
                   </select>
