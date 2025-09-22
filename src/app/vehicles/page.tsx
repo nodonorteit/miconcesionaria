@@ -80,7 +80,6 @@ export default function VehiclesPage() {
   const permissions = usePermissions()
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -140,7 +139,6 @@ export default function VehiclesPage() {
   useEffect(() => {
     fetchVehicles()
     fetchVehicleTypes()
-    fetchSellers()
     fetchCustomers()
   }, [])
 
@@ -156,17 +154,6 @@ export default function VehiclesPage() {
     }
   }
 
-  const fetchSellers = async () => {
-    try {
-      const response = await fetch('/api/sellers')
-      if (response.ok) {
-        const data = await response.json()
-        setSellers(data.filter((seller: Seller) => seller.isActive))
-      }
-    } catch (error) {
-      console.error('Error fetching sellers:', error)
-    }
-  }
 
   const fetchCustomers = async () => {
     try {
@@ -421,19 +408,14 @@ export default function VehiclesPage() {
   }
 
   const handleSellerChange = (sellerId: string) => {
-    const seller = sellers.find(s => s.id === sellerId)
-    if (seller && sellingVehicle) {
-      const commission = (sellingVehicle.price * seller.commissionRate / 100).toFixed(2)
+    // Ahora sellerId es en realidad un customerId
+    if (sellingVehicle) {
+      // Para simplificar, establecer comisión en 0 por defecto
+      // El usuario puede modificar manualmente si es necesario
       setSaleFormData({
         ...saleFormData,
         sellerId,
-        commission
-      })
-    } else {
-      setSaleFormData({
-        ...saleFormData,
-        sellerId,
-        commission: ''
+        commission: '0'
       })
     }
   }
@@ -1448,16 +1430,16 @@ export default function VehiclesPage() {
                       required
                     >
                       <option value="">Seleccionar vendedor...</option>
-                      {sellers.map((seller) => (
-                        <option key={seller.id} value={seller.id}>
-                          {seller.firstName} {seller.lastName} ({seller.commissionRate}% comisión)
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.firstName} {customer.lastName}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div>
-                    <Label htmlFor="customerId">Cliente *</Label>
+                    <Label htmlFor="customerId">Comprador *</Label>
                     <select
                       id="customerId"
                       value={saleFormData.customerId}
@@ -1465,7 +1447,7 @@ export default function VehiclesPage() {
                       className="w-full p-2 border rounded"
                       required
                     >
-                      <option value="">Seleccionar cliente...</option>
+                      <option value="">Seleccionar comprador...</option>
                       {customers.map((customer) => (
                         <option key={customer.id} value={customer.id}>
                           {customer.firstName} {customer.lastName}
