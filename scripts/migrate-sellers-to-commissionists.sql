@@ -33,7 +33,7 @@ ALTER TABLE sales ADD COLUMN commissionistId VARCHAR(191);
 
 -- 4. Migrar relaciones de sales con sellers a commissionists
 UPDATE sales s
-JOIN sellers sel ON s.sellerId = sel.id
+JOIN sellers sel ON s.sellerId COLLATE utf8mb4_unicode_ci = sel.id COLLATE utf8mb4_unicode_ci
 SET s.commissionistId = CONCAT('comm-', sel.id)
 WHERE s.sellerId IN (SELECT id FROM sellers);
 
@@ -41,14 +41,14 @@ WHERE s.sellerId IN (SELECT id FROM sellers);
 ALTER TABLE commissions CHANGE COLUMN sellerId commissionistId VARCHAR(191);
 
 UPDATE commissions c
-JOIN sellers s ON c.commissionistId = s.id
+JOIN sellers s ON c.commissionistId COLLATE utf8mb4_unicode_ci = s.id COLLATE utf8mb4_unicode_ci
 SET c.commissionistId = CONCAT('comm-', s.id);
 
 -- 6. Actualizar tabla expenses
 ALTER TABLE expenses CHANGE COLUMN sellerId commissionistId VARCHAR(191);
 
 UPDATE expenses e
-JOIN sellers s ON e.commissionistId = s.id
+JOIN sellers s ON e.commissionistId COLLATE utf8mb4_unicode_ci = s.id COLLATE utf8mb4_unicode_ci
 SET e.commissionistId = CONCAT('comm-', s.id);
 
 -- 7. Verificar migración
