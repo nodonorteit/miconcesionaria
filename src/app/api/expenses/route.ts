@@ -10,10 +10,10 @@ export async function GET() {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(s.firstName, ' ', s.lastName) COLLATE utf8mb4_unicode_ci as sellerName
+        CONCAT(c.firstName, ' ', c.lastName) COLLATE utf8mb4_unicode_ci as commissionistName
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
-      LEFT JOIN sellers s ON e.sellerId = s.id COLLATE utf8mb4_unicode_ci
+      LEFT JOIN commissionists c ON e.commissionistId = c.id COLLATE utf8mb4_unicode_ci
       WHERE e.isActive = 1
       ORDER BY e.createdAt DESC
     `
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const amount = formData.get('amount') as string
     const description = formData.get('description') as string
     const workshopId = formData.get('workshopId') as string
-    const sellerId = formData.get('sellerId') as string
+    const commissionistId = formData.get('commissionistId') as string
     const receipt = formData.get('receipt') as File
 
     // Validar campos requeridos
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (type === 'COMMISSION' && !sellerId) {
+    if (type === 'COMMISSION' && !commissionistId) {
       return NextResponse.json(
         { error: 'Debe seleccionar un vendedor' },
         { status: 400 }
@@ -89,9 +89,9 @@ export async function POST(request: NextRequest) {
     const expenseId = `exp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     
     await prisma.$executeRaw`
-      INSERT INTO expenses (id, type, amount, description, workshopId, sellerId, receiptPath, isActive, createdAt, updatedAt)
+      INSERT INTO expenses (id, type, amount, description, workshopId, commissionistId, receiptPath, isActive, createdAt, updatedAt)
       VALUES (${expenseId}, ${type}, ${parseFloat(amount)}, ${description}, 
-              ${workshopId || null}, ${sellerId || null}, ${receiptPath}, 1, NOW(), NOW())
+              ${workshopId || null}, ${commissionistId || null}, ${receiptPath}, 1, NOW(), NOW())
     `
 
     // Crear entrada en cashflow
@@ -107,10 +107,10 @@ export async function POST(request: NextRequest) {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(s.firstName, ' ', s.lastName) COLLATE utf8mb4_unicode_ci as sellerName
+        CONCAT(c.firstName, ' ', c.lastName) COLLATE utf8mb4_unicode_ci as commissionistName
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
-      LEFT JOIN sellers s ON e.sellerId = s.id COLLATE utf8mb4_unicode_ci
+      LEFT JOIN commissionists c ON e.commissionistId = c.id COLLATE utf8mb4_unicode_ci
       WHERE e.id = ${expenseId}
     `
     const expense = Array.isArray(expenses) ? expenses[0] : expenses

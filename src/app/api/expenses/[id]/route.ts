@@ -13,10 +13,10 @@ export async function GET(
       SELECT 
         e.*,
         w.name as workshopName,
-        s.name as sellerName
+        CONCAT(c.firstName, ' ', c.lastName) as commissionistName
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id
-      LEFT JOIN sellers s ON e.sellerId = s.id
+      LEFT JOIN commissionists c ON e.commissionistId = c.id
       WHERE e.id = ${params.id}
     `
 
@@ -52,7 +52,7 @@ export async function PUT(
     const amount = formData.get('amount') as string
     const description = formData.get('description') as string
     const workshopId = formData.get('workshopId') as string
-    const sellerId = formData.get('sellerId') as string
+    const commissionistId = formData.get('commissionistId') as string
     const receipt = formData.get('receipt') as File
 
     // Validar campos requeridos
@@ -113,7 +113,7 @@ export async function PUT(
           amount = ${parseFloat(amount)}, 
           description = ${description},
           workshopId = ${workshopId || null},
-          sellerId = ${sellerId || null},
+          commissionistId = ${commissionistId || null},
           receiptPath = ${receiptPath},
           updatedAt = NOW()
       WHERE id = ${params.id}
@@ -135,7 +135,7 @@ export async function PUT(
       where: { id: params.id },
       include: {
         workshop: true,
-        seller: true
+        commissionist: true
       }
     })
 
