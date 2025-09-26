@@ -70,8 +70,7 @@ model Vehicle {
   vehicleTypeId String
   vehicleType   VehicleType    @relation(fields: [vehicleTypeId], references: [id])
   images        VehicleImage[]
-  sales         Sale[]
-  purchases     Purchase[]
+  transactions  Transaction[]
 
   @@map("Vehicle")
 }
@@ -104,10 +103,8 @@ model Customer {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  salesAsBuyer  Sale[]     @relation("CustomerAsBuyer")
-  salesAsSeller Sale[]     @relation("CustomerAsSeller")
-  purchases     Purchase[] @relation("CustomerAsSeller")
-  payments      Payment[]
+  transactions Transaction[]
+  payments     Payment[]
 
   @@map("Client")
 }
@@ -124,9 +121,9 @@ model Commissionist {
   updatedAt      DateTime @updatedAt
 
   // Relations
-  sales       Sale[]
-  commissions Commission[]
-  expenses    Expense[]
+  transactions Transaction[]
+  commissions  Commission[]
+  expenses     Expense[]
 
   @@map("commissionists")
 }
@@ -165,30 +162,32 @@ model Workshop {
   @@map("workshops")
 }
 
-model Sale {
-  id              String     @id @default(cuid())
-  saleNumber      String     @unique
-  saleDate        DateTime   @default(now())
-  vehicleId       String
-  customerId      String // Comprador
-  sellerId        String // Vendedor (Customer)
-  commissionistId String? // Comisionista (opcional)
-  totalAmount     Decimal    @db.Decimal(10, 2)
-  commission      Decimal    @db.Decimal(10, 2)
-  status          SaleStatus @default(PENDING)
-  notes           String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+model Transaction {
+  id                String            @id @default(cuid())
+  transactionNumber String            @unique
+  transactionDate   DateTime          @default(now())
+  type              TransactionType // PURCHASE, SALE
+  vehicleId         String
+  customerId        String // Cliente (comprador o vendedor)
+  commissionistId   String? // Comisionista (opcional)
+  totalAmount       Decimal           @db.Decimal(10, 2)
+  commission        Decimal           @default(0) @db.Decimal(10, 2)
+  status            TransactionStatus @default(PENDING)
+  notes             String?
+  paymentMethod     String            @default("CONTADO")
+  deliveryDate      DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id])
-  customer      Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
-  seller        Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
-  commissionist Commissionist? @relation(fields: [commissionistId], references: [id])
-  documents     SaleDocument[]
+  // Relations
+  vehicle       Vehicle               @relation(fields: [vehicleId], references: [id])
+  customer      Customer              @relation(fields: [customerId], references: [id])
+  commissionist Commissionist?        @relation(fields: [commissionistId], references: [id])
+  documents     TransactionDocument[]
   payments      Payment[]
   receipts      Receipt[]
 
-  @@map("sales")
+  @@map("transactions")
 }
 
 model Payment {
@@ -202,12 +201,12 @@ model Payment {
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  saleId     String
-  sale       Sale     @relation(fields: [saleId], references: [id])
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  customerId    String
+  customer      Customer    @relation(fields: [customerId], references: [id])
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
 
   @@map("payments")
 }
@@ -259,8 +258,8 @@ model Receipt {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  saleId String
-  sale   Sale   @relation(fields: [saleId], references: [id])
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
 
   @@map("receipts")
 }
@@ -281,16 +280,19 @@ model PurchaseTicket {
   @@map("purchase_tickets")
 }
 
-model SaleDocument {
+model TransactionDocument {
   id             String   @id @default(cuid())
   documentNumber String   @unique
-  saleId         String
+  transactionId  String
+  templateId     String?
+  content        String // HTML del documento generado
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  sale Sale @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  transaction Transaction       @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  template    DocumentTemplate? @relation(fields: [templateId], references: [id])
 
-  @@map("sale_documents")
+  @@map("transaction_documents")
 }
 
 model DocumentTemplate {
@@ -304,7 +306,8 @@ model DocumentTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  purchaseDocuments PurchaseDocument[]
+  // Relations
+  transactionDocuments TransactionDocument[]
 
   @@map("document_templates")
 }
@@ -360,7 +363,12 @@ enum VehicleStatus {
   STORAGE
 }
 
-enum SaleStatus {
+enum TransactionType {
+  PURCHASE
+  SALE
+}
+
+enum TransactionStatus {
   PENDING
   COMPLETED
   CANCELLED
@@ -390,49 +398,6 @@ enum ExpenseType {
   WORKSHOP
   PARTS
   COMMISSION
-}
-
-model Purchase {
-  id             String         @id @default(cuid())
-  purchaseNumber String         @unique
-  purchaseDate   DateTime       @default(now())
-  vehicleId      String
-  sellerId       String // El cliente que vende el vehículo
-  totalAmount    Decimal        @db.Decimal(10, 2)
-  commission     Decimal        @default(0) @db.Decimal(10, 2)
-  status         PurchaseStatus @default(PENDING)
-  notes          String?
-  paymentMethod  String         @default("CONTADO")
-  deliveryDate   DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-
-  vehicle   Vehicle            @relation(fields: [vehicleId], references: [id])
-  seller    Customer           @relation("CustomerAsSeller", fields: [sellerId], references: [id])
-  documents PurchaseDocument[]
-
-  @@map("purchases")
-}
-
-model PurchaseDocument {
-  id             String   @id @default(cuid())
-  documentNumber String   @unique
-  purchaseId     String
-  templateId     String?
-  content        String // HTML del documento generado
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  purchase Purchase          @relation(fields: [purchaseId], references: [id])
-  template DocumentTemplate? @relation(fields: [templateId], references: [id])
-
-  @@map("purchase_documents")
-}
-
-enum PurchaseStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
 }
 
 model CompanyConfig {
