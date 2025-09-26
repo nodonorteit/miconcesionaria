@@ -190,14 +190,14 @@ async function main() {
     }),
   ])
 
-  // Create sample seller
-  const seller = await prisma.seller.upsert({
-    where: { email: 'vendedor@miconcesionaria.com' },
+  // Create sample commissionist
+  const commissionist = await prisma.commissionist.upsert({
+    where: { email: 'comisionista@miconcesionaria.com' },
     update: {},
     create: {
       firstName: 'Juan',
       lastName: 'Pérez',
-      email: 'vendedor@miconcesionaria.com',
+      email: 'comisionista@miconcesionaria.com',
       phone: '+54 11 1234-5678',
       commissionRate: 0.05, // 5%
     },
@@ -494,7 +494,7 @@ async function main() {
   console.log('✅ Database seeded successfully!')
   console.log('👤 Admin user created:', adminUser.email)
   console.log('🚗 Vehicle types created:', vehicleTypes.length)
-  console.log('👨‍💼 Sample seller created:', seller.email)
+  console.log('👨‍💼 Sample commissionist created:', commissionist.email)
   console.log('👥 Sample customer created:', customer.email)
   console.log('🏢 Sample provider created:', provider.name)
   console.log('🔧 Sample workshop created:', workshop.name)
