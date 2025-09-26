@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener un vendedor específico
+// GET - Obtener un comisionista específico
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const seller = await prisma.seller.findUnique({
+    const commissionist = await prisma.commissionist.findUnique({
       where: { id: params.id }
     })
 
-    if (!seller) {
+    if (!commissionist) {
       return NextResponse.json(
-        { error: 'Vendedor no encontrado' },
+        { error: 'Comisionista no encontrado' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(seller)
+    return NextResponse.json(commissionist)
   } catch (error) {
-    console.error('Error fetching seller:', error)
+    console.error('Error fetching commissionist:', error)
     return NextResponse.json(
-      { error: 'Error al obtener vendedor' },
+      { error: 'Error al obtener comisionista' },
       { status: 500 }
     )
   }
 }
 
-// PUT - Actualizar un vendedor
+// PUT - Actualizar un comisionista
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
@@ -39,22 +39,22 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       )
     }
 
-    // Verificar si el email ya existe en otro vendedor
-    const existingSeller = await prisma.seller.findFirst({
+    // Verificar si el email ya existe en otro comisionista
+    const existingCommissionist = await prisma.commissionist.findFirst({
       where: {
         email,
         id: { not: params.id }
       }
     })
 
-    if (existingSeller) {
+    if (existingCommissionist) {
       return NextResponse.json(
-        { error: 'Ya existe otro vendedor con este email' },
+        { error: 'Ya existe otro comisionista con este email' },
         { status: 400 }
       )
     }
 
-    const seller = await prisma.seller.update({
+    const commissionist = await prisma.commissionist.update({
       where: { id: params.id },
       data: {
         firstName,
@@ -65,29 +65,29 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
-    return NextResponse.json(seller)
+    return NextResponse.json(commissionist)
   } catch (error) {
-    console.error('Error updating seller:', error)
+    console.error('Error updating commissionist:', error)
     return NextResponse.json(
-      { error: 'Error al actualizar vendedor' },
+      { error: 'Error al actualizar comisionista' },
       { status: 500 }
     )
   }
 }
 
-// DELETE - Eliminar un vendedor (soft delete)
+// DELETE - Eliminar un comisionista (soft delete)
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await prisma.seller.update({
+    await prisma.commissionist.update({
       where: { id: params.id },
       data: { isActive: false }
     })
 
-    return NextResponse.json({ message: 'Vendedor eliminado correctamente' })
+    return NextResponse.json({ message: 'Comisionista eliminado correctamente' })
   } catch (error) {
-    console.error('Error deleting seller:', error)
+    console.error('Error deleting commissionist:', error)
     return NextResponse.json(
-      { error: 'Error al eliminar vendedor' },
+      { error: 'Error al eliminar comisionista' },
       { status: 500 }
     )
   }

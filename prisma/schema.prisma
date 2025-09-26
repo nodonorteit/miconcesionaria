@@ -180,13 +180,13 @@ model Sale {
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
-  vehicle      Vehicle        @relation(fields: [vehicleId], references: [id])
-  customer     Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
-  seller       Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
+  vehicle       Vehicle        @relation(fields: [vehicleId], references: [id])
+  customer      Customer       @relation("CustomerAsBuyer", fields: [customerId], references: [id])
+  seller        Customer       @relation("CustomerAsSeller", fields: [sellerId], references: [id])
   commissionist Commissionist? @relation(fields: [commissionistId], references: [id])
-  documents    SaleDocument[]
-  payments     Payment[]
-  receipts     Receipt[]
+  documents     SaleDocument[]
+  payments      Payment[]
+  receipts      Receipt[]
 
   @@map("sales")
 }
@@ -231,16 +231,16 @@ model Commission {
 }
 
 model Expense {
-  id          String      @id @default(cuid())
-  type        ExpenseType
-  amount      Decimal     @db.Decimal(10, 2)
-  description String
-  workshopId  String?
+  id              String      @id @default(cuid())
+  type            ExpenseType
+  amount          Decimal     @db.Decimal(10, 2)
+  description     String
+  workshopId      String?
   commissionistId String?
-  receiptPath String?
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  receiptPath     String?
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   // Relations
   workshop      Workshop?      @relation(fields: [workshopId], references: [id])

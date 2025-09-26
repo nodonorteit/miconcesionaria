@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener todos los vendedores
+// GET - Obtener todos los comisionistas
 export async function GET() {
   try {
-    const sellers = await prisma.seller.findMany({
+    const commissionists = await prisma.commissionist.findMany({
       where: {
         isActive: true
       },
@@ -13,17 +13,17 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(sellers)
+    return NextResponse.json(commissionists)
   } catch (error) {
-    console.error('Error fetching sellers:', error)
+    console.error('Error fetching commissionists:', error)
     return NextResponse.json(
-      { error: 'Error al obtener vendedores' },
+      { error: 'Error al obtener comisionistas' },
       { status: 500 }
     )
   }
 }
 
-// POST - Crear un nuevo vendedor
+// POST - Crear un nuevo comisionista
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -38,18 +38,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar si el email ya existe
-    const existingSeller = await prisma.seller.findUnique({
+    const existingCommissionist = await prisma.commissionist.findUnique({
       where: { email }
     })
 
-    if (existingSeller) {
+    if (existingCommissionist) {
       return NextResponse.json(
-        { error: 'Ya existe un vendedor con este email' },
+        { error: 'Ya existe un comisionista con este email' },
         { status: 400 }
       )
     }
 
-    const seller = await prisma.seller.create({
+    const commissionist = await prisma.commissionist.create({
       data: {
         firstName,
         lastName,
@@ -59,11 +59,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(seller, { status: 201 })
+    return NextResponse.json(commissionist, { status: 201 })
   } catch (error) {
-    console.error('Error creating seller:', error)
+    console.error('Error creating commissionist:', error)
     return NextResponse.json(
-      { error: 'Error al crear vendedor' },
+      { error: 'Error al crear comisionista' },
       { status: 500 }
     )
   }
