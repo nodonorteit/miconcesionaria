@@ -17,13 +17,13 @@ export async function GET() {
     ] = await Promise.all([
       prisma.vehicle.count(),
       prisma.customer.count(),
-      prisma.sale.count(),
-      prisma.sale.aggregate({
+      prisma.transaction.count(),
+      prisma.transaction.aggregate({
         _sum: {
           totalAmount: true
         }
       }),
-      prisma.sale.count({
+      prisma.transaction.count({
         where: { status: 'PENDING' }
       }),
       prisma.commissionist.count({

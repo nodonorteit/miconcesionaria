@@ -4,16 +4,17 @@ import { prisma } from '@/lib/prisma'
 // GET - Obtener flujo de caja calculado dinámicamente
 export async function GET() {
   try {
-    // Obtener todas las ventas
-    const sales = await prisma.sale.findMany({
+    // Obtener todas las transacciones completadas
+    const transactions = await prisma.transaction.findMany({
       where: {
-        status: 'COMPLETED' // Solo ventas completadas
+        status: 'COMPLETED' // Solo transacciones completadas
       },
       select: {
         id: true,
+        type: true,
         totalAmount: true,
         commission: true,
-        saleDate: true,
+        transactionDate: true,
         status: true,
         notes: true,
         createdAt: true,
@@ -32,7 +33,7 @@ export async function GET() {
         }
       },
       orderBy: {
-        saleDate: 'desc'
+        transactionDate: 'desc'
       }
     })
 
@@ -54,17 +55,17 @@ export async function GET() {
       }
     })
 
-    // Transformar ventas en ingresos de cashflow
-    const incomeEntries = sales.map(sale => ({
-      id: `income-${sale.id}`,
-      type: 'INCOME' as const,
-      amount: Number(sale.totalAmount),
-      description: `Venta de ${sale.vehicle.brand} ${sale.vehicle.model} - ${sale.customer.firstName} ${sale.customer.lastName}`,
-      category: 'Ventas',
-      date: sale.saleDate.toISOString().split('T')[0],
+    // Transformar transacciones en entradas de cashflow
+    const transactionEntries = transactions.map(transaction => ({
+      id: `transaction-${transaction.id}`,
+      type: transaction.type === 'SALE' ? 'INCOME' as const : 'EXPENSE' as const,
+      amount: Number(transaction.totalAmount),
+      description: `${transaction.type === 'SALE' ? 'Venta' : 'Compra'} de ${transaction.vehicle.brand} ${transaction.vehicle.model} - ${transaction.customer.firstName} ${transaction.customer.lastName}`,
+      category: transaction.type === 'SALE' ? 'Ventas' : 'Compras',
+      date: transaction.transactionDate.toISOString().split('T')[0],
       receiptUrl: null,
-      createdAt: sale.createdAt.toISOString(),
-      updatedAt: sale.updatedAt.toISOString()
+      createdAt: transaction.createdAt.toISOString(),
+      updatedAt: transaction.updatedAt.toISOString()
     }))
 
     // Transformar gastos en egresos de cashflow
@@ -81,7 +82,7 @@ export async function GET() {
     }))
 
     // Combinar y ordenar por fecha
-    const cashflow = [...incomeEntries, ...expenseEntries].sort((a, b) => 
+    const cashflow = [...transactionEntries, ...expenseEntries].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
     )
 
