@@ -20,9 +20,9 @@ export async function GET(request: NextRequest) {
         include: {
           vehicleType: true,
           images: true,
-          sales: {
+          transactions: {
             include: {
-              seller: true,
+              commissionist: true,
               customer: true
             }
           }
@@ -40,19 +40,20 @@ export async function GET(request: NextRequest) {
         transmission: (vehicle.transmission && vehicle.transmission.trim() !== '') ? vehicle.transmission : 'MANUAL' as any,
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || '',
-        sale: vehicle.sales[0] ? {
-          id: vehicle.sales[0].id,
-          saleNumber: vehicle.sales[0].saleNumber,
-          totalAmount: Number(vehicle.sales[0].totalAmount),
-          commission: Number(vehicle.sales[0].commission),
-          createdAt: vehicle.sales[0].createdAt,
-          seller: {
-            firstName: vehicle.sales[0].seller.firstName,
-            lastName: vehicle.sales[0].seller.lastName
-          },
+        transaction: vehicle.transactions[0] ? {
+          id: vehicle.transactions[0].id,
+          transactionNumber: vehicle.transactions[0].transactionNumber,
+          type: vehicle.transactions[0].type,
+          totalAmount: Number(vehicle.transactions[0].totalAmount),
+          commission: Number(vehicle.transactions[0].commission),
+          createdAt: vehicle.transactions[0].createdAt,
+          commissionist: vehicle.transactions[0].commissionist ? {
+            firstName: vehicle.transactions[0].commissionist.firstName,
+            lastName: vehicle.transactions[0].commissionist.lastName
+          } : null,
           customer: {
-            firstName: vehicle.sales[0].customer.firstName,
-            lastName: vehicle.sales[0].customer.lastName
+            firstName: vehicle.transactions[0].customer.firstName,
+            lastName: vehicle.transactions[0].customer.lastName
           }
         } : null
       }))
