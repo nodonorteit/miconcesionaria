@@ -107,7 +107,13 @@ SELECT
     pd.updatedAt
 FROM purchase_documents pd;
 
--- 7. Actualizar payments para apuntar a transactions
+-- 7. Agregar columna transactionId a payments
+ALTER TABLE payments ADD COLUMN transactionId VARCHAR(191);
+
+-- 8. Agregar columna transactionId a receipts
+ALTER TABLE receipts ADD COLUMN transactionId VARCHAR(191);
+
+-- 9. Actualizar payments para apuntar a transactions
 -- Primero, actualizar payments de sales
 UPDATE payments p
 JOIN sales s ON p.saleId = s.id
@@ -120,13 +126,13 @@ JOIN purchases pu ON p.purchaseId = pu.id
 SET p.transactionId = CONCAT('txn-purchase-', pu.id)
 WHERE p.purchaseId IS NOT NULL;
 
--- 8. Actualizar receipts para apuntar a transactions
+-- 10. Actualizar receipts para apuntar a transactions
 UPDATE receipts r
 JOIN sales s ON r.saleId = s.id
 SET r.transactionId = CONCAT('txn-sale-', s.id)
 WHERE r.saleId IS NOT NULL;
 
--- 9. Verificar migración
+-- 11. Verificar migración
 SELECT 
     'TRANSACTIONS MIGRADAS' as info,
     COUNT(*) as total,
