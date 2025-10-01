@@ -18,6 +18,7 @@ interface Sale {
   commission: number
   status: string
   notes?: string
+  type?: string // SALE o PURCHASE
   vehicle: {
     id: string
     brand: string
@@ -110,7 +111,8 @@ export default function SalesPage() {
     totalAmount: '',
     commission: '',
     status: 'PENDING',
-    notes: ''
+    notes: '',
+    type: 'SALE' // SALE o PURCHASE
   })
 
   useEffect(() => {
@@ -191,22 +193,23 @@ export default function SalesPage() {
         body: JSON.stringify({
           ...formData,
           totalAmount: parseFloat(formData.totalAmount),
-          commission: parseFloat(formData.commission)
+          commission: parseFloat(formData.commission),
+          type: formData.type
         }),
       })
 
       if (response.ok) {
-        toast.success(editingSale ? 'Venta actualizada' : 'Venta creada')
+        toast.success(editingSale ? 'Transacción actualizada' : 'Transacción creada')
         setShowForm(false)
         setEditingSale(null)
         resetForm()
         fetchSales()
         fetchVehicles() // Refresh available vehicles
       } else {
-        toast.error('Error al guardar venta')
+        toast.error('Error al guardar transacción')
       }
     } catch (error) {
-      toast.error('Error al guardar venta')
+      toast.error('Error al guardar transacción')
     }
   }
 
@@ -220,7 +223,8 @@ export default function SalesPage() {
       totalAmount: sale.totalAmount.toString(),
       commission: sale.commission.toString(),
       status: sale.status,
-      notes: sale.notes || ''
+      notes: sale.notes || '',
+      type: 'SALE' // Por defecto SALE, se puede cambiar si es necesario
     })
     setShowForm(true)
   }
@@ -328,7 +332,8 @@ export default function SalesPage() {
       totalAmount: '',
       commission: '',
       status: 'PENDING',
-      notes: ''
+      notes: '',
+      type: 'SALE'
     })
   }
 
@@ -397,14 +402,14 @@ export default function SalesPage() {
   return (
     <div className="container mx-auto p-6">
       <Navigation 
-        title="Gestión de Ventas" 
-        breadcrumbs={[{ label: 'Ventas' }]}
+        title="Gestión de Transacciones" 
+        breadcrumbs={[{ label: 'Transacciones' }]}
       />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="relative w-full sm:w-96">
           <Input
             type="text"
-            placeholder="Buscar ventas por número, vehículo, cliente, vendedor..."
+            placeholder="Buscar transacciones por número, vehículo, cliente, vendedor..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -413,7 +418,7 @@ export default function SalesPage() {
         </div>
         <Button onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Nueva Venta
+          Nueva Transacción
         </Button>
       </div>
 
@@ -421,12 +426,25 @@ export default function SalesPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              {editingSale ? 'Editar Venta' : 'Nueva Venta'}
+              {editingSale ? 'Editar Transacción' : 'Nueva Transacción'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="type">Tipo de Transacción</Label>
+                  <select
+                    id="type"
+                    value={formData.type}
+                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    className="w-full p-2 border rounded"
+                    required
+                  >
+                    <option value="SALE">Venta (Ingreso)</option>
+                    <option value="PURCHASE">Compra (Egreso)</option>
+                  </select>
+                </div>
                 <div>
                   <Label htmlFor="vehicleId">Vehículo</Label>
                   <select
@@ -445,7 +463,9 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="sellerId">Vendedor</Label>
+                  <Label htmlFor="sellerId">
+                    {formData.type === 'SALE' ? 'Vendedor' : 'Vendedor (Cliente)'}
+                  </Label>
                   <select
                     id="sellerId"
                     value={formData.sellerId}
@@ -453,7 +473,9 @@ export default function SalesPage() {
                     className="w-full p-2 border rounded"
                     required
                   >
-                    <option value="">Seleccionar vendedor</option>
+                    <option value="">
+                      {formData.type === 'SALE' ? 'Seleccionar vendedor' : 'Seleccionar vendedor (cliente)'}
+                    </option>
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.firstName} {customer.lastName}
@@ -462,7 +484,9 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="customerId">Comprador</Label>
+                  <Label htmlFor="customerId">
+                    {formData.type === 'SALE' ? 'Comprador' : 'Comprador (Concesionaria)'}
+                  </Label>
                   <select
                     id="customerId"
                     value={formData.customerId}
@@ -470,7 +494,9 @@ export default function SalesPage() {
                     className="w-full p-2 border rounded"
                     required
                   >
-                    <option value="">Seleccionar comprador</option>
+                    <option value="">
+                      {formData.type === 'SALE' ? 'Seleccionar comprador' : 'Seleccionar comprador (concesionaria)'}
+                    </option>
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.firstName} {customer.lastName}
