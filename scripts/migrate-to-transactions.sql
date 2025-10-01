@@ -39,7 +39,7 @@ INSERT INTO transactions (
 )
 SELECT 
     CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP()) as id,
-    s.saleNumber as transactionNumber,
+    CONCAT(s.saleNumber, '-', UNIX_TIMESTAMP()) as transactionNumber,
     s.saleDate as transactionDate,
     'SALE' as type,
     s.vehicleId,
@@ -63,7 +63,7 @@ INSERT INTO transactions (
 )
 SELECT 
     CONCAT('txn-purchase-', p.id, '-', UNIX_TIMESTAMP()) as id,
-    p.purchaseNumber as transactionNumber,
+    CONCAT(p.purchaseNumber, '-', UNIX_TIMESTAMP()) as transactionNumber,
     p.purchaseDate as transactionDate,
     'PURCHASE' as type,
     p.vehicleId,
@@ -85,7 +85,7 @@ INSERT INTO transaction_documents (
 )
 SELECT 
     CONCAT('txn-doc-sale-', sd.id, '-', UNIX_TIMESTAMP()) as id,
-    sd.documentNumber,
+    CONCAT(sd.documentNumber, '-', UNIX_TIMESTAMP()) as documentNumber,
     CONCAT('txn-sale-', sd.saleId, '-', UNIX_TIMESTAMP()) as transactionId,
     NULL as templateId,
     '' as content, -- Las sale_documents no tenían content
@@ -99,7 +99,7 @@ INSERT INTO transaction_documents (
 )
 SELECT 
     CONCAT('txn-doc-purchase-', pd.id, '-', UNIX_TIMESTAMP()) as id,
-    pd.documentNumber,
+    CONCAT(pd.documentNumber, '-', UNIX_TIMESTAMP()) as documentNumber,
     CONCAT('txn-purchase-', pd.purchaseId, '-', UNIX_TIMESTAMP()) as transactionId,
     pd.templateId,
     pd.content,
