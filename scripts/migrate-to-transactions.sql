@@ -38,7 +38,7 @@ INSERT INTO transactions (
     deliveryDate, createdAt, updatedAt
 )
 SELECT 
-    CONCAT('txn-sale-', s.id) as id,
+    CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP()) as id,
     s.saleNumber as transactionNumber,
     s.saleDate as transactionDate,
     'SALE' as type,
@@ -62,7 +62,7 @@ INSERT INTO transactions (
     deliveryDate, createdAt, updatedAt
 )
 SELECT 
-    CONCAT('txn-purchase-', p.id) as id,
+    CONCAT('txn-purchase-', p.id, '-', UNIX_TIMESTAMP()) as id,
     p.purchaseNumber as transactionNumber,
     p.purchaseDate as transactionDate,
     'PURCHASE' as type,
@@ -84,9 +84,9 @@ INSERT INTO transaction_documents (
     id, documentNumber, transactionId, templateId, content, createdAt, updatedAt
 )
 SELECT 
-    CONCAT('txn-doc-sale-', sd.id) as id,
+    CONCAT('txn-doc-sale-', sd.id, '-', UNIX_TIMESTAMP()) as id,
     sd.documentNumber,
-    CONCAT('txn-sale-', sd.saleId) as transactionId,
+    CONCAT('txn-sale-', sd.saleId, '-', UNIX_TIMESTAMP()) as transactionId,
     NULL as templateId,
     '' as content, -- Las sale_documents no tenían content
     sd.createdAt,
@@ -98,9 +98,9 @@ INSERT INTO transaction_documents (
     id, documentNumber, transactionId, templateId, content, createdAt, updatedAt
 )
 SELECT 
-    CONCAT('txn-doc-purchase-', pd.id) as id,
+    CONCAT('txn-doc-purchase-', pd.id, '-', UNIX_TIMESTAMP()) as id,
     pd.documentNumber,
-    CONCAT('txn-purchase-', pd.purchaseId) as transactionId,
+    CONCAT('txn-purchase-', pd.purchaseId, '-', UNIX_TIMESTAMP()) as transactionId,
     pd.templateId,
     pd.content,
     pd.createdAt,
@@ -117,19 +117,19 @@ ALTER TABLE receipts ADD COLUMN transactionId VARCHAR(191);
 -- Primero, actualizar payments de sales
 UPDATE payments p
 JOIN sales s ON p.saleId = s.id
-SET p.transactionId = CONCAT('txn-sale-', s.id)
+SET p.transactionId = CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP())
 WHERE p.saleId IS NOT NULL;
 
 -- Luego, actualizar payments de purchases (si existen)
 UPDATE payments p
 JOIN purchases pu ON p.purchaseId = pu.id
-SET p.transactionId = CONCAT('txn-purchase-', pu.id)
+SET p.transactionId = CONCAT('txn-purchase-', pu.id, '-', UNIX_TIMESTAMP())
 WHERE p.purchaseId IS NOT NULL;
 
 -- 10. Actualizar receipts para apuntar a transactions
 UPDATE receipts r
 JOIN sales s ON r.saleId = s.id
-SET r.transactionId = CONCAT('txn-sale-', s.id)
+SET r.transactionId = CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP())
 WHERE r.saleId IS NOT NULL;
 
 -- 11. Verificar migración
