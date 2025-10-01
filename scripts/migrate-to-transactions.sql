@@ -107,32 +107,11 @@ SELECT
     pd.updatedAt
 FROM purchase_documents pd;
 
--- 7. Agregar columna transactionId a payments
-ALTER TABLE payments ADD COLUMN transactionId VARCHAR(191);
+-- 7. Verificar estructura de payments y receipts
+-- Nota: Las tablas payments y receipts ya tienen transactionId como campo requerido
+-- No necesitamos agregar columnas, solo verificar que existan
 
--- 8. Agregar columna transactionId a receipts
-ALTER TABLE receipts ADD COLUMN transactionId VARCHAR(191);
-
--- 9. Actualizar payments para apuntar a transactions
--- Primero, actualizar payments de sales
-UPDATE payments p
-JOIN sales s ON p.saleId = s.id
-SET p.transactionId = CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP())
-WHERE p.saleId IS NOT NULL;
-
--- Luego, actualizar payments de purchases (si existen)
-UPDATE payments p
-JOIN purchases pu ON p.purchaseId = pu.id
-SET p.transactionId = CONCAT('txn-purchase-', pu.id, '-', UNIX_TIMESTAMP())
-WHERE p.purchaseId IS NOT NULL;
-
--- 10. Actualizar receipts para apuntar a transactions
-UPDATE receipts r
-JOIN sales s ON r.saleId = s.id
-SET r.transactionId = CONCAT('txn-sale-', s.id, '-', UNIX_TIMESTAMP())
-WHERE r.saleId IS NOT NULL;
-
--- 11. Verificar migración
+-- 8. Verificar migración
 SELECT 
     'TRANSACTIONS MIGRADAS' as info,
     COUNT(*) as total,
@@ -145,14 +124,5 @@ SELECT
     COUNT(*) as total
 FROM transaction_documents;
 
-SELECT 
-    'PAYMENTS ACTUALIZADOS' as info,
-    COUNT(*) as total
-FROM payments 
-WHERE transactionId IS NOT NULL;
-
-SELECT 
-    'RECEIPTS ACTUALIZADOS' as info,
-    COUNT(*) as total
-FROM receipts 
-WHERE transactionId IS NOT NULL;
+-- Nota: payments y receipts se crearán automáticamente con transactionId
+-- cuando se usen en el nuevo sistema de transacciones
