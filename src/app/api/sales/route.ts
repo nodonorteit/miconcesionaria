@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcryptjs'
 
-// GET - Obtener todas las ventas
+// GET - Obtener todas las transacciones
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const vehicleId = searchParams.get('vehicleId')
+    const include = searchParams.get('include')
     
     let whereClause = {}
     if (vehicleId) {
       whereClause = { vehicleId }
     }
 
-    const sales = await prisma.sale.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: whereClause,
       include: {
         vehicle: {
@@ -22,57 +22,75 @@ export async function GET(request: NextRequest) {
           }
         },
         customer: true,
-        seller: true
+        commissionist: true
       },
       orderBy: {
         createdAt: 'desc'
       }
     })
 
-    return NextResponse.json(sales)
+    return NextResponse.json(transactions)
   } catch (error) {
-    console.error('Error fetching sales:', error)
+    console.error('Error fetching transactions:', error)
     return NextResponse.json(
-      { error: 'Error al obtener las ventas' },
+      { error: 'Error al obtener transacciones' },
       { status: 500 }
     )
   }
 }
 
-// POST - Crear una nueva venta
+// POST - Crear una nueva transacción
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes } = body
+    const { 
+      vehicleId, 
+      customerId, 
+      commissionistId, 
+      totalAmount, 
+      commission, 
+      status, 
+      notes, 
+      type, 
+      paymentMethod, 
+      deliveryDate 
+    } = body
 
     // Validar campos requeridos
-    if (!vehicleId || !customerId || !sellerId || !totalAmount) {
+    if (!vehicleId || !customerId || !totalAmount || !type) {
       return NextResponse.json(
-        { error: 'Todos los campos son requeridos' },
+        { error: 'Vehículo, cliente, monto total y tipo son requeridos' },
         { status: 400 }
       )
     }
 
-    // Generar número de venta único
-    const saleNumber = `V${Date.now()}`
+    // Generar número de transacción incremental
+    const lastTransaction = await prisma.transaction.findFirst({
+      orderBy: { transactionNumber: 'desc' },
+      select: { transactionNumber: true }
+    })
 
-    // Crear la venta
-    const sale = await prisma.sale.create({
+    let nextNumber = 1
+    if (lastTransaction && lastTransaction.transactionNumber.match(/^\d+$/)) {
+      nextNumber = parseInt(lastTransaction.transactionNumber) + 1
+    }
+
+    const transactionNumber = nextNumber.toString().padStart(10, '0')
+
+    // Crear la transacción
+    const transaction = await prisma.transaction.create({
       data: {
-        saleNumber,
+        vehicleId,
+        customerId,
+        commissionistId,
         totalAmount: parseFloat(totalAmount),
-        commission: parseFloat(commission || '0'),
+        commission: parseFloat(commission) || 0,
         status: status || 'PENDING',
         notes,
-        vehicle: {
-          connect: { id: vehicleId }
-        },
-        customer: {
-          connect: { id: customerId }
-        },
-        seller: {
-          connect: { id: sellerId }
-        }
+        type,
+        paymentMethod: paymentMethod || 'CONTADO',
+        deliveryDate: deliveryDate ? new Date(deliveryDate) : null,
+        transactionNumber
       },
       include: {
         vehicle: {
@@ -81,44 +99,25 @@ export async function POST(request: NextRequest) {
           }
         },
         customer: true,
-        seller: true
+        commissionist: true
       }
     })
 
-    // Generar número de documento incremental
-    // Obtener el último número de documento y incrementar
-    const lastDocument = await prisma.saleDocument.findFirst({
-      orderBy: { documentNumber: 'desc' },
-      select: { documentNumber: true }
-    })
-
-    let nextNumber = 1
-    if (lastDocument && lastDocument.documentNumber.match(/^\d+$/)) {
-      nextNumber = parseInt(lastDocument.documentNumber) + 1
-    }
-
-    const documentNumber = nextNumber.toString().padStart(10, '0')
-
-    // Crear automáticamente el documento de venta
-    await prisma.saleDocument.create({
+    // Crear automáticamente el documento de transacción
+    await prisma.transactionDocument.create({
       data: {
-        saleId: sale.id,
-        documentNumber: documentNumber
+        transactionId: transaction.id,
+        documentNumber: transactionNumber,
+        content: ''
       }
     })
 
-    // Actualizar estado del vehículo a VENDIDO
-    await prisma.vehicle.update({
-      where: { id: vehicleId },
-      data: { status: 'SOLD' }
-    })
-
-    return NextResponse.json(sale, { status: 201 })
+    return NextResponse.json(transaction, { status: 201 })
   } catch (error) {
-    console.error('Error creating sale:', error)
+    console.error('Error creating transaction:', error)
     return NextResponse.json(
-      { error: 'Error al crear venta' },
+      { error: 'Error al crear transacción' },
       { status: 500 }
     )
   }
-} 
+}

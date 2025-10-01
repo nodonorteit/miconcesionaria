@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener un documento de venta específico
+// GET - Obtener un documento de transacción específico
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const document = await prisma.saleDocument.findUnique({
+    const document = await prisma.transactionDocument.findUnique({
       where: { id: params.id },
       include: {
-        sale: {
+        transaction: {
           include: {
             vehicle: {
               include: {
@@ -18,7 +18,7 @@ export async function GET(
               }
             },
             customer: true,
-            seller: true
+            commissionist: true
           }
         }
       }
@@ -33,10 +33,10 @@ export async function GET(
 
     return NextResponse.json(document)
   } catch (error) {
-    console.error('Error fetching sale document:', error)
+    console.error('Error fetching transaction document:', error)
     return NextResponse.json(
       { error: 'Error al obtener el documento' },
       { status: 500 }
     )
   }
-} 
+}

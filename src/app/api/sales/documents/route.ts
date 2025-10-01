@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener documentos de venta (todos o por saleId)
+// GET - Obtener todos los documentos de transacciones
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const saleId = searchParams.get('saleId')
+    const transactionId = searchParams.get('transactionId')
+    
+    const whereClause = transactionId ? { transactionId } : {}
 
-    const whereClause = saleId ? { saleId } : {}
-
-    const documents = await prisma.saleDocument.findMany({
+    const documents = await prisma.transactionDocument.findMany({
       where: whereClause,
       include: {
-        sale: {
+        transaction: {
           include: {
             vehicle: true,
             customer: true,
-            seller: true
+            commissionist: true
           }
         }
       },
@@ -27,60 +27,54 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(documents)
   } catch (error) {
-    console.error('Error fetching sale documents:', error)
+    console.error('Error fetching transaction documents:', error)
     return NextResponse.json(
-      { error: 'Error al obtener documentos de venta' },
+      { error: 'Error al obtener documentos de transacciones' },
       { status: 500 }
     )
   }
 }
 
-// POST - Generar un nuevo documento de venta
+// POST - Crear un nuevo documento de transacción
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { saleId } = body
+    const { transactionId, templateId, content } = body
 
-    if (!saleId) {
+    // Validar campos requeridos
+    if (!transactionId) {
       return NextResponse.json(
-        { error: 'ID de venta es requerido' },
+        { error: 'ID de transacción es requerido' },
         { status: 400 }
       )
     }
 
-    // Obtener la venta con toda la información necesaria
-    const sale = await prisma.sale.findUnique({
-      where: { id: saleId },
-      include: {
-        vehicle: {
-          include: {
-            vehicleType: true
-          }
-        },
-        customer: true,
-        seller: true
-      }
+    // Verificar que la transacción existe
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: transactionId }
     })
 
-    if (!sale) {
+    if (!transaction) {
       return NextResponse.json(
-        { error: 'Venta no encontrada' },
+        { error: 'Transacción no encontrada' },
         { status: 404 }
       )
     }
 
-    // Verificar si ya existe un documento para esta venta
-    const existingDocument = await prisma.saleDocument.findFirst({
-      where: { saleId }
+    // Verificar si ya existe un documento para esta transacción
+    const existingDocument = await prisma.transactionDocument.findFirst({
+      where: { transactionId }
     })
 
     if (existingDocument) {
-      return NextResponse.json(existingDocument)
+      return NextResponse.json(
+        { error: 'Ya existe un documento para esta transacción' },
+        { status: 400 }
+      )
     }
 
     // Generar número de documento incremental
-    // Obtener el último número de documento y incrementar
-    const lastDocument = await prisma.saleDocument.findFirst({
+    const lastDocument = await prisma.transactionDocument.findFirst({
       orderBy: { documentNumber: 'desc' },
       select: { documentNumber: true }
     })
@@ -92,20 +86,31 @@ export async function POST(request: NextRequest) {
 
     const documentNumber = nextNumber.toString().padStart(10, '0')
 
-    // Crear el documento de venta
-    const document = await prisma.saleDocument.create({
+    // Crear el documento de transacción
+    const document = await prisma.transactionDocument.create({
       data: {
-        saleId: sale.id,
-        documentNumber: documentNumber
+        transactionId,
+        templateId,
+        content: content || '',
+        documentNumber
+      },
+      include: {
+        transaction: {
+          include: {
+            vehicle: true,
+            customer: true,
+            commissionist: true
+          }
+        }
       }
     })
 
     return NextResponse.json(document, { status: 201 })
   } catch (error) {
-    console.error('Error creating sale document:', error)
+    console.error('Error creating transaction document:', error)
     return NextResponse.json(
-      { error: 'Error al crear documento de venta' },
+      { error: 'Error al crear documento de transacción' },
       { status: 500 }
     )
   }
-} 
+}

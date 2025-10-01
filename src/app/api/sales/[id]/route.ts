@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener una venta específica
+// GET - Obtener una transacción específica
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const sale = await prisma.sale.findUnique({
+    const transaction = await prisma.transaction.findUnique({
       where: { id: params.id },
       include: {
         vehicle: {
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
             lastName: true
           }
         },
-        seller: {
+        commissionist: {
           select: {
             id: true,
             firstName: true,
@@ -32,61 +32,64 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
-    if (!sale) {
+    if (!transaction) {
       return NextResponse.json(
-        { error: 'Venta no encontrada' },
+        { error: 'Transacción no encontrada' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json(sale)
+    return NextResponse.json(transaction)
   } catch (error) {
-    console.error('Error fetching sale:', error)
+    console.error('Error fetching transaction:', error)
     return NextResponse.json(
-      { error: 'Error al obtener venta' },
+      { error: 'Error al obtener transacción' },
       { status: 500 }
     )
   }
 }
 
-// PUT - Actualizar una venta
+// PUT - Actualizar una transacción
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await request.json()
-    const { vehicleId, customerId, sellerId, totalAmount, commission, status, notes } = body
+    const { vehicleId, customerId, commissionistId, totalAmount, commission, status, notes, type, paymentMethod, deliveryDate } = body
 
     // Validar campos requeridos
-    if (!vehicleId || !customerId || !sellerId || !totalAmount) {
+    if (!vehicleId || !customerId || !totalAmount || !type) {
       return NextResponse.json(
         { error: 'Todos los campos son requeridos' },
         { status: 400 }
       )
     }
 
-    // Obtener la venta actual para verificar el vehículo anterior
-    const currentSale = await prisma.sale.findUnique({
+    // Obtener la transacción actual para verificar el vehículo anterior
+    const currentTransaction = await prisma.transaction.findUnique({
       where: { id: params.id },
       select: { vehicleId: true }
     })
 
-    if (!currentSale) {
+    if (!currentTransaction) {
       return NextResponse.json(
-        { error: 'Venta no encontrada' },
+        { error: 'Transacción no encontrada' },
         { status: 404 }
       )
     }
 
-    // Actualizar la venta
-    const sale = await prisma.sale.update({
+    // Actualizar la transacción
+    const transaction = await prisma.transaction.update({
       where: { id: params.id },
       data: {
-        totalAmount: parseFloat(totalAmount),
-        commission: parseFloat(commission || '0'),
-        status: status || 'PENDING',
-        notes,
         vehicleId,
         customerId,
-        sellerId
+        commissionistId,
+        totalAmount: parseFloat(totalAmount),
+        commission: parseFloat(commission) || 0,
+        status,
+        notes,
+        type,
+        paymentMethod: paymentMethod || 'CONTADO',
+        deliveryDate: deliveryDate ? new Date(deliveryDate) : null
       },
       include: {
         vehicle: {
@@ -104,7 +107,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             lastName: true
           }
         },
-        seller: {
+        commissionist: {
           select: {
             id: true,
             firstName: true,
@@ -114,65 +117,41 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
-    // Si cambió el vehículo, actualizar estados
-    if (currentSale.vehicleId !== vehicleId) {
-      // Marcar el vehículo anterior como disponible
-      await prisma.vehicle.update({
-        where: { id: currentSale.vehicleId },
-        data: { status: 'AVAILABLE' }
-      })
-
-      // Marcar el nuevo vehículo como vendido
-      await prisma.vehicle.update({
-        where: { id: vehicleId },
-        data: { status: 'SOLD' }
-      })
-    }
-
-    return NextResponse.json(sale)
+    return NextResponse.json(transaction)
   } catch (error) {
-    console.error('Error updating sale:', error)
+    console.error('Error updating transaction:', error)
     return NextResponse.json(
-      { error: 'Error al actualizar venta' },
+      { error: 'Error al actualizar transacción' },
       { status: 500 }
     )
   }
 }
 
-// DELETE - Eliminar una venta (soft delete)
+// DELETE - Eliminar una transacción (soft delete)
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    // Obtener la venta para restaurar el vehículo
-    const sale = await prisma.sale.findUnique({
-      where: { id: params.id },
-      select: { vehicleId: true }
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: params.id }
     })
 
-    if (!sale) {
+    if (!transaction) {
       return NextResponse.json(
-        { error: 'Venta no encontrada' },
+        { error: 'Transacción no encontrada' },
         { status: 404 }
       )
     }
 
-    // Marcar la venta como cancelada
-    await prisma.sale.update({
+    await prisma.transaction.update({
       where: { id: params.id },
       data: { status: 'CANCELLED' }
     })
 
-    // Restaurar el vehículo como disponible
-    await prisma.vehicle.update({
-      where: { id: sale.vehicleId },
-      data: { status: 'AVAILABLE' }
-    })
-
-    return NextResponse.json({ message: 'Venta eliminada correctamente' })
+    return NextResponse.json({ message: 'Transacción cancelada correctamente' })
   } catch (error) {
-    console.error('Error deleting sale:', error)
+    console.error('Error deleting transaction:', error)
     return NextResponse.json(
-      { error: 'Error al eliminar venta' },
+      { error: 'Error al eliminar transacción' },
       { status: 500 }
     )
   }
-} 
+}
