@@ -19,7 +19,7 @@ interface Sale {
   status: string
   notes?: string
   type?: string // SALE o PURCHASE
-  vehicle: {
+  vehicle?: {
     id: string
     brand: string
     model: string
@@ -32,7 +32,7 @@ interface Sale {
       name: string
     }
   }
-  customer: {
+  customer?: {
     id: string
     firstName: string
     lastName: string
@@ -42,7 +42,7 @@ interface Sale {
     city?: string
     state?: string
   }
-  seller: {
+  seller?: {
     id: string
     firstName: string
     lastName: string
@@ -216,9 +216,9 @@ export default function SalesPage() {
   const handleEdit = (sale: Sale) => {
     setEditingSale(sale)
     setFormData({
-      vehicleId: sale.vehicle.id,
-      customerId: sale.customer.id,
-      sellerId: sale.seller.id,
+      vehicleId: sale.vehicle?.id || '',
+      customerId: sale.customer?.id || '',
+      sellerId: sale.seller?.id || '',
       commissionistId: sale.commissionist?.id || '',
       totalAmount: sale.totalAmount.toString(),
       commission: sale.commission.toString(),
@@ -277,9 +277,9 @@ export default function SalesPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          vehicleId: sale.vehicle.id,
-          customerId: sale.customer.id,
-          sellerId: sale.seller.id,
+          vehicleId: sale.vehicle?.id || '',
+          customerId: sale.customer?.id || '',
+          sellerId: sale.seller?.id || '',
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           status: 'COMPLETED',
@@ -378,16 +378,16 @@ export default function SalesPage() {
   const filteredSales = sales.filter(sale => {
     const searchLower = searchTerm.toLowerCase()
     return (
-      sale.saleNumber.toLowerCase().includes(searchLower) ||
-      sale.vehicle.brand.toLowerCase().includes(searchLower) ||
-      sale.vehicle.model.toLowerCase().includes(searchLower) ||
-      sale.customer.firstName.toLowerCase().includes(searchLower) ||
-      sale.customer.lastName.toLowerCase().includes(searchLower) ||
-      sale.seller.firstName.toLowerCase().includes(searchLower) ||
-      sale.seller.lastName.toLowerCase().includes(searchLower) ||
-      sale.totalAmount.toString().includes(searchLower) ||
-      sale.commission.toString().includes(searchLower) ||
-      getStatusLabel(sale.status).toLowerCase().includes(searchLower)
+      (sale.saleNumber || '').toLowerCase().includes(searchLower) ||
+      (sale.vehicle?.brand || '').toLowerCase().includes(searchLower) ||
+      (sale.vehicle?.model || '').toLowerCase().includes(searchLower) ||
+      (sale.customer?.firstName || '').toLowerCase().includes(searchLower) ||
+      (sale.customer?.lastName || '').toLowerCase().includes(searchLower) ||
+      (sale.seller?.firstName || '').toLowerCase().includes(searchLower) ||
+      (sale.seller?.lastName || '').toLowerCase().includes(searchLower) ||
+      (sale.totalAmount || 0).toString().includes(searchLower) ||
+      (sale.commission || 0).toString().includes(searchLower) ||
+      getStatusLabel(sale.status || '').toLowerCase().includes(searchLower)
     )
   })
 
@@ -610,13 +610,13 @@ export default function SalesPage() {
                   </div>
                   <div className="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
                     <span className="flex items-center">
-                      <span className="font-medium">Vehículo:</span> {sale.vehicle.brand} {sale.vehicle.model} ({sale.vehicle.year})
+                      <span className="font-medium">Vehículo:</span> {sale.vehicle ? `${sale.vehicle.brand} ${sale.vehicle.model} (${sale.vehicle.year})` : 'Sin vehículo'}
                     </span>
                     <span className="flex items-center">
-                      <span className="font-medium">Cliente:</span> {sale.customer.firstName} {sale.customer.lastName}
+                      <span className="font-medium">Cliente:</span> {sale.customer ? `${sale.customer.firstName} ${sale.customer.lastName}` : 'Sin cliente'}
                     </span>
                     <span className="flex items-center">
-                      <span className="font-medium">Vendedor:</span> {sale.seller.firstName} {sale.seller.lastName}
+                      <span className="font-medium">Vendedor:</span> {sale.seller ? `${sale.seller.firstName} ${sale.seller.lastName}` : 'Sin vendedor'}
                     </span>
                     <span className="flex items-center">
                       <span className="font-medium">Monto:</span> ${sale.totalAmount.toLocaleString()}
@@ -756,11 +756,11 @@ export default function SalesPage() {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium text-gray-600">Marca y Modelo:</span>
-                        <p className="text-gray-900">{viewingSale.vehicle.brand} {viewingSale.vehicle.model}</p>
+                        <p className="text-gray-900">{viewingSale.vehicle ? `${viewingSale.vehicle.brand} ${viewingSale.vehicle.model}` : 'Sin vehículo'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-600">Año:</span>
-                        <p className="text-gray-900">{viewingSale.vehicle.year}</p>
+                        <p className="text-gray-900">{viewingSale.vehicle?.year || 'N/A'}</p>
                       </div>
                     </div>
                   </div>
@@ -770,7 +770,7 @@ export default function SalesPage() {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium text-gray-600">Nombre:</span>
-                        <p className="text-gray-900">{viewingSale.customer.firstName} {viewingSale.customer.lastName}</p>
+                        <p className="text-gray-900">{viewingSale.customer ? `${viewingSale.customer.firstName} ${viewingSale.customer.lastName}` : 'Sin cliente'}</p>
                       </div>
                     </div>
                   </div>
@@ -780,7 +780,7 @@ export default function SalesPage() {
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium text-gray-600">Nombre:</span>
-                        <p className="text-gray-900">{viewingSale.seller.firstName} {viewingSale.seller.lastName}</p>
+                        <p className="text-gray-900">{viewingSale.seller ? `${viewingSale.seller.firstName} ${viewingSale.seller.lastName}` : 'Sin vendedor'}</p>
                       </div>
                     </div>
                   </div>
@@ -821,9 +821,9 @@ export default function SalesPage() {
       )}
 
       {/* Modal de Boleto de Compra-Venta */}
-      {showSaleDocument && selectedSaleForDocument && (
+      {showSaleDocument && selectedSaleForDocument && selectedSaleForDocument.vehicle && selectedSaleForDocument.customer && (
         <SaleDocument
-          sale={selectedSaleForDocument}
+          sale={selectedSaleForDocument as any}
           isOpen={showSaleDocument}
           onClose={() => {
             setShowSaleDocument(false)
