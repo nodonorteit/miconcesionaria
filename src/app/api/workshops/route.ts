@@ -25,11 +25,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
+    // Validar campos requeridos
+    if (!body.name) {
+      return NextResponse.json(
+        { error: 'El nombre del taller es requerido' },
+        { status: 400 }
+      )
+    }
+    
     const workshopId = `ws-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
     
     await prisma.$executeRaw`
       INSERT INTO workshops (id, name, email, phone, address, city, state, isActive, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      VALUES (${workshopId}, ${body.name}, ${body.email || null}, ${body.phone || null}, ${body.address || null}, ${body.city || null}, ${body.state || null}, 1, NOW(), NOW())
     `
 
     const workshops = await prisma.$queryRaw`
