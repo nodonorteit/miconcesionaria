@@ -15,7 +15,8 @@ import {
   FileText,
   Settings,
   MinusCircle,
-  Archive
+  Archive,
+  Plus
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -45,6 +46,12 @@ export function MainNavigation() {
       label: 'Vehículos Vendidos',
       href: '/vehicles/sold',
       icon: Archive
+    },
+    {
+      label: 'Compra de Vehículos',
+      href: '/purchases',
+      icon: Plus,
+      permission: 'canViewSales'
     },
     {
       label: 'Clientes',
