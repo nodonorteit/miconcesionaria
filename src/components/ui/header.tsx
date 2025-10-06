@@ -4,6 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { LogOut, User, Clock, Calendar } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 
 export function Header() {
@@ -58,26 +59,28 @@ export function Header() {
           {!configLoaded && (
             <div className="text-xs text-gray-500">Cargando...</div>
           )}
-          {companyConfig.logoUrl ? (
-            <Image
-              src={companyConfig.logoUrl}
-              alt={`${companyConfig.name || 'Empresa'} Logo`}
-              width={120}
-              height={40}
-              className="h-8 w-auto"
-              unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
-              onError={(e) => {
-                console.error('Error loading logo:', companyConfig.logoUrl)
-                e.currentTarget.style.display = 'none'
-              }}
-            />
-          ) : (
-            <div className="h-8 px-4 bg-gray-200 rounded-lg flex items-center justify-center">
-              <span className="text-gray-700 font-medium text-sm">
-                {companyConfig.name || 'Sistema de Gestión'}
-              </span>
-            </div>
-          )}
+          <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+            {companyConfig.logoUrl ? (
+              <Image
+                src={companyConfig.logoUrl}
+                alt={`${companyConfig.name || 'Empresa'} Logo`}
+                width={160}
+                height={60}
+                className="h-12 w-auto"
+                unoptimized={companyConfig.logoUrl.startsWith('/uploads/')}
+                onError={(e) => {
+                  console.error('Error loading logo:', companyConfig.logoUrl)
+                  e.currentTarget.style.display = 'none'
+                }}
+              />
+            ) : (
+              <div className="h-12 px-6 bg-gray-200 rounded-lg flex items-center justify-center">
+                <span className="text-gray-700 font-medium text-base">
+                  {companyConfig.name || 'Sistema de Gestión'}
+                </span>
+              </div>
+            )}
+          </Link>
         </div>
         
         <div className="flex items-center space-x-4">
