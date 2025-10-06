@@ -40,14 +40,13 @@ export async function GET(request: NextRequest) {
         transmission: (vehicle.transmission && vehicle.transmission.trim() !== '') ? vehicle.transmission : 'MANUAL' as any,
         vehicleTypeName: vehicle.vehicleType?.name || 'Sin tipo',
         vehicleTypeDescription: vehicle.vehicleType?.description || '',
-        transaction: vehicle.transactions[0] ? {
+        sale: vehicle.transactions[0] ? {
           id: vehicle.transactions[0].id,
-          transactionNumber: vehicle.transactions[0].transactionNumber,
-          type: vehicle.transactions[0].type,
+          saleNumber: vehicle.transactions[0].transactionNumber,
           totalAmount: Number(vehicle.transactions[0].totalAmount),
           commission: Number(vehicle.transactions[0].commission),
           createdAt: vehicle.transactions[0].createdAt,
-          commissionist: vehicle.transactions[0].commissionist ? {
+          seller: vehicle.transactions[0].commissionist ? {
             firstName: vehicle.transactions[0].commissionist.firstName,
             lastName: vehicle.transactions[0].commissionist.lastName
           } : null,

@@ -292,15 +292,11 @@ export default function SoldVehiclesPage() {
                       <span>{viewingVehicle.mileage.toLocaleString()} km</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Precio:</span>
+                      <span className="text-gray-600">Precio de Venta:</span>
                       <span className="font-semibold text-green-600">
-                        {viewingVehicle.purchasePrice ? (
+                        {viewingVehicle.sale?.totalAmount ? (
                           <span className="text-green-600">
-                            ${viewingVehicle.purchasePrice.toLocaleString()}
-                          </span>
-                        ) : viewingVehicle.salePrice ? (
-                          <span className="text-blue-600">
-                            ${viewingVehicle.salePrice.toLocaleString()}
+                            ${viewingVehicle.sale.totalAmount.toLocaleString()}
                           </span>
                         ) : (
                           "No disponible"
