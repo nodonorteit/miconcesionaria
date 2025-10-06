@@ -94,13 +94,8 @@ export async function POST(request: NextRequest) {
               ${workshopId || null}, ${commissionistId || null}, ${receiptPath}, 1, NOW(), NOW())
     `
 
-    // Crear entrada en cashflow
-    await prisma.$executeRaw`
-      INSERT INTO cashflow (id, type, amount, description, category, receiptPath, isActive, createdAt, updatedAt)
-      VALUES (UUID(), 'EXPENSE', ${-parseFloat(amount)}, ${`Egreso: ${description}`}, 
-              ${type === 'WORKSHOP' ? 'MAINTENANCE' : type === 'PARTS' ? 'PURCHASE' : 'COMMISSION'}, 
-              ${receiptPath}, 1, NOW(), NOW())
-    `
+    // Nota: El cashflow se calcula dinámicamente desde las transacciones y gastos
+    // No es necesario insertar en una tabla cashflow separada
 
     // Obtener el egreso creado
     const expenses = await prisma.$queryRaw`

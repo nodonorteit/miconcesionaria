@@ -119,16 +119,8 @@ export async function PUT(
       WHERE id = ${params.id}
     `
 
-    // Actualizar entrada en cashflow
-    await prisma.$executeRaw`
-      UPDATE cashflow 
-      SET amount = ${-parseFloat(amount)}, 
-          description = ${`Egreso: ${description}`}, 
-          receiptPath = ${receiptPath},
-          updatedAt = NOW()
-      WHERE description = ${`Egreso: ${existingExpense.description}`} 
-        AND amount = ${-existingExpense.amount}
-    `
+    // Nota: El cashflow se calcula dinámicamente desde las transacciones y gastos
+    // No es necesario actualizar una tabla cashflow separada
 
     // Obtener el egreso actualizado
     const updatedExpense = await prisma.expense.findUnique({
@@ -179,13 +171,8 @@ export async function DELETE(
       data: { isActive: false }
     })
 
-    // Eliminar entrada correspondiente en cashflow
-    await prisma.$executeRaw`
-      UPDATE cashflow 
-      SET isActive = 0, updatedAt = NOW()
-      WHERE description = ${`Egreso: ${expense.description}`} 
-        AND amount = ${-expense.amount}
-    `
+    // Nota: El cashflow se calcula dinámicamente desde las transacciones y gastos
+    // No es necesario eliminar de una tabla cashflow separada
 
     return NextResponse.json({ message: 'Expense deleted successfully' })
   } catch (error) {
