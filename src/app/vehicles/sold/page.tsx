@@ -75,10 +75,10 @@ export default function SoldVehiclesPage() {
   }
 
   const filteredVehicles = vehicles.filter(vehicle =>
-    vehicle.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.vin?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    vehicle.licensePlate?.toLowerCase().includes(searchTerm.toLowerCase())
+    (vehicle.brand || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (vehicle.model || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (vehicle.vin || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (vehicle.licensePlate || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getStatusColor = (status: string) => {
