@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import { handlePrismaError, handleValidationError } from '@/lib/error-handler'
 
 // GET - Obtener todos los vehículos
 export async function GET(request: NextRequest) {
@@ -291,10 +292,7 @@ export async function POST(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('Error creating vehicle:', error)
-    return NextResponse.json(
-      { error: 'Error creating vehicle' },
-      { status: 500 }
-    )
+    // Usar el manejador de errores personalizado
+    return handlePrismaError(error)
   }
 } 

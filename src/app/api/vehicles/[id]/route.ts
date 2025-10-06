@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handlePrismaError, handleValidationError } from '@/lib/error-handler'
 
 export async function GET(
   request: NextRequest,
@@ -164,40 +165,8 @@ export async function PUT(
     
     return NextResponse.json(updatedVehicle)
   } catch (error) {
-    console.error('❌ Error updating vehicle:', error)
-    
-    // Manejar errores específicos de Prisma
-    if (error && typeof error === 'object' && 'code' in error && (error as any).code === 'P2002') {
-      // Error de constraint único
-      const field = (error as any).meta?.target?.[0] || 'campo'
-      return NextResponse.json(
-        { 
-          error: `El ${field} ya existe en la base de datos. Por favor, usa un valor diferente.`,
-          details: `Error de duplicado en: ${field}`
-        }, 
-        { status: 400 }
-      )
-    }
-    
-    // Otros errores de Prisma
-    if (error && typeof error === 'object' && 'code' in error && (error as any).code?.startsWith('P')) {
-      return NextResponse.json(
-        { 
-          error: 'Error en la base de datos. Por favor, verifica los datos e intenta nuevamente.',
-          details: (error as any).message || 'Error de Prisma desconocido'
-        }, 
-        { status: 400 }
-      )
-    }
-    
-    // Error genérico
-    return NextResponse.json(
-      { 
-        error: 'Error interno del servidor. Por favor, intenta nuevamente.',
-        details: error instanceof Error ? error.message : 'Error desconocido'
-      }, 
-      { status: 500 }
-    )
+    // Usar el manejador de errores personalizado
+    return handlePrismaError(error)
   }
 }
 
