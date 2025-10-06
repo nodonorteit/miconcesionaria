@@ -38,7 +38,7 @@ interface Vehicle {
     seller: {
       firstName: string
       lastName: string
-    }
+    } | null
     customer: {
       firstName: string
       lastName: string
@@ -215,7 +215,12 @@ export default function SoldVehiclesPage() {
                     </div>
                     <div>
                       <p className="text-gray-600">Vendedor</p>
-                      <p className="font-medium">{vehicle.sale.seller.firstName} {vehicle.sale.seller.lastName}</p>
+                      <p className="font-medium">
+                        {vehicle.sale.seller ? 
+                          `${vehicle.sale.seller.firstName} ${vehicle.sale.seller.lastName}` : 
+                          'Sin vendedor asignado'
+                        }
+                      </p>
                     </div>
                     <div>
                       <p className="text-gray-600">Cliente</p>
@@ -342,7 +347,12 @@ export default function SoldVehiclesPage() {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Vendedor:</span>
-                        <span>{viewingVehicle.sale.seller.firstName} {viewingVehicle.sale.seller.lastName}</span>
+                        <span>
+                          {viewingVehicle.sale.seller ? 
+                            `${viewingVehicle.sale.seller.firstName} ${viewingVehicle.sale.seller.lastName}` : 
+                            'Sin vendedor asignado'
+                          }
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Cliente:</span>
