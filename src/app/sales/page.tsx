@@ -106,7 +106,6 @@ export default function SalesPage() {
   const [formData, setFormData] = useState({
     vehicleId: '',
     customerId: '',
-    sellerId: '',
     commissionistId: '',
     totalAmount: '',
     commission: '',
@@ -218,7 +217,6 @@ export default function SalesPage() {
     setFormData({
       vehicleId: sale.vehicle?.id || '',
       customerId: sale.customer?.id || '',
-      sellerId: sale.seller?.id || '',
       commissionistId: sale.commissionist?.id || '',
       totalAmount: sale.totalAmount.toString(),
       commission: sale.commission.toString(),
@@ -279,7 +277,7 @@ export default function SalesPage() {
         body: JSON.stringify({
           vehicleId: sale.vehicle?.id || '',
           customerId: sale.customer?.id || '',
-          sellerId: sale.seller?.id || '',
+          commissionistId: sale.commissionist?.id || '',
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           status: 'COMPLETED',
@@ -309,25 +307,10 @@ export default function SalesPage() {
     }
   }
 
-  const handleSellerChange = (sellerId: string) => {
-    // Ahora sellerId es en realidad un customerId
-    const vehicle = vehicles.find(v => v.id === formData.vehicleId)
-    if (vehicle) {
-      // Para simplificar, establecer comisión en 0 por defecto
-      // El usuario puede modificar manualmente si es necesario
-      setFormData({
-        ...formData,
-        sellerId,
-        commission: '0'
-      })
-    }
-  }
-
   const resetForm = () => {
     setFormData({
       vehicleId: '',
       customerId: '',
-      sellerId: '',
       commissionistId: '',
       totalAmount: '',
       commission: '',
@@ -463,30 +446,7 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="sellerId">
-                    {formData.type === 'SALE' ? 'Vendedor' : 'Vendedor (Cliente)'}
-                  </Label>
-                  <select
-                    id="sellerId"
-                    value={formData.sellerId}
-                    onChange={(e) => handleSellerChange(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">
-                      {formData.type === 'SALE' ? 'Seleccionar vendedor' : 'Seleccionar vendedor (cliente)'}
-                    </option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.firstName} {customer.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="customerId">
-                    {formData.type === 'SALE' ? 'Comprador' : 'Comprador (Concesionaria)'}
-                  </Label>
+                  <Label htmlFor="customerId">Cliente (Comprador) *</Label>
                   <select
                     id="customerId"
                     value={formData.customerId}
@@ -494,9 +454,7 @@ export default function SalesPage() {
                     className="w-full p-2 border rounded"
                     required
                   >
-                    <option value="">
-                      {formData.type === 'SALE' ? 'Seleccionar comprador' : 'Seleccionar comprador (concesionaria)'}
-                    </option>
+                    <option value="">Seleccionar cliente</option>
                     {customers.map((customer) => (
                       <option key={customer.id} value={customer.id}>
                         {customer.firstName} {customer.lastName}
@@ -505,14 +463,15 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="commissionistId">Comisionista (Opcional)</Label>
+                  <Label htmlFor="commissionistId">Vendedor (Opcional)</Label>
+                  <p className="text-xs text-gray-500 mb-2">Si no seleccionas vendedor, la venta es directa de la concesionaria sin comisión</p>
                   <select
                     id="commissionistId"
                     value={formData.commissionistId}
                     onChange={(e) => setFormData({...formData, commissionistId: e.target.value})}
                     className="w-full p-2 border rounded"
                   >
-                    <option value="">Seleccionar comisionista</option>
+                    <option value="">Sin vendedor (venta directa)</option>
                     {commissionists.map((commissionist) => (
                       <option key={commissionist.id} value={commissionist.id}>
                         {commissionist.firstName} {commissionist.lastName} ({commissionist.commissionRate}% comisión)
