@@ -491,15 +491,15 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="commissionistId">Vendedor (Opcional)</Label>
-                  <p className="text-xs text-gray-500 mb-2">Si no seleccionas vendedor, la venta es directa de la concesionaria sin comisión</p>
+                  <Label htmlFor="commissionistId">Comisionista (Opcional)</Label>
+                  <p className="text-xs text-gray-500 mb-2">Si no seleccionas comisionista, la venta es directa de la concesionaria sin comisión</p>
                   <select
                     id="commissionistId"
                     value={formData.commissionistId}
                     onChange={(e) => handleCommissionistChange(e.target.value)}
                     className="w-full p-2 border rounded"
                   >
-                    <option value="">Sin vendedor (venta directa)</option>
+                    <option value="">Sin comisionista (venta directa)</option>
                     {commissionists.map((commissionist) => (
                       <option key={commissionist.id} value={commissionist.id}>
                         {commissionist.firstName} {commissionist.lastName} ({commissionist.commissionRate}% comisión)
@@ -527,7 +527,7 @@ export default function SalesPage() {
                     value={formData.commission}
                     readOnly
                     className="bg-gray-50"
-                    placeholder="Se calcula según el % del vendedor"
+                    placeholder="Se calcula según el % del comisionista"
                   />
                 </div>
                 <div>

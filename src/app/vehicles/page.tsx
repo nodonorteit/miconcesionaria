@@ -707,7 +707,7 @@ export default function VehiclesPage() {
                 {formData.operationType === 'PURCHASE' && (
                   <>
                     <div>
-                      <Label htmlFor="sellerId">Vendedor (Persona que vende el vehículo) *</Label>
+                      <Label htmlFor="sellerId">Vendedor *</Label>
                       <select
                         id="sellerId"
                         value={formData.sellerId}
