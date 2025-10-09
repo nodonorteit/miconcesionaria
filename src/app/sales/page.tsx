@@ -299,12 +299,53 @@ export default function SalesPage() {
   const handleVehicleChange = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId)
     if (vehicle) {
+      // Recalcular comisión si hay un comisionista seleccionado
+      const commissionist = commissionists.find(c => c.id === formData.commissionistId)
+      const totalAmount = vehicle.price
+      const commission = commissionist && totalAmount 
+        ? (totalAmount * (commissionist.commissionRate / 100))
+        : 0
+
       setFormData({
         ...formData,
         vehicleId,
-        totalAmount: vehicle.price.toString()
+        totalAmount: totalAmount.toString(),
+        commission: commission.toString()
       })
     }
+  }
+
+  const handleCommissionistChange = (commissionistId: string) => {
+    const commissionist = commissionists.find(c => c.id === commissionistId)
+    const totalAmount = parseFloat(formData.totalAmount) || 0
+    
+    // Si no hay comisionista (venta directa), comisión = 0
+    // Si hay comisionista, calcular según su porcentaje
+    const commission = commissionist && totalAmount
+      ? (totalAmount * (commissionist.commissionRate / 100))
+      : 0
+
+    setFormData({
+      ...formData,
+      commissionistId,
+      commission: commission.toFixed(2)
+    })
+  }
+
+  const handleTotalAmountChange = (totalAmount: string) => {
+    const commissionist = commissionists.find(c => c.id === formData.commissionistId)
+    const amount = parseFloat(totalAmount) || 0
+    
+    // Recalcular comisión si hay comisionista
+    const commission = commissionist && amount
+      ? (amount * (commissionist.commissionRate / 100))
+      : 0
+
+    setFormData({
+      ...formData,
+      totalAmount,
+      commission: commission.toFixed(2)
+    })
   }
 
   const resetForm = () => {
@@ -455,7 +496,7 @@ export default function SalesPage() {
                   <select
                     id="commissionistId"
                     value={formData.commissionistId}
-                    onChange={(e) => setFormData({...formData, commissionistId: e.target.value})}
+                    onChange={(e) => handleCommissionistChange(e.target.value)}
                     className="w-full p-2 border rounded"
                   >
                     <option value="">Sin vendedor (venta directa)</option>
@@ -467,25 +508,26 @@ export default function SalesPage() {
                   </select>
                 </div>
                 <div>
-                  <Label htmlFor="totalAmount">Monto Total</Label>
+                  <Label htmlFor="totalAmount">Monto Total *</Label>
                   <Input
                     id="totalAmount"
                     type="number"
                     step="0.01"
                     value={formData.totalAmount}
-                    onChange={(e) => setFormData({...formData, totalAmount: e.target.value})}
+                    onChange={(e) => handleTotalAmountChange(e.target.value)}
                     required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="commission">Comisión</Label>
+                  <Label htmlFor="commission">Comisión (Calculada automáticamente)</Label>
                   <Input
                     id="commission"
                     type="number"
                     step="0.01"
                     value={formData.commission}
-                    onChange={(e) => setFormData({...formData, commission: e.target.value})}
-                    required
+                    readOnly
+                    className="bg-gray-50"
+                    placeholder="Se calcula según el % del vendedor"
                   />
                 </div>
                 <div>
