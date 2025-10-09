@@ -60,9 +60,6 @@ model Vehicle {
   // Nuevos campos para tipo de operación
   operationType  String? // PURCHASE, COMMISSION, EXISTING
   purchasePrice  Decimal? @db.Decimal(10, 2) // Precio de compra (si es compra)
-  sellerName     String? // Nombre del vendedor (si es compra)
-  sellerDocument String? // Documento del vendedor (si es compra)
-  sellerPhone    String? // Teléfono del vendedor (si es compra)
   commissionRate Decimal? @db.Decimal(5, 2) // Porcentaje de comisión (si es consignación)
   notes          String? // Notas adicionales sobre la operación
 

@@ -113,9 +113,7 @@ export default function VehiclesPage() {
     // Nuevos campos para el tipo de operación
     operationType: 'PURCHASE', // PURCHASE, COMMISSION, EXISTING
     purchasePrice: '', // Precio de compra (si es compra)
-    sellerName: '', // Nombre del vendedor (si es compra)
-    sellerDocument: '', // Documento del vendedor (si es compra)
-    sellerPhone: '', // Teléfono del vendedor (si es compra)
+    sellerId: '', // ID del cliente que vende el vehículo (si es compra)
     commissionRate: '', // Porcentaje de comisión (si es comisión)
     notes: '' // Notas adicionales
   })
@@ -350,9 +348,7 @@ export default function VehiclesPage() {
       // Nuevos campos
       operationType: vehicle.operationType || 'PURCHASE',
       purchasePrice: vehicle.purchasePrice?.toString() || '',
-      sellerName: vehicle.sellerName || '',
-      sellerDocument: vehicle.sellerDocument || '',
-      sellerPhone: vehicle.sellerPhone || '',
+      sellerId: '', // Se debe seleccionar al editar
       commissionRate: vehicle.commissionRate?.toString() || '',
       notes: vehicle.notes || ''
     })
@@ -540,9 +536,7 @@ export default function VehiclesPage() {
       // Nuevos campos
       operationType: 'PURCHASE',
       purchasePrice: '',
-      sellerName: '',
-      sellerDocument: '',
-      sellerPhone: '',
+      sellerId: '',
       commissionRate: '',
       notes: ''
     })
@@ -713,7 +707,27 @@ export default function VehiclesPage() {
                 {formData.operationType === 'PURCHASE' && (
                   <>
                     <div>
-                      <Label htmlFor="purchasePrice">Precio de Compra</Label>
+                      <Label htmlFor="sellerId">Vendedor (Persona que vende el vehículo) *</Label>
+                      <select
+                        id="sellerId"
+                        value={formData.sellerId}
+                        onChange={(e) => setFormData({...formData, sellerId: e.target.value})}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">Seleccionar vendedor</option>
+                        {customers.map((customer) => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.firstName} {customer.lastName} {customer.documentNumber ? `- ${customer.documentNumber}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Si el vendedor no está en la lista, primero créalo en la sección "Clientes"
+                      </p>
+                    </div>
+                    <div>
+                      <Label htmlFor="purchasePrice">Precio de Compra *</Label>
                       <Input
                         id="purchasePrice"
                         type="number"
@@ -721,39 +735,6 @@ export default function VehiclesPage() {
                         value={formData.purchasePrice}
                         onChange={(e) => setFormData({...formData, purchasePrice: e.target.value})}
                         placeholder="0.00"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sellerName">Nombre del Vendedor</Label>
-                      <Input
-                        id="sellerName"
-                        type="text"
-                        value={formData.sellerName}
-                        onChange={(e) => setFormData({...formData, sellerName: e.target.value})}
-                        placeholder="Nombre completo del vendedor"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sellerDocument">Documento del Vendedor</Label>
-                      <Input
-                        id="sellerDocument"
-                        type="text"
-                        value={formData.sellerDocument}
-                        onChange={(e) => setFormData({...formData, sellerDocument: e.target.value})}
-                        placeholder="DNI, CUIT, etc."
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="sellerPhone">Teléfono del Vendedor</Label>
-                      <Input
-                        id="sellerPhone"
-                        type="tel"
-                        value={formData.sellerPhone}
-                        onChange={(e) => setFormData({...formData, sellerPhone: e.target.value})}
-                        placeholder="Teléfono de contacto"
                         required
                       />
                     </div>

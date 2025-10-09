@@ -126,9 +126,7 @@ export async function POST(request: NextRequest) {
         // Nuevos campos
         operationType: formData.get('operationType') as string,
         purchasePrice: formData.get('purchasePrice') as string,
-        sellerName: formData.get('sellerName') as string,
-        sellerDocument: formData.get('sellerDocument') as string,
-        sellerPhone: formData.get('sellerPhone') as string,
+        sellerId: formData.get('sellerId') as string, // ID del cliente que vende
         commissionRate: formData.get('commissionRate') as string,
         notes: formData.get('notes') as string
       }
@@ -147,8 +145,8 @@ export async function POST(request: NextRequest) {
 
       // Validar campos específicos según el tipo de operación
       if (vehicleData.operationType === 'PURCHASE') {
-        if (!vehicleData.purchasePrice || !vehicleData.sellerName || !vehicleData.sellerDocument) {
-          return NextResponse.json({ error: 'Para compras se requiere precio de compra, nombre y documento del vendedor' }, { status: 400 })
+        if (!vehicleData.purchasePrice || !vehicleData.sellerId) {
+          return NextResponse.json({ error: 'Para compras se requiere precio de compra y vendedor' }, { status: 400 })
         }
       } else if (vehicleData.operationType === 'COMMISSION') {
         if (!vehicleData.commissionRate) {
@@ -171,9 +169,6 @@ export async function POST(request: NextRequest) {
         // Nuevos campos
         operationType: vehicleData.operationType,
         purchasePrice: vehicleData.purchasePrice ? parseFloat(vehicleData.purchasePrice) : null,
-        sellerName: vehicleData.sellerName || null,
-        sellerDocument: vehicleData.sellerDocument || null,
-        sellerPhone: vehicleData.sellerPhone || null,
         commissionRate: vehicleData.commissionRate ? parseFloat(vehicleData.commissionRate) : null,
         notes: vehicleData.notes || null
       }
@@ -182,22 +177,40 @@ export async function POST(request: NextRequest) {
         data
       })
 
-      // Si es una COMPRA, crear el movimiento de egreso
-      if (vehicleData.operationType === 'PURCHASE' && vehicleData.purchasePrice) {
-        const expenseData = {
-          description: `Compra de vehículo: ${vehicleData.brand} ${vehicleData.model} ${vehicleData.year}`,
-          amount: parseFloat(vehicleData.purchasePrice),
-          type: 'WORKSHOP' as any, // Usar WORKSHOP como tipo por defecto
-          workshopId: null,
-          sellerId: null,
-          receiptPath: null
-        }
+      // Si es una COMPRA, crear la transacción de compra y el egreso
+      if (vehicleData.operationType === 'PURCHASE' && vehicleData.purchasePrice && vehicleData.sellerId) {
+        // Generar número de compra único
+        const purchaseNumber = `COMP-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
 
-        await prisma.expense.create({
-          data: expenseData
+        // Crear la transacción de compra
+        await prisma.transaction.create({
+          data: {
+            transactionNumber: purchaseNumber,
+            type: 'PURCHASE',
+            vehicleId: vehicle.id,
+            customerId: vehicleData.sellerId, // El cliente que nos vende el vehículo
+            totalAmount: parseFloat(vehicleData.purchasePrice),
+            commission: 0, // Las compras no tienen comisión
+            status: 'COMPLETED',
+            notes: vehicleData.notes || null,
+            paymentMethod: 'CONTADO',
+            deliveryDate: new Date()
+          }
         })
 
-        console.log(`✅ Egreso creado por compra de vehículo: $${vehicleData.purchasePrice}`)
+        // Crear el egreso correspondiente
+        await prisma.expense.create({
+          data: {
+            description: `Compra de vehículo: ${vehicleData.brand} ${vehicleData.model} ${vehicleData.year}`,
+            amount: parseFloat(vehicleData.purchasePrice),
+            type: 'WORKSHOP' as any,
+            workshopId: null,
+            commissionistId: null,
+            receiptPath: null
+          }
+        })
+
+        console.log(`✅ Transacción de compra y egreso creados: $${vehicleData.purchasePrice}`)
       }
 
       return NextResponse.json(vehicle)
