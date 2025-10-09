@@ -409,27 +409,14 @@ export default function SalesPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              {editingSale ? 'Editar Transacción' : 'Nueva Transacción'}
+              {editingSale ? 'Editar Venta' : 'Nueva Venta'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="type">Tipo de Transacción</Label>
-                  <select
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="SALE">Venta (Ingreso)</option>
-                    <option value="PURCHASE">Compra (Egreso)</option>
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="vehicleId">Vehículo</Label>
+                  <Label htmlFor="vehicleId">Vehículo *</Label>
                   <select
                     id="vehicleId"
                     value={formData.vehicleId}
