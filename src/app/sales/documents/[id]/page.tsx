@@ -14,10 +14,10 @@ import './boleto.css'
 interface SaleDocument {
   id: string
   documentNumber: string
-  sale: {
+  transaction: {
     id: string
-    saleNumber: string
-    saleDate: string
+    transactionNumber: string
+    createdAt: string
     totalAmount: number
     commission: number
     notes?: string
@@ -28,7 +28,7 @@ interface SaleDocument {
       brand: string
       model: string
       year: number
-      color: string
+      color?: string
       mileage: number
       vin?: string
       licensePlate?: string
@@ -47,13 +47,16 @@ interface SaleDocument {
       state?: string
       address?: string
     }
-    seller: {
+    commissionist?: {
       id: string
       firstName: string
       lastName: string
       email?: string
       phone?: string
-      commissionRate: number
+      documentNumber?: string
+      city?: string
+      state?: string
+      address?: string
     }
   }
 }
@@ -126,10 +129,57 @@ export default function SaleDocumentPage() {
     )
   }
 
+  // Transformar datos de transacción al formato esperado por el template
+  const saleData = {
+    id: document.transaction.id,
+    saleNumber: document.transaction.transactionNumber,
+    saleDate: document.transaction.createdAt,
+    totalAmount: Number(document.transaction.totalAmount),
+    commission: Number(document.transaction.commission),
+    notes: document.transaction.notes,
+    paymentMethod: document.transaction.paymentMethod,
+    deliveryDate: document.transaction.deliveryDate,
+    vehicle: {
+      id: document.transaction.vehicle.id,
+      brand: document.transaction.vehicle.brand,
+      model: document.transaction.vehicle.model,
+      year: document.transaction.vehicle.year,
+      color: document.transaction.vehicle.color || 'No especificado',
+      mileage: document.transaction.vehicle.mileage,
+      vin: document.transaction.vehicle.vin,
+      licensePlate: document.transaction.vehicle.licensePlate,
+      vehicleType: {
+        name: document.transaction.vehicle.vehicleType.name
+      }
+    },
+    customer: {
+      id: document.transaction.customer.id,
+      firstName: document.transaction.customer.firstName,
+      lastName: document.transaction.customer.lastName,
+      email: document.transaction.customer.email,
+      phone: document.transaction.customer.phone,
+      documentNumber: document.transaction.customer.documentNumber,
+      city: document.transaction.customer.city,
+      state: document.transaction.customer.state,
+      address: document.transaction.customer.address
+    },
+    seller: document.transaction.commissionist ? {
+      id: document.transaction.commissionist.id,
+      firstName: document.transaction.commissionist.firstName,
+      lastName: document.transaction.commissionist.lastName,
+      email: document.transaction.commissionist.email,
+      phone: document.transaction.commissionist.phone,
+      documentNumber: document.transaction.commissionist.documentNumber,
+      city: document.transaction.commissionist.city,
+      state: document.transaction.commissionist.state,
+      address: document.transaction.commissionist.address
+    } : null
+  }
+
   // Renderizar el template con los datos de la venta
   const renderedHtml = renderTemplate(
     documentTemplate,
-    document.sale,
+    saleData,
     companyConfig,
     document.documentNumber
   )

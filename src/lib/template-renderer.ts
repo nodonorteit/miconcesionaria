@@ -33,7 +33,7 @@ interface SaleData {
     state?: string
     address?: string
   }
-  seller: {
+  seller?: {
     id: string
     firstName: string
     lastName: string
@@ -43,7 +43,7 @@ interface SaleData {
     city?: string
     state?: string
     address?: string
-  }
+  } | null
 }
 
 interface CompanyConfig {
