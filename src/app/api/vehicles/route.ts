@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const sold = searchParams.get('sold')
+    const available = searchParams.get('available')
     
     let vehicles: any[]
     
@@ -61,20 +62,42 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(processedVehicles)
     } else {
       // Obtener vehículos disponibles (no vendidos) con imágenes
-      vehicles = await prisma.vehicle.findMany({
-        where: {
-          status: {
-            not: 'SOLD'
+      if (available === 'true') {
+        // Obtener vehículos disponibles (sin ventas pendientes)
+        vehicles = await prisma.vehicle.findMany({
+          where: {
+            status: 'AVAILABLE',
+            transactions: {
+              none: {
+                status: 'PENDING'
+              }
+            }
+          },
+          include: {
+            vehicleType: true,
+            images: true
+          },
+          orderBy: {
+            createdAt: 'desc'
           }
-        },
-        include: {
-          vehicleType: true,
-          images: true
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      })
+        })
+      } else {
+        // Obtener todos los vehículos (excepto vendidos)
+        vehicles = await prisma.vehicle.findMany({
+          where: {
+            status: {
+              not: 'SOLD'
+            }
+          },
+          include: {
+            vehicleType: true,
+            images: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        })
+      }
       
       // Procesar los resultados para manejar valores vacíos
       const processedVehicles = vehicles.map((vehicle) => ({

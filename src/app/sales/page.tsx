@@ -139,10 +139,10 @@ export default function SalesPage() {
 
   const fetchVehicles = async () => {
     try {
-      const response = await fetch('/api/vehicles')
+      const response = await fetch('/api/vehicles?available=true')
       if (response.ok) {
         const data = await response.json()
-        setVehicles(data.filter((v: Vehicle) => v.status === 'AVAILABLE'))
+        setVehicles(data)
       }
     } catch (error) {
       console.error('Error fetching vehicles:', error)
