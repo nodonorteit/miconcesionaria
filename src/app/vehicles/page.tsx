@@ -528,7 +528,7 @@ export default function VehiclesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ saleId }),
+        body: JSON.stringify({ transactionId: saleId }),
       })
 
       if (response.ok) {
@@ -536,7 +536,8 @@ export default function VehiclesPage() {
         // Abrir el boleto en una nueva ventana
         openSaleDocument(documentData.id)
       } else {
-        toast.error('Error al generar el documento')
+        const errorData = await response.json()
+        toast.error(errorData.error || 'Error al generar el documento')
       }
     } catch (error) {
       toast.error('Error al generar el documento')
