@@ -9,9 +9,13 @@ export async function GET(request: NextRequest) {
     const vehicleId = searchParams.get('vehicleId')
     const include = searchParams.get('include')
     
-    let whereClause = {}
+    let whereClause: any = {
+      status: {
+        not: 'CANCELLED'
+      }
+    }
     if (vehicleId) {
-      whereClause = { vehicleId }
+      whereClause.vehicleId = vehicleId
     }
 
     const transactions = await prisma.transaction.findMany({

@@ -400,6 +400,11 @@ export default function SalesPage() {
 
   // Filtrar ventas basado en el término de búsqueda
   const filteredSales = sales.filter(sale => {
+    // Excluir ventas canceladas
+    if (sale.status === 'CANCELLED') {
+      return false
+    }
+    
     const searchLower = searchTerm.toLowerCase()
     return (
       (sale.saleNumber || '').toLowerCase().includes(searchLower) ||
