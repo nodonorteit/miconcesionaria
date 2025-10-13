@@ -59,6 +59,10 @@ export function handlePrismaError(error: any): NextResponse<ErrorResponse> {
         'providers_taxId_key': {
           name: 'CUIT',
           message: 'El CUIT ya está registrado. Por favor, verifica el CUIT e intenta nuevamente.'
+        },
+        'Transaction_transactionNumber_key': {
+          name: 'Número de Transacción',
+          message: 'El número de transacción ya existe. Por favor, usa un valor diferente.'
         }
       }
       

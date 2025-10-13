@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { handlePrismaError } from '@/lib/error-handler'
 
 // GET - Obtener todas las transacciones
 export async function GET(request: NextRequest) {
@@ -64,18 +65,34 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generar número de transacción incremental
-    const lastTransaction = await prisma.transaction.findFirst({
-      orderBy: { transactionNumber: 'desc' },
-      select: { transactionNumber: true }
-    })
+    // Generar número de transacción único
+    let transactionNumber: string
+    
+    if (type === 'PURCHASE') {
+      // Para compras, usar formato con timestamp
+      transactionNumber = `COMP-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+    } else {
+      // Para ventas, usar formato incremental
+      const lastTransaction = await prisma.transaction.findFirst({
+        where: {
+          transactionNumber: {
+            startsWith: 'SALE'
+          }
+        },
+        orderBy: { transactionNumber: 'desc' },
+        select: { transactionNumber: true }
+      })
 
-    let nextNumber = 1
-    if (lastTransaction && lastTransaction.transactionNumber.match(/^\d+$/)) {
-      nextNumber = parseInt(lastTransaction.transactionNumber) + 1
+      let nextNumber = 1
+      if (lastTransaction && lastTransaction.transactionNumber.match(/^SALE-(\d+)$/)) {
+        const match = lastTransaction.transactionNumber.match(/^SALE-(\d+)$/)
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1
+        }
+      }
+
+      transactionNumber = `SALE-${nextNumber.toString().padStart(10, '0')}`
     }
-
-    const transactionNumber = nextNumber.toString().padStart(10, '0')
 
     // Crear la transacción
     const transaction = await prisma.transaction.create({
@@ -114,10 +131,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transaction, { status: 201 })
   } catch (error) {
-    console.error('Error creating transaction:', error)
-    return NextResponse.json(
-      { error: 'Error al crear transacción' },
-      { status: 500 }
-    )
+    // Usar el manejador de errores personalizado
+    return handlePrismaError(error)
   }
 }
