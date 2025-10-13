@@ -487,7 +487,8 @@ export default function VehiclesPage() {
           status: 'PENDING',
           notes: saleFormData.notes,
           paymentMethod: saleFormData.paymentMethod,
-          deliveryDate: saleFormData.deliveryDate
+          deliveryDate: saleFormData.deliveryDate,
+          type: 'SALE'
         }),
       })
 
