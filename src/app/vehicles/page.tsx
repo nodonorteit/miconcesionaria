@@ -81,6 +81,7 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [vehicleTypes, setVehicleTypes] = useState<VehicleType[]>([])
   const [customers, setCustomers] = useState<Customer[]>([])
+  const [sellers, setSellers] = useState<Seller[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null)
@@ -138,6 +139,7 @@ export default function VehiclesPage() {
     fetchVehicles()
     fetchVehicleTypes()
     fetchCustomers()
+    fetchSellers()
   }, [])
 
   const fetchVehicleTypes = async () => {
@@ -162,6 +164,18 @@ export default function VehiclesPage() {
       }
     } catch (error) {
       console.error('Error fetching customers:', error)
+    }
+  }
+
+  const fetchSellers = async () => {
+    try {
+      const response = await fetch('/api/sellers')
+      if (response.ok) {
+        const data = await response.json()
+        setSellers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error)
     }
   }
 
@@ -404,15 +418,52 @@ export default function VehiclesPage() {
   }
 
   const handleSellerChange = (sellerId: string) => {
-    // Ahora sellerId es en realidad un customerId
     if (sellingVehicle) {
-      // Para simplificar, establecer comisión en 0 por defecto
-      // El usuario puede modificar manualmente si es necesario
-      setSaleFormData({
-        ...saleFormData,
-        sellerId,
+      if (sellerId === 'concessionaire') {
+        // Concesionaria directa - sin comisión
+        setSaleFormData({
+          ...saleFormData,
+          sellerId,
+          commission: '0'
+        })
+      } else {
+        // Buscar el vendedor seleccionado para obtener su tasa de comisión
+        const selectedSeller = sellers.find(seller => seller.id === sellerId)
+        if (selectedSeller) {
+          const commissionAmount = (parseFloat(saleFormData.totalAmount) * selectedSeller.commissionRate / 100).toFixed(2)
+          setSaleFormData({
+            ...saleFormData,
+            sellerId,
+            commission: commissionAmount
+          })
+        }
+      }
+    }
+  }
+
+  const handleTotalAmountChange = (totalAmount: string) => {
+    setSaleFormData({
+      ...saleFormData,
+      totalAmount
+    })
+    
+    // Recalcular comisión si hay un vendedor seleccionado
+    if (saleFormData.sellerId && saleFormData.sellerId !== 'concessionaire') {
+      const selectedSeller = sellers.find(seller => seller.id === saleFormData.sellerId)
+      if (selectedSeller) {
+        const commissionAmount = (parseFloat(totalAmount) * selectedSeller.commissionRate / 100).toFixed(2)
+        setSaleFormData(prev => ({
+          ...prev,
+          totalAmount,
+          commission: commissionAmount
+        }))
+      }
+    } else if (saleFormData.sellerId === 'concessionaire') {
+      setSaleFormData(prev => ({
+        ...prev,
+        totalAmount,
         commission: '0'
-      })
+      }))
     }
   }
 
@@ -430,7 +481,7 @@ export default function VehiclesPage() {
         body: JSON.stringify({
           vehicleId: sellingVehicle.id,
           customerId: saleFormData.customerId,
-          sellerId: saleFormData.sellerId,
+          commissionistId: saleFormData.sellerId === 'concessionaire' ? null : saleFormData.sellerId,
           totalAmount: saleFormData.totalAmount,
           commission: saleFormData.commission,
           status: 'PENDING',
@@ -1411,9 +1462,10 @@ export default function VehiclesPage() {
                       required
                     >
                       <option value="">Seleccionar vendedor...</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.firstName} {customer.lastName}
+                      <option value="concessionaire">Concesionaria (0% comisión)</option>
+                      {sellers.map((seller) => (
+                        <option key={seller.id} value={seller.id}>
+                          {seller.firstName} {seller.lastName} ({seller.commissionRate}% comisión)
                         </option>
                       ))}
                     </select>
@@ -1444,21 +1496,22 @@ export default function VehiclesPage() {
                       type="number"
                       step="0.01"
                       value={saleFormData.totalAmount}
-                      onChange={(e) => setSaleFormData({...saleFormData, totalAmount: e.target.value})}
+                      onChange={(e) => handleTotalAmountChange(e.target.value)}
                       required
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="commission">Comisión</Label>
+                    <Label htmlFor="commission">Comisión (Calculada automáticamente)</Label>
                     <Input
                       id="commission"
                       type="number"
                       step="0.01"
                       value={saleFormData.commission}
                       onChange={(e) => setSaleFormData({...saleFormData, commission: e.target.value})}
-                      placeholder="Se calcula automáticamente"
+                      placeholder="Se calcula según el % del vendedor"
                       readOnly
+                      className="bg-gray-50"
                     />
                   </div>
 
