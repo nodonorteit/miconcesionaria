@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           SELECT DISTINCT v.* FROM Vehicle v 
           WHERE v.status = 'AVAILABLE' 
           AND v.id NOT IN (
-            SELECT DISTINCT t.vehicleId FROM Transaction t 
+            SELECT DISTINCT t.vehicleId FROM transactions t 
             WHERE t.status = 'PENDING'
           )
           ORDER BY v.createdAt DESC
