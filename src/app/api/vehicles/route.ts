@@ -63,34 +63,27 @@ export async function GET(request: NextRequest) {
     } else {
       // Obtener vehículos disponibles (no vendidos) con imágenes
       if (available === 'true') {
-        // Obtener vehículos disponibles (sin ventas pendientes)
-        // Usar raw query para evitar problemas de collation
-        const availableVehicles = await prisma.$queryRaw`
-          SELECT DISTINCT v.* FROM Vehicle v 
-          WHERE v.status = 'AVAILABLE' 
-          AND v.id NOT IN (
-            SELECT DISTINCT t.vehicleId FROM transactions t 
-            WHERE t.status = 'PENDING'
-          )
-          ORDER BY v.createdAt DESC
-        `
-        
-        // Obtener información completa de los vehículos disponibles
-        const vehicleIds = (availableVehicles as any[]).map(v => v.id)
-        vehicles = await prisma.vehicle.findMany({
+        // Obtener vehículos disponibles y filtrar en código para evitar problemas de collation
+        const allVehicles = await prisma.vehicle.findMany({
           where: {
-            id: {
-              in: vehicleIds
-            }
+            status: 'AVAILABLE'
           },
           include: {
             vehicleType: true,
-            images: true
+            images: true,
+            transactions: {
+              where: {
+                status: 'PENDING'
+              }
+            }
           },
           orderBy: {
             createdAt: 'desc'
           }
         })
+        
+        // Filtrar vehículos que no tengan transacciones pendientes
+        vehicles = allVehicles.filter(vehicle => vehicle.transactions.length === 0)
       } else {
         // Obtener todos los vehículos (excepto vendidos)
         vehicles = await prisma.vehicle.findMany({
