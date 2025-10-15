@@ -67,10 +67,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingDocument) {
-      return NextResponse.json(
-        { error: 'Ya existe un documento para esta transacción' },
-        { status: 400 }
-      )
+      // Si ya existe, devolverlo en lugar de dar error
+      return NextResponse.json(existingDocument)
     }
 
     // Generar número de documento incremental
