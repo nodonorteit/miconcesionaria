@@ -117,6 +117,23 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     })
 
+    // Actualizar estado del vehículo según el estado de la venta
+    if (type === 'SALE') {
+      if (status === 'COMPLETED') {
+        await prisma.vehicle.update({
+          where: { id: vehicleId },
+          data: { status: 'SOLD' }
+        })
+        console.log(`✅ Vehículo ${vehicleId} marcado como vendido`)
+      } else if (status === 'CANCELLED') {
+        await prisma.vehicle.update({
+          where: { id: vehicleId },
+          data: { status: 'AVAILABLE' }
+        })
+        console.log(`✅ Vehículo ${vehicleId} vuelve a estar disponible`)
+      }
+    }
+
     return NextResponse.json(transaction)
   } catch (error) {
     console.error('Error updating transaction:', error)
@@ -145,6 +162,15 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       where: { id: params.id },
       data: { status: 'CANCELLED' }
     })
+
+    // Si es una venta cancelada, volver a marcar el vehículo como disponible
+    if (transaction.type === 'SALE') {
+      await prisma.vehicle.update({
+        where: { id: transaction.vehicleId },
+        data: { status: 'AVAILABLE' }
+      })
+      console.log(`✅ Vehículo ${transaction.vehicleId} vuelve a estar disponible tras cancelar venta`)
+    }
 
     return NextResponse.json({ message: 'Transacción cancelada correctamente' })
   } catch (error) {
