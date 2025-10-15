@@ -19,6 +19,8 @@ interface Sale {
   status: string
   notes?: string
   type?: string // SALE o PURCHASE
+  paymentMethod?: string
+  deliveryDate?: string
   vehicle?: {
     id: string
     brand: string
@@ -281,7 +283,10 @@ export default function SalesPage() {
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           status: 'COMPLETED',
-          notes: sale.notes
+          notes: sale.notes,
+          type: 'SALE',
+          paymentMethod: sale.paymentMethod || 'CONTADO',
+          deliveryDate: sale.deliveryDate || new Date().toISOString()
         }),
       })
 
