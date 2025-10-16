@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Plus, Edit, Trash2, ShoppingCart, Receipt, Eye, FileText } from 'lucide-react'
+import { Trash2, ShoppingCart, Receipt, Eye, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
 import { SaleDocument } from '@/components/ui/sale-document'
@@ -66,61 +65,19 @@ interface Sale {
   updatedAt: string
 }
 
-interface Vehicle {
-  id: string
-  brand: string
-  model: string
-  year: number
-  price: number
-  status: string
-}
-
-interface Customer {
-  id: string
-  firstName: string
-  lastName: string
-}
-
-interface Commissionist {
-  id: string
-  firstName: string
-  lastName: string
-  email: string
-  phone?: string
-  commissionRate: number
-  isActive: boolean
-}
 
 
 export default function SalesPage() {
   const [sales, setSales] = useState<Sale[]>([])
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [commissionists, setCommissionists] = useState<Commissionist[]>([])
   const [loading, setLoading] = useState(true)
-  const [showForm, setShowForm] = useState(false)
-  const [editingSale, setEditingSale] = useState<Sale | null>(null)
   const [deletingSale, setDeletingSale] = useState<string | null>(null)
   const [viewingSale, setViewingSale] = useState<Sale | null>(null)
   const [showSaleDocument, setShowSaleDocument] = useState(false)
   const [selectedSaleForDocument, setSelectedSaleForDocument] = useState<Sale | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [formData, setFormData] = useState({
-    vehicleId: '',
-    customerId: '',
-    commissionistId: '',
-    totalAmount: '',
-    commission: '',
-    status: 'PENDING',
-    notes: '',
-    type: 'SALE' // SALE o PURCHASE
-  })
 
   useEffect(() => {
     fetchSales()
-    fetchVehicles()
-    fetchCustomers()
-    fetchCommissionists()
   }, [])
 
   const fetchSales = async () => {
@@ -139,95 +96,8 @@ export default function SalesPage() {
     }
   }
 
-  const fetchVehicles = async () => {
-    try {
-      const response = await fetch('/api/vehicles?available=true')
-      if (response.ok) {
-        const data = await response.json()
-        setVehicles(data)
-      }
-    } catch (error) {
-      console.error('Error fetching vehicles:', error)
-    }
-  }
-
-  const fetchCustomers = async () => {
-    try {
-      const response = await fetch('/api/customers')
-      if (response.ok) {
-        const data = await response.json()
-        setCustomers(data)
-      }
-    } catch (error) {
-      console.error('Error fetching customers:', error)
-    }
-  }
-
-  const fetchCommissionists = async () => {
-    try {
-      const response = await fetch('/api/commissionists')
-      if (response.ok) {
-        const data = await response.json()
-        setCommissionists(data.filter((commissionist: Commissionist) => commissionist.isActive))
-      }
-    } catch (error) {
-      console.error('Error fetching commissionists:', error)
-    }
-  }
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    try {
-      const url = editingSale 
-        ? `/api/sales/${editingSale.id}`
-        : '/api/sales'
-      
-      const method = editingSale ? 'PUT' : 'POST'
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          totalAmount: parseFloat(formData.totalAmount),
-          commission: parseFloat(formData.commission),
-          type: formData.type
-        }),
-      })
-
-      if (response.ok) {
-        toast.success(editingSale ? 'Transacción actualizada' : 'Transacción creada')
-        setShowForm(false)
-        setEditingSale(null)
-        resetForm()
-        fetchSales()
-        fetchVehicles() // Refresh available vehicles
-      } else {
-        toast.error('Error al guardar transacción')
-      }
-    } catch (error) {
-      toast.error('Error al guardar transacción')
-    }
-  }
-
-  const handleEdit = (sale: Sale) => {
-    setEditingSale(sale)
-    setFormData({
-      vehicleId: sale.vehicle?.id || '',
-      customerId: sale.customer?.id || '',
-      commissionistId: sale.commissionist?.id || '',
-      totalAmount: sale.totalAmount.toString(),
-      commission: sale.commission.toString(),
-      status: sale.status,
-      notes: sale.notes || '',
-      type: 'SALE' // Por defecto SALE, se puede cambiar si es necesario
-    })
-    setShowForm(true)
-  }
 
   const handleDelete = async (id: string) => {
     const sale = sales.find(s => s.id === id)
@@ -249,7 +119,6 @@ export default function SalesPage() {
       if (response.ok) {
         toast.success('Venta eliminada correctamente')
         fetchSales()
-        fetchVehicles() // Refresh available vehicles
       } else {
         toast.error('Error al eliminar venta')
       }
@@ -301,70 +170,6 @@ export default function SalesPage() {
     }
   }
 
-  const handleVehicleChange = (vehicleId: string) => {
-    const vehicle = vehicles.find(v => v.id === vehicleId)
-    if (vehicle) {
-      // Recalcular comisión si hay un comisionista seleccionado
-      const commissionist = commissionists.find(c => c.id === formData.commissionistId)
-      const totalAmount = vehicle.price
-      const commission = commissionist && totalAmount 
-        ? (totalAmount * (commissionist.commissionRate / 100))
-        : 0
-
-      setFormData({
-        ...formData,
-        vehicleId,
-        totalAmount: totalAmount.toString(),
-        commission: commission.toString()
-      })
-    }
-  }
-
-  const handleCommissionistChange = (commissionistId: string) => {
-    const commissionist = commissionists.find(c => c.id === commissionistId)
-    const totalAmount = parseFloat(formData.totalAmount) || 0
-    
-    // Si no hay comisionista (venta directa), comisión = 0
-    // Si hay comisionista, calcular según su porcentaje
-    const commission = commissionist && totalAmount
-      ? (totalAmount * (commissionist.commissionRate / 100))
-      : 0
-
-    setFormData({
-      ...formData,
-      commissionistId,
-      commission: commission.toFixed(2)
-    })
-  }
-
-  const handleTotalAmountChange = (totalAmount: string) => {
-    const commissionist = commissionists.find(c => c.id === formData.commissionistId)
-    const amount = parseFloat(totalAmount) || 0
-    
-    // Recalcular comisión si hay comisionista
-    const commission = commissionist && amount
-      ? (amount * (commissionist.commissionRate / 100))
-      : 0
-
-    setFormData({
-      ...formData,
-      totalAmount,
-      commission: commission.toFixed(2)
-    })
-  }
-
-  const resetForm = () => {
-    setFormData({
-      vehicleId: '',
-      customerId: '',
-      commissionistId: '',
-      totalAmount: '',
-      commission: '',
-      status: 'PENDING',
-      notes: '',
-      type: 'SALE'
-    })
-  }
 
   const getStatusLabel = (status: string) => {
     switch (status) {
@@ -450,138 +255,11 @@ export default function SalesPage() {
           />
           <Receipt className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Transacción
-        </Button>
+        <div className="text-sm text-gray-500">
+          Para crear nuevas ventas, ve a la sección "Vehículos"
+        </div>
       </div>
 
-      {showForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
-              {editingSale ? 'Editar Venta' : 'Nueva Venta'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="vehicleId">Vehículo *</Label>
-                  <select
-                    id="vehicleId"
-                    value={formData.vehicleId}
-                    onChange={(e) => handleVehicleChange(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Seleccionar vehículo</option>
-                    {vehicles.map((vehicle) => (
-                      <option key={vehicle.id} value={vehicle.id}>
-                        {vehicle.brand} {vehicle.model} ({vehicle.year}) - Precio no disponible
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="customerId">Cliente (Comprador) *</Label>
-                  <select
-                    id="customerId"
-                    value={formData.customerId}
-                    onChange={(e) => setFormData({...formData, customerId: e.target.value})}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Seleccionar cliente</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.firstName} {customer.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="commissionistId">Comisionista (Opcional)</Label>
-                  <p className="text-xs text-gray-500 mb-2">Si no seleccionas comisionista, la venta es directa de la concesionaria sin comisión</p>
-                  <select
-                    id="commissionistId"
-                    value={formData.commissionistId}
-                    onChange={(e) => handleCommissionistChange(e.target.value)}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="">Sin comisionista (venta directa)</option>
-                    {commissionists.map((commissionist) => (
-                      <option key={commissionist.id} value={commissionist.id}>
-                        {commissionist.firstName} {commissionist.lastName} ({commissionist.commissionRate}% comisión)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="totalAmount">Monto Total *</Label>
-                  <Input
-                    id="totalAmount"
-                    type="number"
-                    step="0.01"
-                    value={formData.totalAmount}
-                    onChange={(e) => handleTotalAmountChange(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="commission">Comisión (Calculada automáticamente)</Label>
-                  <Input
-                    id="commission"
-                    type="number"
-                    step="0.01"
-                    value={formData.commission}
-                    readOnly
-                    className="bg-gray-50"
-                    placeholder="Se calcula según el % del comisionista"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="status">Estado</Label>
-                  <select
-                    id="status"
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value})}
-                    className="w-full p-2 border rounded"
-                  >
-                    <option value="PENDING">Pendiente</option>
-                    <option value="COMPLETED">Completada</option>
-                    <option value="CANCELLED">Cancelada</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="notes">Notas</Label>
-                <Input
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit">
-                  {editingSale ? 'Actualizar' : 'Crear'} Venta
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => {
-                    setShowForm(false)
-                    setEditingSale(null)
-                    resetForm()
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="space-y-2">
         {filteredSales.map((sale) => (
@@ -659,15 +337,6 @@ export default function SalesPage() {
                   <span className="hidden sm:inline">Completar</span>
                 </Button>
               )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleEdit(sale)}
-                className="flex items-center space-x-1"
-              >
-                <Edit className="h-4 w-4" />
-                <span className="hidden sm:inline">Editar</span>
-              </Button>
               <Button
                 size="sm"
                 variant="outline"
