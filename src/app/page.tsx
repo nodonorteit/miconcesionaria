@@ -27,7 +27,7 @@ interface DashboardStats {
   totalSales: number
   totalRevenue: number
   pendingSales: number
-  activeSellers: number
+  activeCommissionists: number
   totalProviders: number
   totalWorkshops: number
   totalExpenses: number
@@ -60,7 +60,7 @@ export default function Dashboard() {
     totalSales: 0,
     totalRevenue: 0,
     pendingSales: 0,
-    activeSellers: 0,
+    activeCommissionists: 0,
     totalProviders: 0,
     totalWorkshops: 0,
     totalExpenses: 0,
@@ -205,7 +205,7 @@ export default function Dashboard() {
                   <UserCheck className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.activeSellers}</div>
+                  <div className="text-2xl font-bold">{stats.activeCommissionists}</div>
                   <p className="text-xs text-muted-foreground">Vendedores activos</p>
                 </CardContent>
               </Card>
