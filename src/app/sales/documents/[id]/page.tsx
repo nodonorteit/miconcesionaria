@@ -139,31 +139,53 @@ export default function SaleDocumentPage() {
     notes: document.transaction.notes,
     paymentMethod: document.transaction.paymentMethod,
     deliveryDate: document.transaction.deliveryDate,
-    vehicle: {
+    vehicle: document.transaction.vehicle ? {
       id: document.transaction.vehicle.id,
-      brand: document.transaction.vehicle.brand,
-      model: document.transaction.vehicle.model,
-      year: document.transaction.vehicle.year,
+      brand: document.transaction.vehicle.brand || '',
+      model: document.transaction.vehicle.model || '',
+      year: document.transaction.vehicle.year || 0,
       color: document.transaction.vehicle.color || 'No especificado',
-      mileage: document.transaction.vehicle.mileage,
+      mileage: document.transaction.vehicle.mileage || 0,
       vin: document.transaction.vehicle.vin,
       licensePlate: document.transaction.vehicle.licensePlate,
       vehicleType: {
-        name: document.transaction.vehicle.vehicleType.name
+        name: document.transaction.vehicle.vehicleType?.name || 'No especificado'
+      }
+    } : {
+      id: '',
+      brand: '',
+      model: '',
+      year: 0,
+      color: 'No especificado',
+      mileage: 0,
+      vin: '',
+      licensePlate: '',
+      vehicleType: {
+        name: 'No especificado'
       }
     },
-    customer: {
+    customer: document.transaction.customer ? {
       id: document.transaction.customer.id,
-      firstName: document.transaction.customer.firstName,
-      lastName: document.transaction.customer.lastName,
+      firstName: document.transaction.customer.firstName || '',
+      lastName: document.transaction.customer.lastName || '',
       email: document.transaction.customer.email,
       phone: document.transaction.customer.phone,
       documentNumber: document.transaction.customer.documentNumber,
       city: document.transaction.customer.city,
       state: document.transaction.customer.state,
       address: document.transaction.customer.address
+    } : {
+      id: '',
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      documentNumber: '',
+      city: '',
+      state: '',
+      address: ''
     },
-    seller: document.transaction.commissionist ? {
+    seller: document.transaction.commissionist && document.transaction.commissionist.firstName ? {
       id: document.transaction.commissionist.id,
       firstName: document.transaction.commissionist.firstName,
       lastName: document.transaction.commissionist.lastName,
