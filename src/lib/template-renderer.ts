@@ -1,31 +1,31 @@
 import { DocumentTemplate } from '@/types/document-template'
 
 interface SaleData {
-  id: string
-  saleNumber: string
-  saleDate: string
-  totalAmount: number
-  commission: number
+  id?: string
+  saleNumber?: string
+  saleDate?: string
+  totalAmount?: number
+  commission?: number
   notes?: string
   paymentMethod?: string
   deliveryDate?: string
-  vehicle: {
-    id: string
-    brand: string
-    model: string
-    year: number
-    color: string
-    mileage: number
+  vehicle?: {
+    id?: string
+    brand?: string
+    model?: string
+    year?: number
+    color?: string
+    mileage?: number
     vin?: string
     licensePlate?: string
-    vehicleType: {
-      name: string
+    vehicleType?: {
+      name?: string
     }
   }
-  customer: {
-    id: string
-    firstName: string
-    lastName: string
+  customer?: {
+    id?: string
+    firstName?: string
+    lastName?: string
     email?: string
     phone?: string
     documentNumber?: string
@@ -34,9 +34,9 @@ interface SaleData {
     address?: string
   }
   seller?: {
-    id: string
-    firstName: string
-    lastName: string
+    id?: string
+    firstName?: string
+    lastName?: string
     email?: string
     phone?: string
     documentNumber?: string
@@ -95,38 +95,38 @@ export function renderTemplate(
     '{{company.cuit}}': companyConfig.cuit || 'Sin CUIT',
     
     // Customer
-    '{{customer.firstName}}': saleData.customer.firstName,
-    '{{customer.lastName}}': saleData.customer.lastName,
-    '{{customer.address}}': saleData.customer.address || 'Sin dirección',
-    '{{customer.city}}': saleData.customer.city || '',
-    '{{customer.state}}': saleData.customer.state || '',
-    '{{customer.documentNumber}}': saleData.customer.documentNumber || '---',
+    '{{customer.firstName}}': saleData.customer?.firstName || '',
+    '{{customer.lastName}}': saleData.customer?.lastName || '',
+    '{{customer.address}}': saleData.customer?.address || 'Sin dirección',
+    '{{customer.city}}': saleData.customer?.city || '',
+    '{{customer.state}}': saleData.customer?.state || '',
+    '{{customer.documentNumber}}': saleData.customer?.documentNumber || '---',
     
     // Vehicle
-    '{{vehicle.brand}}': saleData.vehicle.brand,
-    '{{vehicle.model}}': saleData.vehicle.model,
-    '{{vehicle.year}}': saleData.vehicle.year.toString(),
-    '{{vehicle.color}}': saleData.vehicle.color,
-    '{{vehicle.vin}}': saleData.vehicle.vin || '---',
-    '{{vehicle.licensePlate}}': saleData.vehicle.licensePlate || '---',
-    '{{vehicle.type}}': saleData.vehicle.vehicleType.name,
-    '{{vehicle.mileage}}': saleData.vehicle.mileage.toLocaleString(),
-    '{{vehicle.engineNumber}}': saleData.vehicle.vin || '---', // Usar VIN como número de motor si no hay campo específico
+    '{{vehicle.brand}}': saleData.vehicle?.brand || '',
+    '{{vehicle.model}}': saleData.vehicle?.model || '',
+    '{{vehicle.year}}': saleData.vehicle?.year?.toString() || '0',
+    '{{vehicle.color}}': saleData.vehicle?.color || '',
+    '{{vehicle.vin}}': saleData.vehicle?.vin || '---',
+    '{{vehicle.licensePlate}}': saleData.vehicle?.licensePlate || '---',
+    '{{vehicle.type}}': saleData.vehicle?.vehicleType?.name || '',
+    '{{vehicle.mileage}}': saleData.vehicle?.mileage?.toLocaleString() || '0',
+    '{{vehicle.engineNumber}}': saleData.vehicle?.vin || '---', // Usar VIN como número de motor si no hay campo específico
     
     // Sale
-    '{{sale.totalAmount}}': formatCurrency(saleData.totalAmount),
+    '{{sale.totalAmount}}': formatCurrency(saleData.totalAmount || 0),
     '{{sale.paymentMethod}}': saleData.paymentMethod || 'CONTADO',
     '{{sale.deliveryDate}}': saleData.deliveryDate ? formatDate(saleData.deliveryDate) : '---',
     '{{sale.notes}}': saleData.notes || 'Sin observaciones',
-    '{{sale.date}}': formatDate(saleData.saleDate),
+    '{{sale.date}}': formatDate(saleData.saleDate || new Date().toISOString()),
     
     // Document
     '{{document.number}}': documentNumber,
     '{{document.generatedAt}}': formatDate(new Date().toISOString()),
     
     // Funciones de formato
-    '{{formatCurrency sale.totalAmount}}': formatCurrency(saleData.totalAmount),
-    '{{formatDate sale.date}}': formatDate(saleData.saleDate),
+    '{{formatCurrency sale.totalAmount}}': formatCurrency(saleData.totalAmount || 0),
+    '{{formatDate sale.date}}': formatDate(saleData.saleDate || new Date().toISOString()),
     '{{formatDate sale.deliveryDate}}': saleData.deliveryDate ? formatDate(saleData.deliveryDate) : '---',
     '{{formatDate document.generatedAt}}': formatDate(new Date().toISOString())
   }
