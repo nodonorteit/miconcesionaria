@@ -50,7 +50,7 @@ interface SaleDocumentProps {
       state?: string
       address?: string
     }
-    seller: {
+    seller?: {
       id: string
       firstName: string
       lastName: string
@@ -60,7 +60,7 @@ interface SaleDocumentProps {
       city?: string
       state?: string
       address?: string
-    }
+    } | null
   }
   isOpen: boolean
   onClose: () => void
@@ -135,7 +135,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
             state: sale.customer.state,
             address: sale.customer.address
           },
-          seller: {
+          seller: sale.seller ? {
             id: sale.seller.id,
             firstName: sale.seller.firstName,
             lastName: sale.seller.lastName,
@@ -145,7 +145,7 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
             city: sale.seller.city,
             state: sale.seller.state,
             address: sale.seller.address
-          }
+          } : null
         }
         
         const companyConfigData = {
@@ -331,12 +331,12 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(12)
       
-      doc.text(`Nombre: ${sale.customer.firstName} ${sale.customer.lastName}`, 20, 290)
-      if (sale.customer.email) {
-        doc.text(`Email: ${sale.customer.email}`, 20, 300)
+      doc.text(`Nombre: ${sale.seller ? `${sale.seller.firstName} ${sale.seller.lastName}` : 'Sin vendedor asignado'}`, 20, 290)
+      if (sale.seller?.email) {
+        doc.text(`Email: ${sale.seller.email}`, 20, 300)
       }
-      if (sale.customer.phone) {
-        doc.text(`Teléfono: ${sale.customer.phone}`, 20, 310)
+      if (sale.seller?.phone) {
+        doc.text(`Teléfono: ${sale.seller.phone}`, 20, 310)
       }
       doc.text(`Comisión: $${sale.commission}`, 20, 320)
       
@@ -492,15 +492,17 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-600">Nombre</label>
-                <p className="text-gray-900">{sale.seller.firstName} {sale.seller.lastName}</p>
+                <p className="text-gray-900">
+                  {sale.seller ? `${sale.seller.firstName} ${sale.seller.lastName}` : 'Sin vendedor asignado'}
+                </p>
               </div>
-              {sale.seller.email && (
+              {sale.seller?.email && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">Email</label>
                   <p className="text-gray-900">{sale.seller.email}</p>
                 </div>
               )}
-              {sale.seller.phone && (
+              {sale.seller?.phone && (
                 <div>
                   <label className="text-sm font-medium text-gray-600">Teléfono</label>
                   <p className="text-gray-900">{sale.seller.phone}</p>
