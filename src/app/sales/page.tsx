@@ -187,7 +187,7 @@ export default function SalesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ saleId }),
+        body: JSON.stringify({ transactionId: saleId }),
       })
 
       if (response.ok) {
