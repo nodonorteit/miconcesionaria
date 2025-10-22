@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
+    console.log(`🔍 Debug: Found ${sellers.length} active sellers`)
+    console.log(`🔍 Debug: First seller:`, sellers[0])
+
     // Para cada vendedor, calcular comisiones usando Prisma
     const sellersWithCommissions = await Promise.all(
       sellers.map(async (seller) => {
@@ -57,6 +60,11 @@ export async function GET(request: NextRequest) {
         // Calcular totales
         const totalSales = transactions.length
         const totalCommission = transactions.reduce((sum, t) => sum + Number(t.commission), 0)
+
+        console.log(`🔍 Debug: Seller ${seller.firstName} ${seller.lastName} (${seller.id}) has ${transactions.length} transactions`)
+        if (transactions.length > 0) {
+          console.log(`🔍 Debug: First transaction:`, transactions[0])
+        }
 
         // Obtener comisiones mensuales usando raw query
         const monthlyQuery = `
