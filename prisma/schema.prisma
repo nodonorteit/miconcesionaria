@@ -411,3 +411,20 @@ model CompanyConfig {
 
   @@map("company_config")
 }
+
+model SystemLog {
+  id          String   @id @default(cuid())
+  action      String   // CREATE, UPDATE, DELETE, COMPLETE, CANCEL, etc.
+  entity      String   // VEHICLE, SALE, CUSTOMER, EXPENSE, etc.
+  entityId    String   // ID del registro afectado
+  description String   // Descripción detallada de la acción
+  oldData     Json?    // Datos anteriores (para UPDATE)
+  newData     Json?    // Datos nuevos (para CREATE/UPDATE)
+  userId      String?  // Usuario que realizó la acción
+  userEmail   String?  // Email del usuario (backup)
+  ipAddress   String?  // IP desde donde se realizó la acción
+  userAgent   String?  // Navegador/dispositivo
+  createdAt   DateTime @default(now())
+
+  @@map("system_logs")
+}

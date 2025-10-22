@@ -98,6 +98,12 @@ export function MainNavigation() {
       href: '/admin',
       icon: Settings,
       permission: 'canViewAdmin'
+    },
+    {
+      label: 'Logs de Auditoría',
+      href: '/audit-logs',
+      icon: FileText,
+      permission: 'canViewAuditLogs'
     }
   ]
 

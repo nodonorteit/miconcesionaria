@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { AuditLogger, getUserInfoFromRequest } from '@/lib/audit-logger'
 
 // GET - Obtener una transacción específica
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -158,10 +159,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       )
     }
 
+    const userInfo = getUserInfoFromRequest(request)
+
     // Si es una venta completada, crear un egreso para reversar el ingreso
     if (transaction.type === 'SALE' && transaction.status === 'COMPLETED') {
       // Crear un egreso por el monto total de la venta (incluye la comisión)
-      await prisma.expense.create({
+      const expense = await prisma.expense.create({
         data: {
           description: `Reversión de venta cancelada: ${transaction.transactionNumber}`,
           amount: Number(transaction.totalAmount),
@@ -172,7 +175,41 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         }
       })
       console.log(`✅ Egreso creado por reversión de venta: $${transaction.totalAmount}`)
+
+      // Log del egreso creado
+      await AuditLogger.logExpenseAction(
+        'CREATE',
+        expense.id,
+        `Egreso automático por reversión de venta cancelada: ${transaction.transactionNumber}`,
+        undefined,
+        {
+          description: expense.description,
+          amount: Number(expense.amount),
+          type: expense.type
+        },
+        userInfo.userId,
+        userInfo.userEmail
+      )
     }
+
+    // Log de la cancelación de la venta
+    await AuditLogger.logSaleAction(
+      'CANCEL',
+      transaction.id,
+      `Venta cancelada: ${transaction.transactionNumber} - Monto: $${transaction.totalAmount}`,
+      {
+        status: transaction.status,
+        totalAmount: transaction.totalAmount,
+        commission: transaction.commission
+      },
+      {
+        status: 'CANCELLED',
+        totalAmount: transaction.totalAmount,
+        commission: transaction.commission
+      },
+      userInfo.userId,
+      userInfo.userEmail
+    )
 
     await prisma.transaction.update({
       where: { id: params.id },
@@ -186,6 +223,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         data: { status: 'AVAILABLE' }
       })
       console.log(`✅ Vehículo ${transaction.vehicleId} vuelve a estar disponible tras cancelar venta`)
+
+      // Log del cambio de estado del vehículo
+      await AuditLogger.logVehicleAction(
+        'UPDATE',
+        transaction.vehicleId,
+        `Vehículo vuelve a estar disponible tras cancelar venta: ${transaction.transactionNumber}`,
+        { status: 'SOLD' },
+        { status: 'AVAILABLE' },
+        userInfo.userId,
+        userInfo.userEmail
+      )
     }
 
     return NextResponse.json({ message: 'Transacción cancelada correctamente' })

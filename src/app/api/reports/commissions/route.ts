@@ -13,30 +13,37 @@ export async function GET(request: NextRequest) {
     let dateParams: any[] = []
 
     if (startDate && endDate) {
-      dateCondition = 'AND sa.createdAt >= ? AND sa.createdAt <= ?'
+      dateCondition = 'AND t.createdAt >= ? AND t.createdAt <= ?'
       dateParams = [new Date(startDate), new Date(endDate + 'T23:59:59')]
     } else if (startDate) {
-      dateCondition = 'AND sa.createdAt >= ?'
+      dateCondition = 'AND t.createdAt >= ?'
       dateParams = [new Date(startDate)]
     } else if (endDate) {
-      dateCondition = 'AND sa.createdAt <= ?'
+      dateCondition = 'AND t.createdAt <= ?'
       dateParams = [new Date(endDate + 'T23:59:59')]
     }
 
     // Obtener todos los vendedores con sus comisiones
     const sellersQuery = `
       SELECT 
-        s.id,
-        s.firstName,
-        s.lastName,
-        s.email,
-        s.commissionRate,
-        COALESCE(COUNT(sa.id), 0) as totalSales,
-        COALESCE(SUM(sa.totalAmount * s.commissionRate), 0) as totalCommission
-      FROM sellers s
-      LEFT JOIN sales sa ON s.id = sa.sellerId ${dateCondition ? `AND sa.createdAt IS NOT NULL ${dateCondition}` : ''}
-      WHERE s.isActive = 1
-      GROUP BY s.id, s.firstName, s.lastName, s.email, s.commissionRate
+        c.id,
+        c.firstName,
+        c.lastName,
+        c.email,
+        c.commissionRate,
+        COALESCE(sales_data.totalSales, 0) as totalSales,
+        COALESCE(sales_data.totalCommission, 0) as totalCommission
+      FROM commissionists c
+      LEFT JOIN (
+        SELECT 
+          commissionistId,
+          COUNT(*) as totalSales,
+          SUM(commission) as totalCommission
+        FROM transactions 
+        WHERE type = 'SALE' AND status = 'COMPLETED' ${dateCondition ? `AND createdAt IS NOT NULL ${dateCondition}` : ''}
+        GROUP BY commissionistId
+      ) sales_data ON c.id = sales_data.commissionistId
+      WHERE c.isActive = 1
       ORDER BY totalCommission DESC
     `
 
@@ -47,29 +54,29 @@ export async function GET(request: NextRequest) {
       (sellers as any[]).map(async (seller) => {
         let monthlyQuery = `
           SELECT 
-            DATE_FORMAT(sa.createdAt, '%Y-%m') as month,
-            DATE_FORMAT(sa.createdAt, '%M %Y') as monthName,
-            COUNT(sa.id) as sales,
-            SUM(sa.totalAmount * ${seller.commissionRate}) as commission
-          FROM sales sa
-          WHERE sa.sellerId = ?
+            DATE_FORMAT(t.createdAt, '%Y-%m') as month,
+            DATE_FORMAT(t.createdAt, '%M %Y') as monthName,
+            COUNT(t.id) as sales,
+            SUM(t.commission) as commission
+          FROM transactions t
+          WHERE t.commissionistId = ? AND t.type = 'SALE' AND t.status = 'COMPLETED'
         `
 
         let monthlyParams = [seller.id]
 
         if (startDate && endDate) {
-          monthlyQuery += ' AND sa.createdAt >= ? AND sa.createdAt <= ?'
+          monthlyQuery += ' AND t.createdAt >= ? AND t.createdAt <= ?'
           monthlyParams.push(new Date(startDate), new Date(endDate + 'T23:59:59'))
         } else if (startDate) {
-          monthlyQuery += ' AND sa.createdAt >= ?'
+          monthlyQuery += ' AND t.createdAt >= ?'
           monthlyParams.push(new Date(startDate))
         } else if (endDate) {
-          monthlyQuery += ' AND sa.createdAt <= ?'
+          monthlyQuery += ' AND t.createdAt <= ?'
           monthlyParams.push(new Date(endDate + 'T23:59:59'))
         }
 
         monthlyQuery += `
-          GROUP BY DATE_FORMAT(sa.createdAt, '%Y-%m'), DATE_FORMAT(sa.createdAt, '%M %Y')
+          GROUP BY DATE_FORMAT(t.createdAt, '%Y-%m'), DATE_FORMAT(t.createdAt, '%M %Y')
           ORDER BY month DESC
           LIMIT 12
         `
