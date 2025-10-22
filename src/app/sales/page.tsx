@@ -104,7 +104,11 @@ export default function SalesPage() {
     if (!sale) return
     
     const confirmed = window.confirm(
-      `¿Estás seguro de que quieres eliminar la venta "${sale.saleNumber}"?\n\nEsta acción no se puede deshacer.`
+      `¿Estás seguro de que quieres cancelar la venta "${sale.saleNumber}"?\n\n${
+        sale.status === 'COMPLETED' 
+          ? '⚠️ ATENCIÓN: Esta venta está completada. Al cancelarla se creará un egreso por el monto total para reversar el ingreso.\n\n'
+          : ''
+      }Esta acción marcará la venta como cancelada y el vehículo volverá a estar disponible.`
     )
     
     if (!confirmed) return
@@ -117,7 +121,7 @@ export default function SalesPage() {
       })
 
       if (response.ok) {
-        toast.success('Venta eliminada correctamente')
+        toast.success(sale.status === 'COMPLETED' ? 'Venta cancelada y egreso creado' : 'Venta cancelada correctamente')
         fetchSales()
       } else {
         toast.error('Error al eliminar venta')

@@ -158,6 +158,37 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       )
     }
 
+    // Si es una venta completada, crear un egreso para reversar el ingreso
+    if (transaction.type === 'SALE' && transaction.status === 'COMPLETED') {
+      // Crear un egreso por el monto total de la venta
+      await prisma.expense.create({
+        data: {
+          description: `Reversión de venta cancelada: ${transaction.transactionNumber}`,
+          amount: Number(transaction.totalAmount),
+          type: 'WORKSHOP' as any, // Tipo genérico para reversiones
+          workshopId: null,
+          commissionistId: null,
+          receiptPath: null
+        }
+      })
+      console.log(`✅ Egreso creado por reversión de venta: $${transaction.totalAmount}`)
+
+      // Si había comisión, también crear un egreso por la comisión
+      if (transaction.commission && Number(transaction.commission) > 0) {
+        await prisma.expense.create({
+          data: {
+            description: `Reversión de comisión cancelada: ${transaction.transactionNumber}`,
+            amount: Number(transaction.commission),
+            type: 'WORKSHOP' as any, // Tipo genérico para reversiones
+            workshopId: null,
+            commissionistId: transaction.commissionistId,
+            receiptPath: null
+          }
+        })
+        console.log(`✅ Egreso creado por reversión de comisión: $${transaction.commission}`)
+      }
+    }
+
     await prisma.transaction.update({
       where: { id: params.id },
       data: { status: 'CANCELLED' }
