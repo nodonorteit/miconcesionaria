@@ -108,7 +108,16 @@ export async function GET(request: NextRequest) {
     // Ordenar por comisión total descendente
     sellersWithCommissions.sort((a, b) => b.totalCommission - a.totalCommission)
 
-    return NextResponse.json(sellersWithCommissions)
+    // Debug: retornar información adicional para debuggear
+    return NextResponse.json({
+      sellersWithCommissions,
+      debug: {
+        totalSellers: sellers.length,
+        sellersWithSales: sellersWithCommissions.filter(s => s.totalSales > 0).length,
+        totalTransactions: sellersWithCommissions.reduce((sum, s) => sum + s.totalSales, 0),
+        totalCommissions: sellersWithCommissions.reduce((sum, s) => sum + s.totalCommission, 0)
+      }
+    })
   } catch (error) {
     console.error('Error fetching commissions report:', error)
     return NextResponse.json(

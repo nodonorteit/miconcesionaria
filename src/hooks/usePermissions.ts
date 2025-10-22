@@ -19,6 +19,7 @@ export interface UserPermissions {
   canDeleteWorkshops: boolean
   canViewCashflow: boolean
   canViewAdmin: boolean
+  canViewAuditLogs: boolean
   canCreateVehicles: boolean
   canDeleteVehicles: boolean
   canCreateCustomers: boolean
@@ -70,6 +71,9 @@ export function usePermissions(): UserPermissions {
 
     // Permisos para administración
     canViewAdmin: isAdmin || isManager,
+
+    // Permisos para logs de auditoría (solo administradores)
+    canViewAuditLogs: isAdmin,
 
     // Permisos para vehículos (usuarios comunes pueden crear/ver)
     canCreateVehicles: true, // Todos pueden crear vehículos
