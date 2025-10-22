@@ -8,95 +8,99 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
-    // Construir condiciones de fecha
-    let dateCondition = ''
-    let dateParams: any[] = []
-
-    if (startDate && endDate) {
-      dateCondition = 'AND t.createdAt >= ? AND t.createdAt <= ?'
-      dateParams = [new Date(startDate), new Date(endDate + 'T23:59:59')]
-    } else if (startDate) {
-      dateCondition = 'AND t.createdAt >= ?'
-      dateParams = [new Date(startDate)]
-    } else if (endDate) {
-      dateCondition = 'AND t.createdAt <= ?'
-      dateParams = [new Date(endDate + 'T23:59:59')]
+    // Construir condiciones de fecha para Prisma
+    const dateFilter: any = {}
+    if (startDate) {
+      dateFilter.gte = new Date(startDate)
+    }
+    if (endDate) {
+      dateFilter.lte = new Date(endDate + 'T23:59:59')
     }
 
-    // Obtener todos los vendedores con sus comisiones
-    const sellersQuery = `
-      SELECT 
-        c.id,
-        c.firstName,
-        c.lastName,
-        c.email,
-        c.commissionRate,
-        COALESCE(sales_data.totalSales, 0) as totalSales,
-        COALESCE(sales_data.totalCommission, 0) as totalCommission
-      FROM commissionists c
-      LEFT JOIN (
-        SELECT 
-          commissionistId,
-          COUNT(*) as totalSales,
-          SUM(commission) as totalCommission
-        FROM transactions 
-        WHERE type = 'SALE' AND status = 'COMPLETED' ${dateCondition ? `AND createdAt IS NOT NULL ${dateCondition}` : ''}
-        GROUP BY commissionistId
-      ) sales_data ON c.id = sales_data.commissionistId
-      WHERE c.isActive = 1
-      ORDER BY totalCommission DESC
-    `
+    // Obtener todos los vendedores activos
+    const sellers = await prisma.commissionist.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        commissionRate: true
+      }
+    })
 
-    const sellers = await prisma.$queryRawUnsafe(sellersQuery, ...dateParams)
-
-    // Para cada vendedor, obtener comisiones mensuales
-    const sellersWithMonthlyData = await Promise.all(
-      (sellers as any[]).map(async (seller) => {
-        let monthlyQuery = `
-          SELECT 
-            DATE_FORMAT(t.createdAt, '%Y-%m') as month,
-            DATE_FORMAT(t.createdAt, '%M %Y') as monthName,
-            COUNT(t.id) as sales,
-            SUM(t.commission) as commission
-          FROM transactions t
-          WHERE t.commissionistId = ? AND t.type = 'SALE' AND t.status = 'COMPLETED'
-        `
-
-        let monthlyParams = [seller.id]
-
-        if (startDate && endDate) {
-          monthlyQuery += ' AND t.createdAt >= ? AND t.createdAt <= ?'
-          monthlyParams.push(new Date(startDate), new Date(endDate + 'T23:59:59'))
-        } else if (startDate) {
-          monthlyQuery += ' AND t.createdAt >= ?'
-          monthlyParams.push(new Date(startDate))
-        } else if (endDate) {
-          monthlyQuery += ' AND t.createdAt <= ?'
-          monthlyParams.push(new Date(endDate + 'T23:59:59'))
+    // Para cada vendedor, calcular comisiones usando Prisma
+    const sellersWithCommissions = await Promise.all(
+      sellers.map(async (seller) => {
+        // Construir filtro de fecha para transacciones
+        const transactionFilter: any = {
+          commissionistId: seller.id,
+          type: 'SALE',
+          status: 'COMPLETED'
+        }
+        
+        if (Object.keys(dateFilter).length > 0) {
+          transactionFilter.createdAt = dateFilter
         }
 
-        monthlyQuery += `
-          GROUP BY DATE_FORMAT(t.createdAt, '%Y-%m'), DATE_FORMAT(t.createdAt, '%M %Y')
+        // Obtener transacciones del vendedor
+        const transactions = await prisma.transaction.findMany({
+          where: transactionFilter,
+          select: {
+            id: true,
+            commission: true,
+            totalAmount: true,
+            createdAt: true
+          }
+        })
+
+        // Calcular totales
+        const totalSales = transactions.length
+        const totalCommission = transactions.reduce((sum, t) => sum + Number(t.commission), 0)
+
+        // Obtener comisiones mensuales usando raw query
+        const monthlyQuery = `
+          SELECT 
+            DATE_FORMAT(createdAt, '%Y-%m') as month,
+            DATE_FORMAT(createdAt, '%M %Y') as monthName,
+            COUNT(*) as sales,
+            SUM(commission) as commission
+          FROM transactions 
+          WHERE commissionistId = ? AND type = 'SALE' AND status = 'COMPLETED'
+          ${Object.keys(dateFilter).length > 0 ? 
+            (dateFilter.gte ? 'AND createdAt >= ?' : '') + 
+            (dateFilter.lte ? ' AND createdAt <= ?' : '') : ''}
+          GROUP BY DATE_FORMAT(createdAt, '%Y-%m'), DATE_FORMAT(createdAt, '%M %Y')
           ORDER BY month DESC
           LIMIT 12
         `
 
+        const monthlyParams = [seller.id]
+        if (dateFilter.gte) monthlyParams.push(dateFilter.gte)
+        if (dateFilter.lte) monthlyParams.push(dateFilter.lte)
+
         const monthlyCommissions = await prisma.$queryRawUnsafe(monthlyQuery, ...monthlyParams)
+
+        // Formatear datos mensuales
+        const formattedMonthly = (monthlyCommissions as any[]).map(month => ({
+          month: month.monthName,
+          sales: Number(month.sales),
+          commission: Number(month.commission)
+        }))
 
         return {
           ...seller,
-          totalSales: Number(seller.totalSales),
-          totalCommission: Number(seller.totalCommission),
-          monthlyCommissions: (monthlyCommissions as any[]).map(month => ({
-            month: month.monthName,
-            sales: Number(month.sales),
-            commission: Number(month.commission)
-          }))
+          totalSales,
+          totalCommission,
+          monthlyCommissions: formattedMonthly
         }
       })
     )
 
-    return NextResponse.json(sellersWithMonthlyData)
+    // Ordenar por comisión total descendente
+    sellersWithCommissions.sort((a, b) => b.totalCommission - a.totalCommission)
+
+    return NextResponse.json(sellersWithCommissions)
   } catch (error) {
     console.error('Error fetching commissions report:', error)
     return NextResponse.json(
