@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-// GET - Obtener logs de auditoría
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -9,152 +8,198 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const entity = searchParams.get('entity')
     const action = searchParams.get('action')
-    const entityId = searchParams.get('entityId')
+    const userId = searchParams.get('userId')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
 
     const skip = (page - 1) * limit
 
     // Construir filtros
-    const whereClause: any = {}
+    const where: any = {}
     
     if (entity) {
-      whereClause.entity = entity
+      where.entity = entity
     }
     
     if (action) {
-      whereClause.action = action
+      where.action = action
     }
     
-    if (entityId) {
-      whereClause.entityId = entityId
+    if (userId) {
+      where.userId = userId
     }
     
     if (startDate || endDate) {
-      whereClause.createdAt = {}
+      where.createdAt = {}
       if (startDate) {
-        whereClause.createdAt.gte = new Date(startDate)
+        where.createdAt.gte = new Date(startDate)
       }
       if (endDate) {
-        whereClause.createdAt.lte = new Date(endDate)
+        where.createdAt.lte = new Date(endDate)
       }
     }
 
-    const [logs, totalCount] = await Promise.all([
+    // Obtener logs con paginación
+    const [logs, total] = await Promise.all([
       prisma.systemLog.findMany({
-        where: whereClause,
+        where,
         orderBy: {
           createdAt: 'desc'
         },
         skip,
         take: limit
       }),
-      prisma.systemLog.count({
-        where: whereClause
-      })
+      prisma.systemLog.count({ where })
     ])
 
-    // Parsear los datos JSON almacenados
-    const parsedLogs = logs.map(log => ({
-      ...log,
-      oldData: log.oldData ? JSON.parse(log.oldData as string) : null,
-      newData: log.newData ? JSON.parse(log.newData as string) : null
-    }))
+    // Obtener estadísticas
+    const stats = await prisma.systemLog.groupBy({
+      by: ['action'],
+      _count: {
+        action: true
+      },
+      where: where
+    })
+
+    const entityStats = await prisma.systemLog.groupBy({
+      by: ['entity'],
+      _count: {
+        entity: true
+      },
+      where: where
+    })
 
     return NextResponse.json({
-      logs: parsedLogs,
+      logs,
       pagination: {
         page,
         limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
+      },
+      stats: {
+        byAction: stats,
+        byEntity: entityStats
       }
     })
+
   } catch (error) {
     console.error('Error fetching audit logs:', error)
     return NextResponse.json(
-      { error: 'Error al obtener logs de auditoría' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }
 }
 
-// GET - Obtener estadísticas de logs
+// Endpoint para obtener estadísticas de auditoría
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { startDate, endDate } = body
+    const { startDate, endDate, entity, action } = body
 
-    const whereClause: any = {}
+    const where: any = {}
+    
     if (startDate || endDate) {
-      whereClause.createdAt = {}
+      where.createdAt = {}
       if (startDate) {
-        whereClause.createdAt.gte = new Date(startDate)
+        where.createdAt.gte = new Date(startDate)
       }
       if (endDate) {
-        whereClause.createdAt.lte = new Date(endDate)
+        where.createdAt.lte = new Date(endDate)
       }
     }
+    
+    if (entity) {
+      where.entity = entity
+    }
+    
+    if (action) {
+      where.action = action
+    }
 
-    // Estadísticas por entidad
-    const entityStats = await prisma.systemLog.groupBy({
-      by: ['entity'],
-      where: whereClause,
-      _count: {
-        entity: true
-      }
-    })
-
-    // Estadísticas por acción
-    const actionStats = await prisma.systemLog.groupBy({
-      by: ['action'],
-      where: whereClause,
-      _count: {
-        action: true
-      }
-    })
-
-    // Estadísticas por usuario
-    const userStats = await prisma.systemLog.groupBy({
-      by: ['userEmail'],
-      where: {
-        ...whereClause,
-        userEmail: {
-          not: null
-        }
-      },
-      _count: {
-        userEmail: true
-      }
-    })
-
-    // Actividad por día (últimos 30 días)
+    // Estadísticas generales
+    const totalLogs = await prisma.systemLog.count({ where })
+    
+    // Logs por día (últimos 30 días)
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-
-    const dailyActivity = await prisma.systemLog.groupBy({
+    
+    const dailyStats = await prisma.systemLog.groupBy({
       by: ['createdAt'],
+      _count: {
+        id: true
+      },
       where: {
+        ...where,
         createdAt: {
           gte: thirtyDaysAgo
         }
       },
-      _count: {
-        id: true
+      orderBy: {
+        createdAt: 'desc'
       }
     })
 
-    return NextResponse.json({
-      entityStats,
-      actionStats,
-      userStats,
-      dailyActivity
+    // Top usuarios más activos
+    const topUsers = await prisma.systemLog.groupBy({
+      by: ['userId', 'userEmail'],
+      _count: {
+        id: true
+      },
+      where: {
+        ...where,
+        userId: {
+          not: null
+        }
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: 10
     })
+
+    // Top entidades más modificadas
+    const topEntities = await prisma.systemLog.groupBy({
+      by: ['entity'],
+      _count: {
+        id: true
+      },
+      where,
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: 10
+    })
+
+    return NextResponse.json({
+      totalLogs,
+      dailyStats,
+      topUsers,
+      topEntities
+    })
+
   } catch (error) {
     console.error('Error fetching audit statistics:', error)
     return NextResponse.json(
-      { error: 'Error al obtener estadísticas de auditoría' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }
+}
+
+// IMPORTANTE: No implementamos DELETE para prevenir eliminación de logs de auditoría
+// Los logs de auditoría son inmutables y solo pueden ser eliminados directamente desde la base de datos
+export async function DELETE() {
+  return NextResponse.json(
+    { 
+      error: 'Los logs de auditoría no pueden ser eliminados desde la aplicación',
+      message: 'Los registros de auditoría son inmutables por seguridad'
+    },
+    { status: 403 }
+  )
 }

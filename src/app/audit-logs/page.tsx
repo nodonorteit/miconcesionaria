@@ -1,19 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { 
-  Search, 
-  Filter, 
-  Calendar, 
-  User, 
-  Activity,
-  Eye,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react'
+import { Label } from '@/components/ui/label'
 
 interface AuditLog {
   id: string
@@ -23,79 +14,118 @@ interface AuditLog {
   description: string
   oldData: any
   newData: any
-  userId: string
-  userEmail: string
-  ipAddress: string
-  userAgent: string
+  userId: string | null
+  userEmail: string | null
+  ipAddress: string | null
+  userAgent: string | null
   createdAt: string
 }
 
-interface Pagination {
-  page: number
-  limit: number
-  total: number
-  totalPages: number
+interface AuditStats {
+  totalLogs: number
+  dailyStats: Array<{
+    createdAt: string
+    _count: { id: number }
+  }>
+  topUsers: Array<{
+    userId: string
+    userEmail: string
+    _count: { id: number }
+  }>
+  topEntities: Array<{
+    entity: string
+    _count: { id: number }
+  }>
 }
 
 export default function AuditLogsPage() {
   const [logs, setLogs] = useState<AuditLog[]>([])
+  const [stats, setStats] = useState<AuditStats | null>(null)
   const [loading, setLoading] = useState(true)
-  const [pagination, setPagination] = useState<Pagination>({
-    page: 1,
-    limit: 50,
-    total: 0,
-    totalPages: 0
-  })
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
   const [filters, setFilters] = useState({
     entity: '',
     action: '',
-    entityId: '',
+    userId: '',
     startDate: '',
     endDate: ''
   })
-
-  useEffect(() => {
-    fetchLogs()
-  }, [pagination.page, filters])
 
   const fetchLogs = async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...Object.fromEntries(
-          Object.entries(filters).filter(([_, value]) => value !== '')
-        )
+        page: page.toString(),
+        limit: '50',
+        ...Object.fromEntries(Object.entries(filters).filter(([_, v]) => v))
       })
 
       const response = await fetch(`/api/audit-logs?${params}`)
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         setLogs(data.logs)
-        setPagination(data.pagination)
+        setTotalPages(data.pagination.totalPages)
+      } else {
+        console.error('Error fetching logs:', data.error)
       }
     } catch (error) {
-      console.error('Error fetching audit logs:', error)
+      console.error('Error fetching logs:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/audit-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(filters)
+      })
+      const data = await response.json()
+
+      if (response.ok) {
+        setStats(data)
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchLogs()
+    fetchStats()
+  }, [page, filters])
+
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
-    setPagination(prev => ({ ...prev, page: 1 }))
+    setPage(1) // Reset to first page when filters change
   }
 
   const clearFilters = () => {
     setFilters({
       entity: '',
       action: '',
-      entityId: '',
+      userId: '',
       startDate: '',
       endDate: ''
     })
-    setPagination(prev => ({ ...prev, page: 1 }))
+    setPage(1)
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
   }
 
   const getActionColor = (action: string) => {
@@ -103,196 +133,225 @@ export default function AuditLogsPage() {
       case 'CREATE': return 'bg-green-100 text-green-800'
       case 'UPDATE': return 'bg-blue-100 text-blue-800'
       case 'DELETE': return 'bg-red-100 text-red-800'
-      case 'CANCEL': return 'bg-orange-100 text-orange-800'
       case 'COMPLETE': return 'bg-purple-100 text-purple-800'
+      case 'CANCEL': return 'bg-orange-100 text-orange-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
 
-  const getEntityIcon = (entity: string) => {
+  const getEntityColor = (entity: string) => {
     switch (entity) {
-      case 'VEHICLE': return '🚗'
-      case 'SALE': return '💰'
-      case 'CUSTOMER': return '👤'
-      case 'EXPENSE': return '📊'
-      default: return '📝'
+      case 'VEHICLE': return 'bg-blue-50 text-blue-700'
+      case 'SALE': return 'bg-green-50 text-green-700'
+      case 'CUSTOMER': return 'bg-purple-50 text-purple-700'
+      case 'EXPENSE': return 'bg-red-50 text-red-700'
+      default: return 'bg-gray-50 text-gray-700'
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center">Cargando logs de auditoría...</div>
-      </div>
-    )
   }
 
   return (
     <div className="container mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Logs de Auditoría</h1>
-        <p className="text-gray-600">Registro completo de todas las acciones del sistema</p>
+        <h1 className="text-3xl font-bold text-gray-900">Auditoría del Sistema</h1>
+        <p className="text-gray-600 mt-2">
+          Registro de todos los movimientos y cambios realizados en el sistema
+        </p>
       </div>
 
-      {/* Filtros */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filtros
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-600">Entidad</label>
-              <select
-                value={filters.entity}
-                onChange={(e) => handleFilterChange('entity', e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Todas</option>
-                <option value="VEHICLE">Vehículos</option>
-                <option value="SALE">Ventas</option>
-                <option value="CUSTOMER">Clientes</option>
-                <option value="EXPENSE">Egresos</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-600">Acción</label>
-              <select
-                value={filters.action}
-                onChange={(e) => handleFilterChange('action', e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">Todas</option>
-                <option value="CREATE">Crear</option>
-                <option value="UPDATE">Actualizar</option>
-                <option value="DELETE">Eliminar</option>
-                <option value="CANCEL">Cancelar</option>
-                <option value="COMPLETE">Completar</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-600">ID de Entidad</label>
-              <Input
-                value={filters.entityId}
-                onChange={(e) => handleFilterChange('entityId', e.target.value)}
-                placeholder="ID específico"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-600">Fecha Desde</label>
-              <Input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-600">Fecha Hasta</label>
-              <Input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              />
-            </div>
-            <div className="flex items-end">
-              <Button onClick={clearFilters} variant="outline" className="w-full">
-                Limpiar
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Logs */}
-      <div className="space-y-4">
-        {logs.map((log) => (
-          <Card key={log.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{getEntityIcon(log.entity)}</span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
-                      {log.action}
-                    </span>
-                    <span className="text-sm text-gray-500">{log.entity}</span>
-                    <span className="text-xs text-gray-400">#{log.entityId}</span>
-                  </div>
-                  
-                  <p className="text-gray-900 mb-2">{log.description}</p>
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {log.userEmail || 'Sistema'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(log.createdAt).toLocaleString('es-AR')}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Activity className="h-3 w-3" />
-                      {log.ipAddress}
-                    </span>
-                  </div>
-                </div>
-                
-                {(log.oldData || log.newData) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const details = {
-                        oldData: log.oldData,
-                        newData: log.newData,
-                        userAgent: log.userAgent
-                      }
-                      alert(JSON.stringify(details, null, 2))
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </CardContent>
+      {/* Estadísticas */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <Card className="p-4">
+            <h3 className="font-semibold text-gray-700">Total de Registros</h3>
+            <p className="text-2xl font-bold text-blue-600">{stats.totalLogs}</p>
           </Card>
-        ))}
-      </div>
-
-      {/* Paginación */}
-      {pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-500">
-            Mostrando {((pagination.page - 1) * pagination.limit) + 1} a {Math.min(pagination.page * pagination.limit, pagination.total)} de {pagination.total} registros
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
-              disabled={pagination.page === 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Anterior
-            </Button>
-            <span className="text-sm">
-              Página {pagination.page} de {pagination.totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
-              disabled={pagination.page === pagination.totalPages}
-            >
-              Siguiente
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <Card className="p-4">
+            <h3 className="font-semibold text-gray-700">Usuarios Activos</h3>
+            <p className="text-2xl font-bold text-green-600">{stats.topUsers.length}</p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="font-semibold text-gray-700">Entidades Modificadas</h3>
+            <p className="text-2xl font-bold text-purple-600">{stats.topEntities.length}</p>
+          </Card>
+          <Card className="p-4">
+            <h3 className="font-semibold text-gray-700">Registros Hoy</h3>
+            <p className="text-2xl font-bold text-orange-600">
+              {stats.dailyStats.find(d => 
+                new Date(d.createdAt).toDateString() === new Date().toDateString()
+              )?._count.id || 0}
+            </p>
+          </Card>
         </div>
       )}
+
+      {/* Filtros */}
+      <Card className="p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Filtros</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div>
+            <Label htmlFor="entity">Entidad</Label>
+            <Input
+              id="entity"
+              value={filters.entity}
+              onChange={(e) => handleFilterChange('entity', e.target.value)}
+              placeholder="VEHICLE, SALE, etc."
+            />
+          </div>
+          <div>
+            <Label htmlFor="action">Acción</Label>
+            <Input
+              id="action"
+              value={filters.action}
+              onChange={(e) => handleFilterChange('action', e.target.value)}
+              placeholder="CREATE, UPDATE, etc."
+            />
+          </div>
+          <div>
+            <Label htmlFor="userId">Usuario</Label>
+            <Input
+              id="userId"
+              value={filters.userId}
+              onChange={(e) => handleFilterChange('userId', e.target.value)}
+              placeholder="ID del usuario"
+            />
+          </div>
+          <div>
+            <Label htmlFor="startDate">Fecha Inicio</Label>
+            <Input
+              id="startDate"
+              type="date"
+              value={filters.startDate}
+              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="endDate">Fecha Fin</Label>
+            <Input
+              id="endDate"
+              type="date"
+              value={filters.endDate}
+              onChange={(e) => handleFilterChange('endDate', e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="mt-4">
+          <Button onClick={clearFilters} variant="outline">
+            Limpiar Filtros
+          </Button>
+        </div>
+      </Card>
+
+      {/* Lista de Logs */}
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Registros de Auditoría</h2>
+          <div className="text-sm text-gray-500">
+            Página {page} de {totalPages}
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Cargando registros...</p>
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No se encontraron registros con los filtros aplicados
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {logs.map((log) => (
+              <div key={log.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getActionColor(log.action)}`}>
+                      {log.action}
+                    </span>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getEntityColor(log.entity)}`}>
+                      {log.entity}
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {formatDate(log.createdAt)}
+                  </span>
+                </div>
+                
+                <p className="text-gray-800 mb-2">{log.description}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-600">ID Entidad:</span>
+                    <span className="ml-2 font-mono">{log.entityId}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Usuario:</span>
+                    <span className="ml-2">
+                      {log.userEmail || log.userId || 'Sistema'}
+                    </span>
+                  </div>
+                  {log.ipAddress && (
+                    <div>
+                      <span className="font-medium text-gray-600">IP:</span>
+                      <span className="ml-2 font-mono">{log.ipAddress}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mostrar datos si existen */}
+                {(log.oldData || log.newData) && (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm font-medium text-gray-600 hover:text-gray-800">
+                      Ver Detalles
+                    </summary>
+                    <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {log.oldData && (
+                        <div>
+                          <h4 className="font-medium text-gray-700 mb-1">Datos Anteriores:</h4>
+                          <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-32">
+                            {JSON.stringify(log.oldData, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      {log.newData && (
+                        <div>
+                          <h4 className="font-medium text-gray-700 mb-1">Datos Nuevos:</h4>
+                          <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-32">
+                            {JSON.stringify(log.newData, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-6">
+            <Button
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              variant="outline"
+            >
+              Anterior
+            </Button>
+            <span className="px-4 py-2 text-sm text-gray-600">
+              Página {page} de {totalPages}
+            </span>
+            <Button
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              variant="outline"
+            >
+              Siguiente
+            </Button>
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

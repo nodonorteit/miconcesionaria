@@ -15,7 +15,8 @@ import {
   FileText,
   Settings,
   MinusCircle,
-  Archive
+  Archive,
+  Shield
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -102,7 +103,7 @@ export function MainNavigation() {
     {
       label: 'Logs de Auditoría',
       href: '/audit-logs',
-      icon: FileText,
+      icon: Shield,
       permission: 'canViewAuditLogs'
     }
   ]
