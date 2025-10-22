@@ -99,12 +99,21 @@ export default function SalesPage() {
 
 
 
+  const getSaleDescription = (sale: Sale) => {
+    const vehicleInfo = sale.vehicle ? `${sale.vehicle.brand} ${sale.vehicle.model} ${sale.vehicle.year}` : 'Vehículo'
+    const customerInfo = sale.customer ? `${sale.customer.firstName} ${sale.customer.lastName}` : 'Cliente'
+    const saleNumber = sale.saleNumber || `#${sale.id.slice(-6)}`
+    return `${saleNumber} - ${vehicleInfo} (${customerInfo})`
+  }
+
   const handleDelete = async (id: string) => {
     const sale = sales.find(s => s.id === id)
     if (!sale) return
     
+    const saleDescription = getSaleDescription(sale)
+    
     const confirmed = window.confirm(
-      `¿Estás seguro de que quieres cancelar la venta "${sale.saleNumber}"?\n\n${
+      `¿Estás seguro de que quieres cancelar la venta "${saleDescription}"?\n\n${
         sale.status === 'COMPLETED' 
           ? '⚠️ ATENCIÓN: Esta venta está completada. Al cancelarla se creará un egreso por el monto total para reversar el ingreso.\n\n'
           : ''
@@ -137,8 +146,10 @@ export default function SalesPage() {
     const sale = sales.find(s => s.id === id)
     if (!sale) return
     
+    const saleDescription = getSaleDescription(sale)
+    
     const confirmed = window.confirm(
-      `¿Estás seguro de que quieres marcar como completada la venta "${sale.saleNumber}"?\n\nEsta acción confirmará que el pago ha sido recibido.`
+      `¿Estás seguro de que quieres marcar como completada la venta "${saleDescription}"?\n\nEsta acción confirmará que el pago ha sido recibido.`
     )
     
     if (!confirmed) return
