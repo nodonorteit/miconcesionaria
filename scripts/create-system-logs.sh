@@ -5,6 +5,17 @@
 
 echo "🔧 Creando tabla system_logs..."
 
+# Configuración de la base de datos (usando las credenciales de producción)
+DB_HOST="127.0.0.1"
+DB_USER="miconcesionaria"
+DB_PASSWORD="%21FVsxr%3Fpmm34xm2N"
+DB_NAME="miconcesionaria"
+
+echo "📊 Configuración de base de datos:"
+echo "  Host: $DB_HOST"
+echo "  Database: $DB_NAME"
+echo "  User: $DB_USER"
+
 # Verificar que el archivo SQL existe
 if [ ! -f "scripts/create-system-logs-table.sql" ]; then
     echo "❌ Error: No se encontró el archivo scripts/create-system-logs-table.sql"
