@@ -10,7 +10,12 @@ export async function GET() {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(c.firstName, ' ', c.lastName) COLLATE utf8mb4_unicode_ci as commissionistName
+        c.id as commissionistId,
+        c.firstName as commissionistFirstName,
+        c.lastName as commissionistLastName,
+        c.email as commissionistEmail,
+        c.phone as commissionistPhone,
+        c.commissionRate as commissionistCommissionRate
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
       LEFT JOIN commissionists c ON e.commissionistId = c.id COLLATE utf8mb4_unicode_ci
@@ -102,7 +107,12 @@ export async function POST(request: NextRequest) {
       SELECT 
         e.*,
         w.name as workshopName,
-        CONCAT(c.firstName, ' ', c.lastName) COLLATE utf8mb4_unicode_ci as commissionistName
+        c.id as commissionistId,
+        c.firstName as commissionistFirstName,
+        c.lastName as commissionistLastName,
+        c.email as commissionistEmail,
+        c.phone as commissionistPhone,
+        c.commissionRate as commissionistCommissionRate
       FROM expenses e
       LEFT JOIN workshops w ON e.workshopId = w.id COLLATE utf8mb4_unicode_ci
       LEFT JOIN commissionists c ON e.commissionistId = c.id COLLATE utf8mb4_unicode_ci

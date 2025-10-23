@@ -15,7 +15,7 @@ interface Expense {
   amount: number
   description: string
   workshopId?: string
-  sellerId?: string
+  commissionistId?: string
   receiptPath?: string
   isActive: boolean
   createdAt: string
@@ -24,9 +24,13 @@ interface Expense {
     id: string
     name: string
   }
-  seller?: {
+  commissionist?: {
     id: string
-    name: string
+    firstName: string
+    lastName: string
+    email: string
+    phone?: string
+    commissionRate: number
   }
 }
 
@@ -39,15 +43,17 @@ interface Workshop {
 
 interface Seller {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   email: string
+  phone?: string
   commissionRate: number
 }
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [workshops, setWorkshops] = useState<Workshop[]>([])
-  const [sellers, setSellers] = useState<Seller[]>([])
+  const [commissionists, setCommissionists] = useState<Seller[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
@@ -56,14 +62,14 @@ export default function ExpensesPage() {
     amount: '',
     description: '',
     workshopId: '',
-    sellerId: '',
+    commissionistId: '',
     receipt: null as File | null
   })
 
   useEffect(() => {
     fetchExpenses()
     fetchWorkshops()
-    fetchSellers()
+    fetchCommissionists()
   }, [])
 
   const fetchExpenses = async () => {
@@ -71,7 +77,25 @@ export default function ExpensesPage() {
       const response = await fetch('/api/expenses')
       if (response.ok) {
         const data = await response.json()
-        setExpenses(data)
+        
+        // Transformar los datos para que coincidan con la interfaz Expense
+        const transformedExpenses = data.map((expense: any) => ({
+          ...expense,
+          workshop: expense.workshopName ? {
+            id: expense.workshopId,
+            name: expense.workshopName
+          } : undefined,
+          commissionist: expense.commissionistId ? {
+            id: expense.commissionistId,
+            firstName: expense.commissionistFirstName,
+            lastName: expense.commissionistLastName,
+            email: expense.commissionistEmail,
+            phone: expense.commissionistPhone,
+            commissionRate: expense.commissionistCommissionRate
+          } : undefined
+        }))
+        
+        setExpenses(transformedExpenses)
       } else {
         toast.error('Error al cargar egresos')
       }
@@ -94,15 +118,15 @@ export default function ExpensesPage() {
     }
   }
 
-  const fetchSellers = async () => {
+  const fetchCommissionists = async () => {
     try {
       const response = await fetch('/api/sellers')
       if (response.ok) {
         const data = await response.json()
-        setSellers(data)
+        setCommissionists(data)
       }
     } catch (error) {
-      console.error('Error fetching sellers:', error)
+      console.error('Error fetching commissionists:', error)
     }
   }
 
@@ -119,7 +143,7 @@ export default function ExpensesPage() {
       return
     }
 
-    if (formData.type === 'COMMISSION' && !formData.sellerId) {
+    if (formData.type === 'COMMISSION' && !formData.commissionistId) {
       toast.error('Por favor seleccione un vendedor')
       return
     }
@@ -134,8 +158,8 @@ export default function ExpensesPage() {
         data.append('workshopId', formData.workshopId)
       }
       
-      if (formData.sellerId) {
-        data.append('sellerId', formData.sellerId)
+      if (formData.commissionistId) {
+        data.append('commissionistId', formData.commissionistId)
       }
       
       if (formData.receipt) {
@@ -170,7 +194,7 @@ export default function ExpensesPage() {
       amount: expense.amount.toString(),
       description: expense.description,
       workshopId: expense.workshopId || '',
-      sellerId: expense.sellerId || '',
+      commissionistId: expense.commissionistId || '',
       receipt: null
     })
     setShowForm(true)
@@ -203,7 +227,7 @@ export default function ExpensesPage() {
       amount: '',
       description: '',
       workshopId: '',
-      sellerId: '',
+      commissionistId: '',
       receipt: null
     })
     setEditingExpense(null)
@@ -324,15 +348,15 @@ export default function ExpensesPage() {
                     <Label htmlFor="sellerId">Vendedor</Label>
                     <select
                       id="sellerId"
-                      value={formData.sellerId}
-                      onChange={(e) => setFormData({ ...formData, sellerId: e.target.value })}
+                      value={formData.commissionistId}
+                      onChange={(e) => setFormData({ ...formData, commissionistId: e.target.value })}
                       className="w-full p-2 border border-gray-300 rounded-md"
                       required
                     >
                       <option value="">Seleccionar vendedor</option>
-                      {sellers.map((seller) => (
-                        <option key={seller.id} value={seller.id}>
-                          {seller.name}
+                      {commissionists.map((commissionist) => (
+                        <option key={commissionist.id} value={commissionist.id}>
+                          {commissionist.firstName} {commissionist.lastName}
                         </option>
                       ))}
                     </select>
@@ -385,7 +409,7 @@ export default function ExpensesPage() {
                   <div className="text-sm text-gray-500">
                     <p>Fecha: {formatDate(expense.createdAt)}</p>
                     {expense.workshop && <p>Taller: {expense.workshop.name}</p>}
-                    {expense.seller && <p>Vendedor: {expense.seller.name}</p>}
+                    {expense.commissionist && <p>Vendedor: {expense.commissionist.firstName} {expense.commissionist.lastName}</p>}
                   </div>
                 </div>
                 <div className="flex gap-2">
