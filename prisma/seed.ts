@@ -20,6 +20,36 @@ async function main() {
     },
   })
 
+  // Create manager user
+  const managerPassword = await bcrypt.hash('manager123', 12)
+  
+  const managerUser = await prisma.user.upsert({
+    where: { email: 'manager@miconcesionaria.com' },
+    update: {},
+    create: {
+      email: 'manager@miconcesionaria.com',
+      name: 'Gerente',
+      password: managerPassword,
+      role: 'MANAGER',
+    },
+  })
+
+  // Create regular user
+  const userPassword = await bcrypt.hash('user123', 12)
+  
+  const regularUser = await prisma.user.upsert({
+    where: { email: 'user@miconcesionaria.com' },
+    update: {},
+    create: {
+      email: 'user@miconcesionaria.com',
+      name: 'Usuario',
+      password: userPassword,
+      role: 'USER',
+    },
+  })
+
+  console.log('👤 Users created:', { adminUser, managerUser, regularUser })
+
   // Create vehicle types
   const vehicleTypes = await Promise.all([
     prisma.vehicleType.upsert({
