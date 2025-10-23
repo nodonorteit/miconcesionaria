@@ -193,23 +193,30 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     // Log de la cancelación de la venta
-    await AuditLogger.logSaleAction(
-      'CANCEL',
-      transaction.id,
-      `Venta cancelada: ${transaction.transactionNumber} - Monto: $${transaction.totalAmount}`,
-      {
-        status: transaction.status,
-        totalAmount: transaction.totalAmount,
-        commission: transaction.commission
-      },
-      {
-        status: 'CANCELLED',
-        totalAmount: transaction.totalAmount,
-        commission: transaction.commission
-      },
-      userInfo.userId,
-      userInfo.userEmail
-    )
+    console.log('🔍 [DEBUG] Intentando registrar log de auditoría para cancelación de venta:', transaction.id)
+    
+    try {
+      await AuditLogger.logSaleAction(
+        'CANCEL',
+        transaction.id,
+        `Venta cancelada: ${transaction.transactionNumber} - Monto: $${transaction.totalAmount}`,
+        {
+          status: transaction.status,
+          totalAmount: transaction.totalAmount,
+          commission: transaction.commission
+        },
+        {
+          status: 'CANCELLED',
+          totalAmount: transaction.totalAmount,
+          commission: transaction.commission
+        },
+        userInfo.userId,
+        userInfo.userEmail
+      )
+      console.log('✅ [DEBUG] Log de auditoría registrado exitosamente')
+    } catch (auditError) {
+      console.error('❌ [DEBUG] Error registrando log de auditoría:', auditError)
+    }
 
     await prisma.transaction.update({
       where: { id: params.id },
@@ -225,15 +232,22 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       console.log(`✅ Vehículo ${transaction.vehicleId} vuelve a estar disponible tras cancelar venta`)
 
       // Log del cambio de estado del vehículo
-      await AuditLogger.logVehicleAction(
-        'UPDATE',
-        transaction.vehicleId,
-        `Vehículo vuelve a estar disponible tras cancelar venta: ${transaction.transactionNumber}`,
-        { status: 'SOLD' },
-        { status: 'AVAILABLE' },
-        userInfo.userId,
-        userInfo.userEmail
-      )
+      console.log('🔍 [DEBUG] Intentando registrar log de auditoría para cambio de estado del vehículo:', transaction.vehicleId)
+      
+      try {
+        await AuditLogger.logVehicleAction(
+          'UPDATE',
+          transaction.vehicleId,
+          `Vehículo vuelve a estar disponible tras cancelar venta: ${transaction.transactionNumber}`,
+          { status: 'SOLD' },
+          { status: 'AVAILABLE' },
+          userInfo.userId,
+          userInfo.userEmail
+        )
+        console.log('✅ [DEBUG] Log de auditoría del vehículo registrado exitosamente')
+      } catch (auditError) {
+        console.error('❌ [DEBUG] Error registrando log de auditoría del vehículo:', auditError)
+      }
     }
 
     return NextResponse.json({ message: 'Transacción cancelada correctamente' })
