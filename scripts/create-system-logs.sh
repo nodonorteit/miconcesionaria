@@ -5,10 +5,10 @@
 
 echo "🔧 Creando tabla system_logs..."
 
-# Configuración de la base de datos (usando las credenciales de producción)
+# Configuración de la base de datos (probando con root primero)
 DB_HOST="127.0.0.1"
-DB_USER="miconcesionaria"
-DB_PASSWORD="%21FVsxr%3Fpmm34xm2N"
+DB_USER="root"
+DB_PASSWORD=""
 DB_NAME="miconcesionaria"
 
 echo "📊 Configuración de base de datos:"
