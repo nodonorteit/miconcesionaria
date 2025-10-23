@@ -69,8 +69,8 @@ export function usePermissions(): UserPermissions {
     // Permisos para flujo de caja
     canViewCashflow: isAdmin || isManager,
 
-    // Permisos para administración
-    canViewAdmin: isAdmin || isManager,
+    // Permisos para administración (solo administradores)
+    canViewAdmin: isAdmin,
 
     // Permisos para logs de auditoría (solo administradores)
     canViewAuditLogs: isAdmin,

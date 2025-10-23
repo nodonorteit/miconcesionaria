@@ -16,9 +16,13 @@ const protectedRoutes = [
   '/admin'
 ]
 
-// Rutas que solo pueden acceder administradores y managers
+// Rutas que solo pueden acceder administradores (ADMIN únicamente)
 const adminOnlyRoutes = [
-  '/admin',
+  '/admin'
+]
+
+// Rutas que pueden acceder administradores y managers
+const managerAndAdminRoutes = [
   '/reports',
   '/sales',
   '/sellers',
@@ -57,10 +61,18 @@ export async function middleware(request: NextRequest) {
   // Verificar permisos según el rol
   const userRole = token.role as string || 'USER'
 
-  // Rutas solo para administradores y managers
+  // Rutas solo para administradores (ADMIN únicamente)
   if (adminOnlyRoutes.some(route => pathname.startsWith(route))) {
+    if (userRole !== 'ADMIN') {
+      // Solo administradores pueden acceder a estas rutas
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  // Rutas que pueden acceder administradores y managers
+  if (managerAndAdminRoutes.some(route => pathname.startsWith(route))) {
     if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-      // Usuario común intentando acceder a ruta de admin/manager
+      // Solo administradores y managers pueden acceder a estas rutas
       return NextResponse.redirect(new URL('/', request.url))
     }
   }
@@ -69,13 +81,6 @@ export async function middleware(request: NextRequest) {
   if (userAllowedRoutes.some(route => pathname.startsWith(route))) {
     // Permitir acceso a usuarios comunes para estas rutas
     return NextResponse.next()
-  }
-
-  // Para otras rutas protegidas que no están en adminOnlyRoutes ni userAllowedRoutes
-  // (esto no debería pasar con la configuración actual, pero por seguridad)
-  if (userRole !== 'ADMIN' && userRole !== 'MANAGER') {
-    // Usuario común intentando acceder a ruta restringida
-    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()
