@@ -68,12 +68,20 @@ export default function CommissionsReportPage() {
       const response = await fetch(`/api/reports/commissions?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
-        setSellers(data)
+        // Asegurar que data sea un array
+        if (Array.isArray(data)) {
+          setSellers(data)
+        } else {
+          console.error('API returned non-array data:', data)
+          setSellers([])
+        }
       } else {
         console.error('Error fetching commissions report')
+        setSellers([])
       }
     } catch (error) {
       console.error('Error fetching commissions report:', error)
+      setSellers([])
     } finally {
       setLoading(false)
     }
@@ -89,6 +97,9 @@ export default function CommissionsReportPage() {
   }
 
   const getSortedSellers = () => {
+    if (!Array.isArray(sellers)) {
+      return []
+    }
     return [...sellers].sort((a, b) => {
       let aValue: string | number
       let bValue: string | number
@@ -262,7 +273,7 @@ export default function CommissionsReportPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${sellers.reduce((sum, seller) => sum + seller.totalCommission, 0).toLocaleString()}
+              ${Array.isArray(sellers) ? sellers.reduce((sum, seller) => sum + seller.totalCommission, 0).toLocaleString() : '0'}
             </div>
             <p className="text-xs text-muted-foreground">Comisiones pagadas</p>
           </CardContent>
@@ -275,7 +286,7 @@ export default function CommissionsReportPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${sellers.length > 0 ? (sellers.reduce((sum, seller) => sum + seller.totalCommission, 0) / sellers.length).toLocaleString() : '0'}
+              ${Array.isArray(sellers) && sellers.length > 0 ? (sellers.reduce((sum, seller) => sum + seller.totalCommission, 0) / sellers.length).toLocaleString() : '0'}
             </div>
             <p className="text-xs text-muted-foreground">Promedio de comisiones</p>
           </CardContent>
