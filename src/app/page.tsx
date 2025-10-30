@@ -122,51 +122,59 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vehículos</CardTitle>
-              <Car className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalVehicles}</div>
-              <p className="text-xs text-muted-foreground">Total en inventario</p>
-            </CardContent>
-          </Card>
+          <Link href="/vehicles">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Vehículos</CardTitle>
+                <Car className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalVehicles}</div>
+                <p className="text-xs text-muted-foreground">Total en inventario</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Clientes</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCustomers}</div>
-              <p className="text-xs text-muted-foreground">Clientes registrados</p>
-            </CardContent>
-          </Card>
+          <Link href="/customers">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Clientes</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalCustomers}</div>
+                <p className="text-xs text-muted-foreground">Clientes registrados</p>
+              </CardContent>
+            </Card>
+          </Link>
 
           {permissions.canViewSales && (
             <>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ventas</CardTitle>
-                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalSales}</div>
-                  <p className="text-xs text-muted-foreground">Ventas totales</p>
-                </CardContent>
-              </Card>
+              <Link href="/sales">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Ventas</CardTitle>
+                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.totalSales}</div>
+                    <p className="text-xs text-muted-foreground">Ventas totales</p>
+                  </CardContent>
+                </Card>
+              </Link>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Ingresos totales</p>
-                </CardContent>
-              </Card>
+              <Link href="/cashflow">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Ingresos</CardTitle>
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${stats.totalRevenue.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">Ingresos totales</p>
+                  </CardContent>
+                </Card>
+              </Link>
             </>
           )}
         </div>
@@ -175,53 +183,61 @@ export default function Dashboard() {
         {permissions.canViewSales && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {permissions.canViewExpenses && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Egresos</CardTitle>
-                  <MinusCircle className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${stats.totalExpensesAmount.toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">{stats.totalExpenses} egresos registrados</p>
-                </CardContent>
-              </Card>
+              <Link href="/expenses">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Egresos</CardTitle>
+                    <MinusCircle className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">${stats.totalExpensesAmount.toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground">{stats.totalExpenses} egresos registrados</p>
+                  </CardContent>
+                </Card>
+              </Link>
             )}
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Ventas Pendientes</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingSales}</div>
-                <p className="text-xs text-muted-foreground">Pendientes de pago</p>
-              </CardContent>
-            </Card>
-
-            {permissions.canViewSellers && (
-              <Card>
+            <Link href="/sales">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Vendedores</CardTitle>
-                  <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Ventas Pendientes</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.activeCommissionists}</div>
-                  <p className="text-xs text-muted-foreground">Vendedores activos</p>
+                  <div className="text-2xl font-bold">{stats.pendingSales}</div>
+                  <p className="text-xs text-muted-foreground">Pendientes de pago</p>
                 </CardContent>
               </Card>
+            </Link>
+
+            {permissions.canViewSellers && (
+              <Link href="/sellers">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Vendedores</CardTitle>
+                    <UserCheck className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.activeCommissionists}</div>
+                    <p className="text-xs text-muted-foreground">Vendedores activos</p>
+                  </CardContent>
+                </Card>
+              </Link>
             )}
 
             {permissions.canViewProviders && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalProviders}</div>
-                  <p className="text-xs text-muted-foreground">Proveedores registrados</p>
-                </CardContent>
-              </Card>
+              <Link href="/providers">
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Proveedores</CardTitle>
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats.totalProviders}</div>
+                    <p className="text-xs text-muted-foreground">Proveedores registrados</p>
+                  </CardContent>
+                </Card>
+              </Link>
             )}
           </div>
         )}
