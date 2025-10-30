@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -68,6 +69,8 @@ interface Sale {
 
 
 export default function SalesPage() {
+  const searchParams = useSearchParams()
+  const statusFilter = searchParams.get('status')
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
   const [deletingSale, setDeletingSale] = useState<string | null>(null)
@@ -78,11 +81,15 @@ export default function SalesPage() {
 
   useEffect(() => {
     fetchSales()
-  }, [])
+  }, [statusFilter])
 
   const fetchSales = async () => {
     try {
-      const response = await fetch('/api/sales?include=vehicle,customer,seller,vehicleType')
+      let url = '/api/sales?include=vehicle,customer,seller,vehicleType'
+      if (statusFilter) {
+        url += `&status=${statusFilter}`
+      }
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setSales(data)
@@ -256,7 +263,7 @@ export default function SalesPage() {
   return (
     <div className="container mx-auto p-6">
       <Navigation 
-        title="Gestión de Transacciones" 
+        title={statusFilter === 'PENDING' ? 'Ventas Pendientes' : 'Gestión de Transacciones'} 
         breadcrumbs={[{ label: 'Transacciones' }]}
       />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">

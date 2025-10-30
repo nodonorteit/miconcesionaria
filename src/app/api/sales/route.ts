@@ -8,12 +8,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const vehicleId = searchParams.get('vehicleId')
     const include = searchParams.get('include')
+    const status = searchParams.get('status')
     
-    let whereClause: any = {
-      status: {
+    let whereClause: any = {}
+    
+    // Si se especifica un status, filtrar solo por ese status
+    // Si no se especifica, excluir las canceladas
+    if (status) {
+      whereClause.status = status
+    } else {
+      whereClause.status = {
         not: 'CANCELLED'
       }
     }
+    
     if (vehicleId) {
       whereClause.vehicleId = vehicleId
     }
