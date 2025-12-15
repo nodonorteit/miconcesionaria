@@ -41,7 +41,7 @@ feature/* → dev → staging → master/main
 ```yaml
 services:
   app:
-    image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging
+    image: gmsastre/miconcesionaria:staging
     network_mode: host
     environment:
       - PORT=3001
@@ -54,7 +54,7 @@ services:
 ```yaml
 services:
   app:
-    image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+    image: gmsastre/miconcesionaria:latest
     network_mode: host
     environment:
       - NODE_ENV=production

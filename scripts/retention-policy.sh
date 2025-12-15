@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 🧹 Script de Retención Automática de Imágenes en Huawei Cloud
+# 🧹 Script de Retención Automática de Imágenes en Docker Hub
 # Uso: ./scripts/retention-policy.sh [--dry-run] [--keep=10]
 
 set -e
@@ -15,8 +15,7 @@ NC='\033[0m'
 # Configuración por defecto
 DRY_RUN=false
 KEEP_COUNT=10
-REGISTRY="swr.sa-argentina-1.myhuaweicloud.com"
-ORGANIZATION="nodonorteit"
+REPOSITORY="gmsastre/miconcesionaria"
 IMAGE_NAME="miconcesionaria"
 
 log() {
@@ -61,13 +60,13 @@ echo "====================================================="
 echo "📋 Configuración:"
 echo "  - Mantener últimas: $KEEP_COUNT imágenes"
 echo "  - Modo: $([ "$DRY_RUN" = true ] && echo "SIMULACIÓN" || echo "EJECUCIÓN REAL")"
-echo "  - Registro: $REGISTRY/$ORGANIZATION/$IMAGE_NAME"
+echo "  - Repositorio: $REPOSITORY"
 echo
 
 # Función para obtener imágenes con timestamp
 get_timestamp_images() {
     docker images --format "{{.Repository}}:{{.Tag}}\t{{.CreatedAt}}\t{{.ID}}" | \
-    grep "$REGISTRY/$ORGANIZATION/$IMAGE_NAME" | \
+    grep -E "($REPOSITORY|$IMAGE_NAME)" | \
     grep -E "[0-9]{8}-[0-9]{6}" | \
     sort -k2 -r
 }
@@ -236,7 +235,7 @@ main() {
     fi
     
     echo "🎉 Política de retención completada!"
-    echo "💡 Para verificar imágenes: ./scripts/check-huawei-images.sh"
+    echo "💡 Para verificar imágenes: ./scripts/check-dockerhub-images.sh"
 }
 
 # Ejecutar función principal

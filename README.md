@@ -46,16 +46,16 @@
 
 ### 🏗️ **Imágenes Docker**
 
-El sistema utiliza **dos imágenes separadas**:
+El sistema utiliza **dos imágenes separadas** en Docker Hub:
 
 1. **🟢 Producción** (`:latest`)
    - Se construye desde `master`/`main`
-   - URL: `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest`
+   - URL: `gmsastre/miconcesionaria:latest`
    - Entorno: `production`
 
 2. **🟡 Staging** (`:staging`)
    - Se construye desde `staging`
-   - URL: `swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:staging`
+   - URL: `gmsastre/miconcesionaria:staging`
    - Entorno: `staging`
 
 ### 🔄 **Flujo de Trabajo**
@@ -69,21 +69,42 @@ feature/* → dev → staging → master
 
 ### 📋 **Comandos de Despliegue**
 
-#### **Staging**
+#### **Build y Push de Imágenes**
+
+Primero, hacer login a Docker Hub:
+```bash
+./scripts/dockerhub-login.sh
+```
+
+Luego, build y push según el entorno:
+
+**Producción:**
+```bash
+./scripts/dockerhub-build-push.sh latest
+```
+
+**Staging:**
+```bash
+./scripts/dockerhub-build-push.sh staging
+```
+
+#### **Despliegue en Servidor**
+
+**Staging:**
 ```bash
 # En el servidor de staging
-git pull origin staging
 docker-compose -f docker-compose.staging.yml pull
 docker-compose -f docker-compose.staging.yml up -d
 ```
 
-#### **Producción**
+**Producción:**
 ```bash
 # En el servidor de producción
-git pull origin master
 docker-compose -f docker-compose.prod.yml pull
 docker-compose -f docker-compose.prod.yml up -d
 ```
+
+> 📖 Ver documentación completa en [DOCKERHUB_SETUP.md](./DOCKERHUB_SETUP.md)
 
 ## 🚀 Instalación Local
 

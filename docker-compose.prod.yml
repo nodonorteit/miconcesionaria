@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: swr.sa-argentina-1.myhuaweicloud.com/nodonorteit/miconcesionaria:latest
+    image: gmsastre/miconcesionaria:latest
     platform: linux/amd64
     network_mode: host
     environment:

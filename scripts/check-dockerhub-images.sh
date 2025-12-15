@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 🔍 Script de Verificación de Imágenes en Huawei Cloud
-# Uso: ./scripts/check-huawei-images.sh
+# 🔍 Script de Verificación de Imágenes en Docker Hub
+# Uso: ./scripts/check-dockerhub-images.sh
 
 set -e
 
@@ -28,12 +28,11 @@ info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-echo "🔍 Verificación de Imágenes en Huawei Cloud SWR"
-echo "=============================================="
+echo "🔍 Verificación de Imágenes en Docker Hub"
+echo "=========================================="
 
 # Configuración
-REGISTRY="swr.sa-argentina-1.myhuaweicloud.com"
-ORGANIZATION="nodonorteit"
+REPOSITORY="gmsastre/miconcesionaria"
 IMAGE_NAME="miconcesionaria"
 
 # Verificar si Docker está instalado
@@ -42,26 +41,25 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Verificar si estamos logueados en Huawei Cloud
-log "Verificando autenticación en Huawei Cloud..."
-if ! docker info | grep -q "swr.sa-argentina-1.myhuaweicloud.com"; then
-    warning "No estás logueado en Huawei Cloud SWR"
-    echo "Ejecuta: docker login swr.sa-argentina-1.myhuaweicloud.com"
-    echo "Con tus credenciales de Huawei Cloud"
+# Verificar si estamos logueados en Docker Hub
+log "Verificando autenticación en Docker Hub..."
+if ! docker info | grep -q "Username"; then
+    warning "No estás logueado en Docker Hub"
+    echo "Ejecuta: ./scripts/dockerhub-login.sh"
     exit 1
 fi
 
 # Función para obtener información de imágenes remotas
 check_remote_images() {
-    log "Verificando imágenes remotas en Huawei Cloud..."
+    log "Verificando imágenes remotas en Docker Hub..."
     
     # Intentar obtener información de las imágenes
-    echo "📋 Imágenes disponibles en el registro:"
-    echo "======================================"
+    echo "📋 Imágenes disponibles en Docker Hub:"
+    echo "====================================="
     
     # Verificar imagen latest
-    if docker pull "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:latest" >/dev/null 2>&1; then
-        LATEST_INFO=$(docker images "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:latest" --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}")
+    if docker pull "$REPOSITORY:latest" >/dev/null 2>&1; then
+        LATEST_INFO=$(docker images "$REPOSITORY:latest" --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}")
         echo "✅ Latest:"
         echo "$LATEST_INFO"
     else
@@ -69,21 +67,12 @@ check_remote_images() {
     fi
     
     # Verificar imagen staging
-    if docker pull "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:staging" >/dev/null 2>&1; then
-        STAGING_INFO=$(docker images "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:staging" --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}")
+    if docker pull "$REPOSITORY:staging" >/dev/null 2>&1; then
+        STAGING_INFO=$(docker images "$REPOSITORY:staging" --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}")
         echo "✅ Staging:"
         echo "$STAGING_INFO"
     else
         warning "No se pudo acceder a la imagen staging"
-    fi
-    
-    # Verificar imagen dev
-    if docker pull "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:dev" >/dev/null 2>&1; then
-        DEV_INFO=$(docker images "$REGISTRY/$ORGANIZATION/$IMAGE_NAME:dev" --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}")
-        echo "✅ Dev:"
-        echo "$DEV_INFO"
-    else
-        warning "No se pudo acceder a la imagen dev"
     fi
 }
 
@@ -94,7 +83,7 @@ check_local_images() {
     echo "📋 Imágenes locales de MiConcesionaria:"
     echo "======================================"
     
-    LOCAL_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}" | grep -i "miconcesionaria" || echo "No se encontraron imágenes locales")
+    LOCAL_IMAGES=$(docker images --format "table {{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}\t{{.CreatedAt}}" | grep -E "(miconcesionaria|gmsastre)" || echo "No se encontraron imágenes locales")
     echo "$LOCAL_IMAGES"
 }
 
@@ -133,19 +122,19 @@ show_accumulation_stats() {
     echo "=============================="
     
     # Contar imágenes por tag
-    LATEST_COUNT=$(docker images | grep "miconcesionaria.*latest" | wc -l)
-    STAGING_COUNT=$(docker images | grep "miconcesionaria.*staging" | wc -l)
-    DEV_COUNT=$(docker images | grep "miconcesionaria.*dev" | wc -l)
-    TIMESTAMP_COUNT=$(docker images | grep "miconcesionaria.*[0-9]\{8\}-[0-9]\{6\}" | wc -l)
+    LATEST_COUNT=$(docker images | grep -E "(miconcesionaria|gmsastre).*latest" | wc -l)
+    STAGING_COUNT=$(docker images | grep -E "(miconcesionaria|gmsastre).*staging" | wc -l)
+    TIMESTAMP_COUNT=$(docker images | grep -E "(miconcesionaria|gmsastre).*[0-9]\{8\}-[0-9]\{6\}" | wc -l)
+    VERSION_COUNT=$(docker images | grep -E "(miconcesionaria|gmsastre).*v[0-9]" | wc -l)
     
     echo "📈 Imágenes por tipo:"
     echo "  - Latest: $LATEST_COUNT"
     echo "  - Staging: $STAGING_COUNT"
-    echo "  - Dev: $DEV_COUNT"
+    echo "  - Versiones: $VERSION_COUNT"
     echo "  - Con timestamp: $TIMESTAMP_COUNT"
     
     # Calcular espacio total usado
-    TOTAL_SIZE=$(docker images | grep "miconcesionaria" | awk '{sum+=$7} END {print sum "MB"}' 2>/dev/null || echo "No calculable")
+    TOTAL_SIZE=$(docker images | grep -E "(miconcesionaria|gmsastre)" | awk '{sum+=$7} END {print sum "MB"}' 2>/dev/null || echo "No calculable")
     echo "💾 Espacio total usado por MiConcesionaria: $TOTAL_SIZE"
     
     # Mostrar recomendaciones
@@ -212,6 +201,7 @@ main() {
     echo
     
     echo "🎉 Verificación completada!"
+    echo "💡 Para hacer build y push: ./scripts/dockerhub-build-push.sh [latest|staging|v1.0.0]"
     echo "💡 Para limpiar imágenes antiguas: ./scripts/cleanup-docker-images.sh"
 }
 
