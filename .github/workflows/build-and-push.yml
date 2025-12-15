@@ -77,7 +77,7 @@ jobs:
         # Crear archivo docker-compose.prod.yml para producción
         if [[ "${{ github.ref }}" == "refs/heads/master" || "${{ github.ref }}" == "refs/heads/main" ]]; then
           echo "📝 Actualizando docker-compose.prod.yml para PRODUCCIÓN"
-          cat > docker-compose.prod.yml << 'EOF'
+          cat > docker-compose.prod.yml << 'HEREDOC_EOF'
 version: '3.8'
 
 services:
@@ -100,13 +100,13 @@ services:
 
 volumes:
   uploads_data:
-EOF
+HEREDOC_EOF
         fi
         
         # Crear archivo docker-compose.staging.yml para staging
         if [[ "${{ github.ref }}" == "refs/heads/staging" ]]; then
           echo "📝 Actualizando docker-compose.staging.yml para STAGING"
-          cat > docker-compose.staging.yml << 'EOF'
+          cat > docker-compose.staging.yml << 'HEREDOC_EOF'
 version: '3.8'
 
 services:
@@ -130,7 +130,7 @@ services:
 
 volumes:
   uploads_data_staging:
-EOF
+HEREDOC_EOF
         fi
 
     - name: Commit updated docker-compose files
