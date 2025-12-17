@@ -14,8 +14,6 @@ services:
       - SMTP_USER=pzbkjxwenzkr
       - SMTP_PASS=7FOtsP0qKvNF
       - NODE_ENV=production
-    depends_on:
-      - db
     volumes:
       - uploads_data:/app/uploads
     restart: unless-stopped
