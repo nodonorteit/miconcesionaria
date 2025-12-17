@@ -28,8 +28,6 @@ services:
       - MYSQL_PASSWORD=!FVsxr?pmm34xm2N
     volumes:
       - db_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
     restart: unless-stopped
 
 volumes:
