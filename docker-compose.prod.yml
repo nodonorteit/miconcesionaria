@@ -4,11 +4,9 @@ services:
   app:
     image: gmsastre/miconcesionaria:latest
     platform: linux/amd64
-    ports:
-      - "3021:3021"
+    network_mode: host
     environment:
-      - PORT=3021
-      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@db:3306/miconcesionaria
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
       - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
       - SMTP_HOST=smtp1.s.ipzmarketing.com
@@ -16,24 +14,9 @@ services:
       - SMTP_USER=pzbkjxwenzkr
       - SMTP_PASS=7FOtsP0qKvNF
       - NODE_ENV=production
-    depends_on:
-      - db
     volumes:
       - uploads_data:/app/uploads
     restart: unless-stopped
 
-  db:
-    image: mariadb:10.6
-    platform: linux/amd64
-    environment:
-      - MYSQL_ROOT_PASSWORD=!FVsxr?pmm34xm2N
-      - MYSQL_DATABASE=miconcesionaria
-      - MYSQL_USER=miconcesionaria
-      - MYSQL_PASSWORD=!FVsxr?pmm34xm2N
-    volumes:
-      - db_data:/var/lib/mysql
-    restart: unless-stopped
-
 volumes:
   uploads_data:
-  db_data:
