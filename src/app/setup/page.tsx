@@ -52,7 +52,7 @@ export default function SetupPage() {
         throw new Error(errorData.error || 'Error al crear la base de datos')
       }
 
-      setProgress('Aplicando migraciones...')
+      setProgress('Creando tablas en la base de datos...')
       const migrateResponse = await fetch('/api/setup', {
         method: 'POST',
         headers: {

@@ -68,12 +68,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'migrate') {
-      // Ejecutar migraciones de Prisma
+      // Crear tablas desde el schema usando db push
       const dbUrl = buildDatabaseUrl(dbHost, dbPort, dbName, dbUser, dbPassword)
 
       try {
-        // Ejecutar prisma migrate deploy con DATABASE_URL en el entorno
-        const { stdout, stderr } = await execAsync('npx prisma migrate deploy', {
+        // Ejecutar prisma db push con DATABASE_URL en el entorno
+        const { stdout, stderr } = await execAsync('npx prisma db push --accept-data-loss', {
           env: { 
             ...process.env, 
             DATABASE_URL: dbUrl,
@@ -89,49 +89,185 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ 
           success: true, 
-          message: 'Migraciones aplicadas exitosamente',
+          message: 'Tablas creadas exitosamente',
           output: stdout 
         })
       } catch (error: any) {
         console.error('Migration error:', error)
         const errorMessage = error.stderr || error.message || 'Error desconocido'
         return NextResponse.json(
-          { error: `Error al aplicar migraciones: ${errorMessage}` },
+          { error: `Error al crear tablas: ${errorMessage}` },
           { status: 500 }
         )
       }
     }
 
     if (action === 'seed') {
-      // Ejecutar seed de Prisma
+      // Ejecutar seed directamente desde el código
       const dbUrl = buildDatabaseUrl(dbHost, dbPort, dbName, dbUser, dbPassword)
       
       try {
-        // Ejecutar prisma db seed con DATABASE_URL en el entorno
-        const { stdout, stderr } = await execAsync('npx prisma db seed', {
-          env: { 
-            ...process.env, 
-            DATABASE_URL: dbUrl,
-            PATH: process.env.PATH
+        // Establecer DATABASE_URL para Prisma
+        process.env.DATABASE_URL = dbUrl
+        
+        // Importar y ejecutar el seed
+        const { PrismaClient } = await import('@prisma/client')
+        const bcrypt = await import('bcryptjs')
+        const prisma = new PrismaClient()
+
+        // Crear admin user
+        const hashedPassword = await bcrypt.default.hash('admin123', 12)
+        const adminUser = await prisma.user.upsert({
+          where: { email: 'admin@miconcesionaria.com' },
+          update: { mustChangePassword: true },
+          create: {
+            email: 'admin@miconcesionaria.com',
+            name: 'Administrador',
+            password: hashedPassword,
+            role: 'ADMIN',
+            mustChangePassword: true,
           },
-          cwd: process.cwd(),
-          maxBuffer: 10 * 1024 * 1024 // 10MB buffer
         })
 
-        if (stderr && !stderr.includes('warning')) {
-          console.error('Seed stderr:', stderr)
-        }
+        // Crear vehicle types
+        await Promise.all([
+          prisma.vehicleType.upsert({
+            where: { name: 'Automóvil' },
+            update: {},
+            create: { name: 'Automóvil', description: 'Vehículos de pasajeros' },
+          }),
+          prisma.vehicleType.upsert({
+            where: { name: 'Camioneta' },
+            update: {},
+            create: { name: 'Camioneta', description: 'Vehículos utilitarios' },
+          }),
+          prisma.vehicleType.upsert({
+            where: { name: 'Camión' },
+            update: {},
+            create: { name: 'Camión', description: 'Vehículos de carga' },
+          }),
+          prisma.vehicleType.upsert({
+            where: { name: 'Moto' },
+            update: {},
+            create: { name: 'Moto', description: 'Motocicletas' },
+          }),
+        ])
+
+        // Crear template por defecto
+        const defaultTemplateContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Boleto de Compra-Venta</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .document-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-weight: bold; margin-bottom: 10px; }
+    .row { display: flex; margin-bottom: 10px; }
+    .col { flex: 1; }
+    .signature { margin-top: 50px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    {{#if company.logoUrl}}
+    <img src="{{company.logoUrl}}" alt="Logo" style="max-height: 80px;">
+    {{/if}}
+    <h1>{{company.name}}</h1>
+    <p>{{company.address}}, {{company.city}}, {{company.state}}</p>
+    <p>CUIT: {{company.cuit}}</p>
+  </div>
+  
+  <div class="document-title">BOLETO DE COMPRA-VENTA N° {{document.number}}</div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL VENDEDOR</div>
+    <div class="row">
+      <div class="col"><strong>Nombre:</strong> {{company.name}}</div>
+      <div class="col"><strong>CUIT:</strong> {{company.cuit}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL COMPRADOR</div>
+    <div class="row">
+      <div class="col"><strong>Nombre:</strong> {{customer.firstName}} {{customer.lastName}}</div>
+      <div class="col"><strong>{{customer.documentLabel}}:</strong> {{customer.documentFormatted}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL VEHÍCULO</div>
+    <div class="row">
+      <div class="col"><strong>Marca:</strong> {{vehicle.brand}}</div>
+      <div class="col"><strong>Modelo:</strong> {{vehicle.model}}</div>
+    </div>
+    <div class="row">
+      <div class="col"><strong>Año:</strong> {{vehicle.year}}</div>
+      <div class="col"><strong>Patente:</strong> {{vehicle.licensePlate}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DE LA OPERACIÓN</div>
+    <div class="row">
+      <div class="col"><strong>Precio:</strong> {{sale.totalAmountFormatted}}</div>
+      <div class="col"><strong>Forma de Pago:</strong> {{sale.paymentMethod}}</div>
+    </div>
+    <div class="row">
+      <div class="col"><strong>Fecha:</strong> {{sale.date}}</div>
+    </div>
+  </div>
+  
+  <div class="signature">
+    <div class="row">
+      <div class="col" style="text-align: center;">
+        <p>_________________________</p>
+        <p><strong>VENDEDOR</strong></p>
+        <p>{{company.name}}</p>
+      </div>
+      <div class="col" style="text-align: center;">
+        <p>_________________________</p>
+        <p><strong>COMPRADOR</strong></p>
+        <p>{{customer.firstName}} {{customer.lastName}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+        await prisma.documentTemplate.upsert({
+          where: { name: 'Boleto de Compra-Venta - Por Defecto' },
+          update: {},
+          create: {
+            name: 'Boleto de Compra-Venta - Por Defecto',
+            type: 'BOLETO_COMPRA_VENTA',
+            isDefault: true,
+            isActive: true,
+            content: defaultTemplateContent,
+            variables: {
+              company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit', 'phone', 'email', 'postalCode', 'ivaCondition'],
+              customer: ['firstName', 'lastName', 'documentNumber', 'documentType', 'documentLabel', 'documentFormatted', 'address', 'city', 'state'],
+              vehicle: ['brand', 'model', 'year', 'type', 'licensePlate', 'vin', 'mileage'],
+              sale: ['totalAmount', 'totalAmountFormatted', 'paymentMethod', 'date', 'deliveryDate', 'notes'],
+              document: ['number', 'generatedAt']
+            }
+          }
+        })
+
+        await prisma.$disconnect()
 
         return NextResponse.json({ 
           success: true, 
           message: 'Datos iniciales creados exitosamente',
-          output: stdout 
+          adminEmail: adminUser.email
         })
       } catch (error: any) {
         console.error('Seed error:', error)
-        const errorMessage = error.stderr || error.message || 'Error desconocido'
         return NextResponse.json(
-          { error: `Error al crear datos iniciales: ${errorMessage}` },
+          { error: `Error al crear datos iniciales: ${error.message || 'Error desconocido'}` },
           { status: 500 }
         )
       }
