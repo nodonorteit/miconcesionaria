@@ -1,12 +1,16 @@
 version: '3.8'
+ 
 
 services:
   app:
     image: gmsastre/miconcesionaria:latest
     platform: linux/amd64
-    network_mode: host
+    ports:
+      - "3021:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
+      - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@host.docker.internal:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
       - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
       - SMTP_HOST=smtp1.s.ipzmarketing.com
