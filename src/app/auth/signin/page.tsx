@@ -36,7 +36,11 @@ export default function SignIn() {
       } else {
         const session = await getSession()
         if (session) {
-          router.push('/')
+          if ((session.user as any).mustChangePassword) {
+            router.push('/auth/change-password')
+          } else {
+            router.push('/')
+          }
         }
       }
     } catch (error) {

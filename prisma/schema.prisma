@@ -16,6 +16,7 @@ model User {
   email     String   @unique
   name      String
   password  String
+  mustChangePassword Boolean @default(false)
   role      UserRole @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

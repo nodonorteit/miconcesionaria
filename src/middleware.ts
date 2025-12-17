@@ -34,8 +34,28 @@ const userAllowedRoutes = [
   '/customers'
 ]
 
+// Rutas permitidas cuando se fuerza cambio de contraseña
+const passwordChangeAllowedRoutes = [
+  '/auth/change-password',
+  '/auth/signin',
+  '/auth/logout'
+]
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Obtener token si existe (aunque la ruta no sea protegida) para validar mustChangePassword
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+  const mustChangePassword = (token as any)?.mustChangePassword === true
+
+  // Si tiene que cambiar contraseña, solo permitir rutas permitidas
+  if (token && mustChangePassword) {
+    const isAllowedForChange = passwordChangeAllowedRoutes.some(route => pathname.startsWith(route))
+    if (!isAllowedForChange) {
+      const changeUrl = new URL('/auth/change-password', request.url)
+      return NextResponse.redirect(changeUrl)
+    }
+  }
 
   // Verificar si es una ruta protegida
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
@@ -43,9 +63,6 @@ export async function middleware(request: NextRequest) {
   if (!isProtectedRoute) {
     return NextResponse.next()
   }
-
-  // Obtener el token de autenticación
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
 
   // Si no hay token, redirigir al login
   if (!token) {
