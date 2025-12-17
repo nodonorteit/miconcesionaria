@@ -142,6 +142,110 @@ async function main() {
     },
   })
 
+  // Create default document template for BOLETO_COMPRA_VENTA
+  const defaultTemplateContent = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Boleto de Compra-Venta</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .document-title { font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+    .section { margin-bottom: 20px; }
+    .section-title { font-weight: bold; margin-bottom: 10px; }
+    .row { display: flex; margin-bottom: 10px; }
+    .col { flex: 1; }
+    .signature { margin-top: 50px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    {{#if company.logoUrl}}
+    <img src="{{company.logoUrl}}" alt="Logo" style="max-height: 80px;">
+    {{/if}}
+    <h1>{{company.name}}</h1>
+    <p>{{company.address}}, {{company.city}}, {{company.state}}</p>
+    <p>CUIT: {{company.cuit}}</p>
+  </div>
+  
+  <div class="document-title">BOLETO DE COMPRA-VENTA N° {{document.number}}</div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL VENDEDOR</div>
+    <div class="row">
+      <div class="col"><strong>Nombre:</strong> {{company.name}}</div>
+      <div class="col"><strong>CUIT:</strong> {{company.cuit}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL COMPRADOR</div>
+    <div class="row">
+      <div class="col"><strong>Nombre:</strong> {{customer.firstName}} {{customer.lastName}}</div>
+      <div class="col"><strong>{{customer.documentLabel}}:</strong> {{customer.documentFormatted}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DEL VEHÍCULO</div>
+    <div class="row">
+      <div class="col"><strong>Marca:</strong> {{vehicle.brand}}</div>
+      <div class="col"><strong>Modelo:</strong> {{vehicle.model}}</div>
+    </div>
+    <div class="row">
+      <div class="col"><strong>Año:</strong> {{vehicle.year}}</div>
+      <div class="col"><strong>Patente:</strong> {{vehicle.licensePlate}}</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">DATOS DE LA OPERACIÓN</div>
+    <div class="row">
+      <div class="col"><strong>Precio:</strong> {{sale.totalAmountFormatted}}</div>
+      <div class="col"><strong>Forma de Pago:</strong> {{sale.paymentMethod}}</div>
+    </div>
+    <div class="row">
+      <div class="col"><strong>Fecha:</strong> {{sale.date}}</div>
+    </div>
+  </div>
+  
+  <div class="signature">
+    <div class="row">
+      <div class="col" style="text-align: center;">
+        <p>_________________________</p>
+        <p><strong>VENDEDOR</strong></p>
+        <p>{{company.name}}</p>
+      </div>
+      <div class="col" style="text-align: center;">
+        <p>_________________________</p>
+        <p><strong>COMPRADOR</strong></p>
+        <p>{{customer.firstName}} {{customer.lastName}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`
+
+  const defaultTemplate = await prisma.documentTemplate.upsert({
+    where: { name: 'Boleto de Compra-Venta - Por Defecto' },
+    update: {},
+    create: {
+      name: 'Boleto de Compra-Venta - Por Defecto',
+      type: 'BOLETO_COMPRA_VENTA',
+      isDefault: true,
+      isActive: true,
+      content: defaultTemplateContent,
+      variables: {
+        company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit', 'phone', 'email', 'postalCode', 'ivaCondition'],
+        customer: ['firstName', 'lastName', 'documentNumber', 'documentType', 'documentLabel', 'documentFormatted', 'address', 'city', 'state'],
+        vehicle: ['brand', 'model', 'year', 'type', 'licensePlate', 'vin', 'mileage'],
+        sale: ['totalAmount', 'paymentMethod', 'date', 'deliveryDate', 'notes'],
+        document: ['number', 'generatedAt']
+      }
+    }
+  })
+
   console.log('✅ Database seeded successfully!')
   console.log('👤 Admin user created:', adminUser.email)
   console.log('🚗 Vehicle types created:', vehicleTypes.length)
@@ -149,6 +253,7 @@ async function main() {
   console.log('👥 Sample customer created:', customer.email)
   console.log('🏢 Sample provider created:', provider.name)
   console.log('🔧 Sample workshop created:', workshop.name)
+  console.log('📄 Default document template created:', defaultTemplate.name)
 }
 
 main()

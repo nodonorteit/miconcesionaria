@@ -14,13 +14,29 @@ interface CompanyConfig {
   name: string
   logoUrl: string
   description: string
+  address?: string
+  city?: string
+  state?: string
+  cuit?: string
+  phone?: string
+  email?: string
+  postalCode?: string
+  ivaCondition?: string
 }
 
 export default function CompanyConfigPage() {
   const [config, setConfig] = useState<CompanyConfig>({
     name: '',
     logoUrl: '',
-    description: ''
+    description: '',
+    address: '',
+    city: '',
+    state: '',
+    cuit: '',
+    phone: '',
+    email: '',
+    postalCode: '',
+    ivaCondition: ''
   })
   const [loading, setLoading] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -59,7 +75,15 @@ export default function CompanyConfigPage() {
     try {
       const formData = new FormData()
       formData.append('name', config.name)
-      formData.append('description', config.description)
+      formData.append('description', config.description || '')
+      formData.append('address', config.address || '')
+      formData.append('city', config.city || '')
+      formData.append('state', config.state || '')
+      formData.append('cuit', config.cuit || '')
+      formData.append('phone', config.phone || '')
+      formData.append('email', config.email || '')
+      formData.append('postalCode', config.postalCode || '')
+      formData.append('ivaCondition', config.ivaCondition || '')
       if (selectedFile) {
         formData.append('logo', selectedFile)
       }
@@ -175,6 +199,116 @@ export default function CompanyConfigPage() {
                   onChange={(e) => setConfig({...config, description: e.target.value})}
                   placeholder="Ej: Sistema de Gestión"
                 />
+              </div>
+
+              {/* Información Fiscal y de Contacto */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-semibold mb-4">Información Fiscal y de Contacto</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* CUIT */}
+                  <div className="space-y-2">
+                    <Label htmlFor="cuit">CUIT *</Label>
+                    <Input
+                      id="cuit"
+                      value={config.cuit || ''}
+                      onChange={(e) => setConfig({...config, cuit: e.target.value})}
+                      placeholder="Ej: 20-12345678-9"
+                      required
+                    />
+                  </div>
+
+                  {/* Condición IVA */}
+                  <div className="space-y-2">
+                    <Label htmlFor="ivaCondition">Condición IVA</Label>
+                    <select
+                      id="ivaCondition"
+                      value={config.ivaCondition || ''}
+                      onChange={(e) => setConfig({...config, ivaCondition: e.target.value})}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Seleccionar...</option>
+                      <option value="Responsable Inscripto">Responsable Inscripto</option>
+                      <option value="Monotributista">Monotributista</option>
+                      <option value="Exento">Exento</option>
+                      <option value="No Responsable">No Responsable</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Dirección */}
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="address">Dirección *</Label>
+                  <Input
+                    id="address"
+                    value={config.address || ''}
+                    onChange={(e) => setConfig({...config, address: e.target.value})}
+                    placeholder="Ej: Av. Corrientes 1234"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  {/* Ciudad */}
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Ciudad *</Label>
+                    <Input
+                      id="city"
+                      value={config.city || ''}
+                      onChange={(e) => setConfig({...config, city: e.target.value})}
+                      placeholder="Ej: Buenos Aires"
+                      required
+                    />
+                  </div>
+
+                  {/* Provincia */}
+                  <div className="space-y-2">
+                    <Label htmlFor="state">Provincia *</Label>
+                    <Input
+                      id="state"
+                      value={config.state || ''}
+                      onChange={(e) => setConfig({...config, state: e.target.value})}
+                      placeholder="Ej: CABA"
+                      required
+                    />
+                  </div>
+
+                  {/* Código Postal */}
+                  <div className="space-y-2">
+                    <Label htmlFor="postalCode">Código Postal</Label>
+                    <Input
+                      id="postalCode"
+                      value={config.postalCode || ''}
+                      onChange={(e) => setConfig({...config, postalCode: e.target.value})}
+                      placeholder="Ej: C1043AAX"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  {/* Teléfono */}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Teléfono</Label>
+                    <Input
+                      id="phone"
+                      value={config.phone || ''}
+                      onChange={(e) => setConfig({...config, phone: e.target.value})}
+                      placeholder="Ej: +54 11 1234-5678"
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={config.email || ''}
+                      onChange={(e) => setConfig({...config, email: e.target.value})}
+                      placeholder="Ej: contacto@empresa.com"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Botón de guardar */}

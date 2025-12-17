@@ -50,7 +50,7 @@ export default function SettingsPage() {
     autoBackup: true,
     sessionTimeout: 30,
     maxFileSize: 10,
-    allowedFileTypes: ['jpg', 'jpeg', 'png', 'pdf']
+    allowedFileTypes: ['jpg', 'jpeg', 'png', 'pdf', 'webp']
   })
   const [systemInfo, setSystemInfo] = useState<SystemInfo>({
     version: '1.0.0',
@@ -65,7 +65,20 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSystemInfo()
+    loadSettings()
   }, [])
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(data)
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error)
+    }
+  }
 
   const loadSystemInfo = async () => {
     try {
@@ -95,10 +108,31 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setLoading(true)
     try {
-      // Simular guardado de configuración
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Configuración guardada correctamente')
+      console.log('🔍 [DEBUG Frontend] Guardando settings:', settings)
+      
+      const response = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings)
+      })
+
+      console.log('🔍 [DEBUG Frontend] Response status:', response.status)
+      
+      if (response.ok) {
+        const data = await response.json()
+        console.log('🔍 [DEBUG Frontend] Response data:', data)
+        toast.success('Configuración guardada correctamente')
+        // Recargar los settings para verificar que se guardaron
+        await loadSettings()
+      } else {
+        const errorData = await response.json()
+        console.error('🔍 [DEBUG Frontend] Error response:', errorData)
+        toast.error(errorData.error || 'Error al guardar la configuración')
+      }
     } catch (error) {
+      console.error('Error saving settings:', error)
       toast.error('Error al guardar la configuración')
     } finally {
       setLoading(false)
@@ -250,6 +284,17 @@ export default function SettingsPage() {
                   />
                 </div>
               </div>
+
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={handleSaveSettings} 
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  {loading ? 'Guardando...' : 'Guardar Configuración'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -293,15 +338,6 @@ export default function SettingsPage() {
                 >
                   <RefreshCw className="h-4 w-4" />
                   Reiniciar Sistema
-                </Button>
-                
-                <Button 
-                  onClick={handleSaveSettings} 
-                  disabled={loading}
-                  className="flex items-center gap-2"
-                >
-                  <Settings className="h-4 w-4" />
-                  Guardar Configuración
                 </Button>
               </div>
             </CardContent>

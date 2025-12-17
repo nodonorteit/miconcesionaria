@@ -11,6 +11,7 @@ import { Navigation } from '@/components/ui/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import Link from 'next/link'
 import { ImageCarousel } from '@/components/ui/image-carousel'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 
 interface Vehicle {
   id: string
@@ -899,9 +900,11 @@ export default function VehiclesPage() {
                     id="images"
                     type="file"
                     multiple
-                    accept=".jpg,.jpeg,.png,.gif"
+                    accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
                     onChange={(e) => {
                       const newFiles = Array.from(e.target.files || [])
+                      console.log('🔍 [DEBUG] Archivos seleccionados:', newFiles.map(f => ({ name: f.name, type: f.type, size: f.size })))
+                      
                       if (newFiles.length > 0) {
                         // Validar que no exceda el límite total
                         const totalImages = formData.images.length + newFiles.length
@@ -910,11 +913,40 @@ export default function VehiclesPage() {
                           return
                         }
                         
-                        // Validar tipos de archivo
-                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
-                        const invalidFiles = newFiles.filter(file => !validTypes.includes(file.type))
+                        // Validar tipos de archivo - aceptar por tipo MIME o por extensión
+                        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+                        const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+                        
+                        const invalidFiles = newFiles.filter(file => {
+                          const fileType = (file.type || '').toLowerCase()
+                          const fileName = (file.name || '').toLowerCase()
+                          
+                          // Validar por tipo MIME
+                          const isValidType = validTypes.includes(fileType)
+                          // Validar por extensión (más permisivo)
+                          const isValidExtension = validExtensions.some(ext => fileName.endsWith(ext))
+                          
+                          // Si el tipo MIME está vacío pero la extensión es válida, aceptar
+                          // Esto es común con archivos WebP en algunos navegadores
+                          const isWebPWithoutMime = !fileType && fileName.endsWith('.webp')
+                          
+                          console.log('🔍 [DEBUG] Validando archivo:', {
+                            name: file.name,
+                            type: file.type || '(sin tipo)',
+                            fileName: fileName,
+                            fileType: fileType || '(vacío)',
+                            isValidType,
+                            isValidExtension,
+                            isWebPWithoutMime,
+                            willAccept: isValidType || isValidExtension || isWebPWithoutMime
+                          })
+                          
+                          return !isValidType && !isValidExtension && !isWebPWithoutMime
+                        })
+                        
                         if (invalidFiles.length > 0) {
-                          toast.error('Solo se permiten archivos JPG, PNG o GIF')
+                          console.error('❌ Archivos inválidos:', invalidFiles.map(f => ({ name: f.name, type: f.type })))
+                          toast.error(`Solo se permiten archivos JPG, PNG, GIF o WebP. Archivos rechazados: ${invalidFiles.map(f => f.name).join(', ')}`)
                           return
                         }
                         
@@ -940,7 +972,7 @@ export default function VehiclesPage() {
                   />
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-sm text-gray-500">
-                      Máximo 10 fotos. Formatos: JPG, PNG, GIF. Máximo 5MB por archivo.
+                      Máximo 10 fotos. Formatos: JPG, PNG, GIF, WebP. Máximo 5MB por archivo.
                     </p>
                     {formData.images.length > 0 && (
                       <Button
@@ -1014,7 +1046,7 @@ export default function VehiclesPage() {
                         {editingVehicle.images.map((image, index) => (
                           <div key={image.id} className="relative group">
                             <img
-                              src={`/uploads/${image.filename}`}
+                              src={image.path ? `/api${image.path}` : `/api/uploads/${image.filename}`}
                               alt={`Imagen del vehículo`}
                               className="w-full h-24 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() => handleOpenCarousel(editingVehicle.images || [], index)}
@@ -1053,13 +1085,17 @@ export default function VehiclesPage() {
                   />
                 </div>
               </div>
-              <div>
+              <div className="md:col-span-2">
                 <Label htmlFor="description">Descripción</Label>
-                <Input
-                  id="description"
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(value) => setFormData({...formData, description: value})}
+                  placeholder="Describe el vehículo, sus características, estado, accesorios, etc."
+                  className="mt-2"
                 />
+                <p className="text-sm text-gray-500 mt-2">
+                  Puedes usar formato de texto enriquecido: negrita, cursiva, listas, colores, etc.
+                </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -1360,7 +1396,10 @@ export default function VehiclesPage() {
                   {viewingVehicle.description && (
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h3 className="text-lg font-semibold mb-4">Descripción</h3>
-                      <p className="text-gray-700">{viewingVehicle.description}</p>
+                      <div 
+                        className="text-gray-700 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: viewingVehicle.description }}
+                      />
                     </div>
                   )}
                 </div>
@@ -1374,12 +1413,12 @@ export default function VehiclesPage() {
                         {viewingVehicle.images.map((image, index) => (
                           <div key={image.id} className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                             <img
-                              src={`/uploads/${image.filename}`}
+                              src={image.path ? `/api${image.path}` : `/api/uploads/${image.filename}`}
                               alt={`${viewingVehicle.brand} ${viewingVehicle.model} - Foto ${index + 1}`}
                               className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                               onClick={() => handleOpenCarousel(viewingVehicle.images || [], index)}
                               onError={(e) => {
-                                console.error('Error loading image:', image.filename)
+                                console.error('Error loading image:', image.path || image.filename)
                                 e.currentTarget.style.display = 'none'
                               }}
                             />
@@ -1538,6 +1577,7 @@ export default function VehiclesPage() {
                     <Input
                       id="deliveryDate"
                       type="date"
+                      lang="es-AR"
                       value={saleFormData.deliveryDate}
                       onChange={(e) => setSaleFormData({...saleFormData, deliveryDate: e.target.value})}
                       required

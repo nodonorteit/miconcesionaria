@@ -27,7 +27,11 @@ interface NavItem {
   permission?: keyof ReturnType<typeof usePermissions>
 }
 
-export function MainNavigation() {
+interface MainNavigationProps {
+  onNavigate?: () => void
+}
+
+export function MainNavigation({ onNavigate }: MainNavigationProps) {
   const pathname = usePathname()
   const permissions = usePermissions()
 
@@ -63,18 +67,6 @@ export function MainNavigation() {
       href: '/sellers',
       icon: UserCheck,
       permission: 'canViewSellers'
-    },
-    {
-      label: 'Proveedores',
-      href: '/providers',
-      icon: Building,
-      permission: 'canViewProviders'
-    },
-    {
-      label: 'Talleres',
-      href: '/workshops',
-      icon: Wrench,
-      permission: 'canViewWorkshops'
     },
     {
       label: 'Egresos',
@@ -122,6 +114,7 @@ export function MainNavigation() {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={cn(
               'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
               isActive

@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
     // Obtener estadísticas generales
     const statsQuery = `
       SELECT 
-        COUNT(s.id) as totalSales,
-        COALESCE(SUM(s.totalAmount), 0) as totalRevenue,
-        COALESCE(SUM(s.commission), 0) as totalCommission,
-        COALESCE(AVG(s.totalAmount), 0) as averageSaleValue
-      FROM sales s
-      WHERE s.status = 'COMPLETED' ${dateCondition}
+        COUNT(t.id) as totalSales,
+        COALESCE(SUM(t.totalAmount), 0) as totalRevenue,
+        COALESCE(SUM(t.commission), 0) as totalCommission,
+        COALESCE(AVG(t.totalAmount), 0) as averageSaleValue
+      FROM transactions t
+      WHERE t.type = 'SALE' AND t.status = 'COMPLETED' ${dateCondition}
     `
 
     const stats = await prisma.$queryRawUnsafe(statsQuery, ...dateParams)
@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
     // Obtener ventas por mes
     const monthlyQuery = `
       SELECT 
-        DATE_FORMAT(s.createdAt, '%M %Y') as month,
-        COUNT(s.id) as sales,
-        COALESCE(SUM(s.totalAmount), 0) as revenue
-      FROM sales s
-      WHERE s.status = 'COMPLETED' ${dateCondition}
-      GROUP BY DATE_FORMAT(s.createdAt, '%Y-%m'), DATE_FORMAT(s.createdAt, '%M %Y')
-      ORDER BY DATE_FORMAT(s.createdAt, '%Y-%m') DESC
+        DATE_FORMAT(t.createdAt, '%M %Y') as month,
+        COUNT(t.id) as sales,
+        COALESCE(SUM(t.totalAmount), 0) as revenue
+      FROM transactions t
+      WHERE t.type = 'SALE' AND t.status = 'COMPLETED' ${dateCondition}
+      GROUP BY DATE_FORMAT(t.createdAt, '%Y-%m'), DATE_FORMAT(t.createdAt, '%M %Y')
+      ORDER BY DATE_FORMAT(t.createdAt, '%Y-%m') DESC
       LIMIT 12
     `
 
@@ -55,13 +55,13 @@ export async function GET(request: NextRequest) {
     // Obtener mejores vendedores
     const topSellersQuery = `
       SELECT 
-        CONCAT(sel.firstName, ' ', sel.lastName) as name,
-        COUNT(s.id) as sales,
-        COALESCE(SUM(s.commission), 0) as commission
-      FROM sales s
-      JOIN sellers sel ON s.sellerId = sel.id
-      WHERE s.status = 'COMPLETED' ${dateCondition}
-      GROUP BY s.sellerId, sel.firstName, sel.lastName
+        CONCAT(cm.firstName, ' ', cm.lastName) as name,
+        COUNT(t.id) as sales,
+        COALESCE(SUM(t.commission), 0) as commission
+      FROM transactions t
+      JOIN commissionists cm ON t.commissionistId = cm.id
+      WHERE t.type = 'SALE' AND t.status = 'COMPLETED' ${dateCondition}
+      GROUP BY t.commissionistId, cm.firstName, cm.lastName
       ORDER BY commission DESC
       LIMIT 5
     `
@@ -71,17 +71,17 @@ export async function GET(request: NextRequest) {
     // Obtener ventas recientes
     const recentSalesQuery = `
       SELECT 
-        s.id,
-        s.saleNumber,
-        s.createdAt as date,
-        s.totalAmount as amount,
+        t.id,
+        t.transactionNumber AS saleNumber,
+        t.createdAt as date,
+        t.totalAmount as amount,
         CONCAT(c.firstName, ' ', c.lastName) as customer,
         CONCAT(v.brand, ' ', v.model, ' ', v.year) as vehicle
-      FROM sales s
-      JOIN Client c ON s.customerId = c.id
-      JOIN Vehicle v ON s.vehicleId = v.id
-      WHERE s.status = 'COMPLETED' ${dateCondition}
-      ORDER BY s.createdAt DESC
+      FROM transactions t
+      JOIN Client c ON t.customerId = c.id
+      JOIN Vehicle v ON t.vehicleId = v.id
+      WHERE t.type = 'SALE' AND t.status = 'COMPLETED' ${dateCondition}
+      ORDER BY t.createdAt DESC
       LIMIT 10
     `
 

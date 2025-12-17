@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Estilos para React Quill (editor de texto enriquecido) */
+@import 'react-quill/dist/quill.snow.css';
+
+/* Ajustes básicos responsive */
+:root {
+  font-size: 16px;
+}
+
+.device-mobile {
+  font-size: 15px;
+}
+
+.device-tablet {
+  font-size: 15.5px;
+}
+
+/* Helpers para tablas en mobile */
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

@@ -365,11 +365,11 @@ export default function ExpensesPage() {
 
                 {(formData.type === 'WORKSHOP' || formData.type === 'PARTS') && (
                   <div className="md:col-span-2">
-                    <Label htmlFor="receipt">Comprobante (PDF, JPG, PNG, GIF)</Label>
+                    <Label htmlFor="receipt">Comprobante (PDF, JPG, PNG, GIF, WebP)</Label>
                     <Input
                       id="receipt"
                       type="file"
-                      accept=".pdf,.jpg,.jpeg,.png,.gif"
+                      accept=".pdf,.jpg,.jpeg,.png,.gif,.webp"
                       onChange={(e) => setFormData({ ...formData, receipt: e.target.files?.[0] || null })}
                       className="w-full p-2 border border-gray-300 rounded-md"
                     />

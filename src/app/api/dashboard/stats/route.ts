@@ -10,7 +10,6 @@ export async function GET() {
       totalRevenue,
       pendingSales,
       activeCommissionists,
-      totalProviders,
       totalWorkshops,
       totalExpenses,
       totalExpensesAmount
@@ -27,9 +26,6 @@ export async function GET() {
         where: { status: 'PENDING' }
       }),
       prisma.commissionist.count({
-        where: { isActive: true }
-      }),
-      prisma.provider.count({
         where: { isActive: true }
       }),
       prisma.workshop.count({
@@ -53,7 +49,6 @@ export async function GET() {
       totalRevenue: totalRevenue._sum.totalAmount || 0,
       pendingSales,
       activeCommissionists,
-      totalProviders,
       totalWorkshops,
       totalExpenses,
       totalExpensesAmount: totalExpensesAmount._sum.amount || 0

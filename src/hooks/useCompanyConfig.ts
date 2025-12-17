@@ -8,6 +8,10 @@ interface CompanyConfig {
   address?: string
   city?: string
   state?: string
+  phone?: string
+  email?: string
+  postalCode?: string
+  ivaCondition?: string
 }
 
 export function useCompanyConfig() {

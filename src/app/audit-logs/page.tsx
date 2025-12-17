@@ -220,6 +220,7 @@ export default function AuditLogsPage() {
             <Input
               id="startDate"
               type="date"
+              lang="es-AR"
               value={filters.startDate}
               onChange={(e) => handleFilterChange('startDate', e.target.value)}
             />
@@ -229,6 +230,7 @@ export default function AuditLogsPage() {
             <Input
               id="endDate"
               type="date"
+              lang="es-AR"
               value={filters.endDate}
               onChange={(e) => handleFilterChange('endDate', e.target.value)}
             />

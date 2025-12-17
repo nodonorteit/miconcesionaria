@@ -27,7 +27,15 @@ export async function GET() {
     return NextResponse.json({
       name: '',
       logoUrl: '',
-      description: ''
+      description: '',
+      address: '',
+      city: '',
+      state: '',
+      cuit: '',
+      phone: '',
+      email: '',
+      postalCode: '',
+      ivaCondition: ''
     })
   } catch (error) {
     console.error('❌ Error fetching company config:', error)
@@ -35,7 +43,15 @@ export async function GET() {
     return NextResponse.json({
       name: '',
       logoUrl: '',
-      description: ''
+      description: '',
+      address: '',
+      city: '',
+      state: '',
+      cuit: '',
+      phone: '',
+      email: '',
+      postalCode: '',
+      ivaCondition: ''
     })
   }
 }
@@ -47,6 +63,14 @@ export async function POST(request: NextRequest) {
     
     const name = formData.get('name') as string
     const description = formData.get('description') as string
+    const address = formData.get('address') as string
+    const city = formData.get('city') as string
+    const state = formData.get('state') as string
+    const cuit = formData.get('cuit') as string
+    const phone = formData.get('phone') as string
+    const email = formData.get('email') as string
+    const postalCode = formData.get('postalCode') as string
+    const ivaCondition = formData.get('ivaCondition') as string
     const logo = formData.get('logo') as File
 
     let logoUrl = '' // Sin valor por defecto
@@ -90,19 +114,56 @@ export async function POST(request: NextRequest) {
       console.log('📝 No se subió ningún logo nuevo')
     }
 
+    // Obtener configuración existente para preservar logoUrl si no se sube uno nuevo
+    let existingConfig: any = null
+    try {
+      const existing = await prisma.$queryRaw`
+        SELECT * FROM company_config ORDER BY updatedAt DESC LIMIT 1
+      `
+      if (Array.isArray(existing) && existing.length > 0) {
+        existingConfig = existing[0]
+      }
+    } catch (error) {
+      console.log('No hay configuración existente')
+    }
+
+    // Si no se subió un logo nuevo, usar el existente
+    if (!logoUrl && existingConfig && existingConfig.logoUrl) {
+      logoUrl = existingConfig.logoUrl
+    }
+
     // Guardar configuración en base de datos
     try {
-      console.log('💾 Guardando en BD:', { name, logoUrl, description })
+      console.log('💾 Guardando en BD:', { name, logoUrl, description, address, city, state, cuit, phone, email, postalCode, ivaCondition })
       
-      await prisma.$executeRaw`
-        INSERT INTO company_config (name, logoUrl, description, createdAt, updatedAt)
-        VALUES (${name || ''}, ${logoUrl || ''}, ${description || ''}, NOW(), NOW())
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO company_config (name, logoUrl, description, address, city, state, cuit, phone, email, postalCode, ivaCondition, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
         ON DUPLICATE KEY UPDATE
         name = VALUES(name),
         logoUrl = VALUES(logoUrl),
         description = VALUES(description),
-        updatedAt = NOW()
-      `
+        address = VALUES(address),
+        city = VALUES(city),
+        state = VALUES(state),
+        cuit = VALUES(cuit),
+        phone = VALUES(phone),
+        email = VALUES(email),
+        postalCode = VALUES(postalCode),
+        ivaCondition = VALUES(ivaCondition),
+        updatedAt = NOW()`,
+        name || '',
+        logoUrl || '',
+        description || '',
+        address || '',
+        city || '',
+        state || '',
+        cuit || '',
+        phone || '',
+        email || '',
+        postalCode || '',
+        ivaCondition || ''
+      )
       
       console.log('✅ Configuración guardada en BD exitosamente')
       console.log('🔗 URL final guardada en BD:', logoUrl)
@@ -114,7 +175,15 @@ export async function POST(request: NextRequest) {
     const config = {
       name: name || '',
       logoUrl: logoUrl || '',
-      description: description || ''
+      description: description || '',
+      address: address || '',
+      city: city || '',
+      state: state || '',
+      cuit: cuit || '',
+      phone: phone || '',
+      email: email || '',
+      postalCode: postalCode || '',
+      ivaCondition: ivaCondition || ''
     }
 
     return NextResponse.json(config)

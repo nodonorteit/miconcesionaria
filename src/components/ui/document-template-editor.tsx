@@ -86,7 +86,7 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
                     <div class="field-value">{{customer.firstName}} {{customer.lastName}}</div>
                     <div class="field-value">{{customer.address}}</div>
                     <div class="field-value">{{customer.city}} {{customer.state}}</div>
-                    <div class="field-value">Doc: {{customer.documentNumber}}</div>
+                    <div class="field-value">{{customer.documentLabel}}: {{customer.documentFormatted}}</div>
                 </div>
             </div>
         </div>
@@ -137,7 +137,7 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
                 <div class="field">
                     <div class="field-label">Precio Total:</div>
                     <div class="field-value" style="font-size: 24px; font-weight: bold; color: #059669;">
-                        {{formatCurrency sale.totalAmount}}
+                        {{sale.totalAmountFormatted}}
                     </div>
                 </div>
             </div>
@@ -189,9 +189,9 @@ const DEFAULT_TEMPLATE = `<!DOCTYPE html>
 
 
 const DEFAULT_VARIABLES = {
-  company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit'],
-  customer: ['firstName', 'lastName', 'address', 'city', 'state', 'documentNumber'],
-  vehicle: ['brand', 'model', 'year', 'color', 'vin', 'licensePlate', 'type', 'mileage', 'engineNumber'],
+  company: ['name', 'logoUrl', 'address', 'city', 'state', 'cuit', 'phone', 'email', 'postalCode', 'ivaCondition'],
+  customer: ['firstName', 'lastName', 'address', 'city', 'state', 'documentNumber', 'documentType', 'documentLabel', 'documentFormatted'],
+  vehicle: ['brand', 'model', 'year', 'vin', 'licensePlate', 'type', 'mileage'],
   sale: ['totalAmount', 'paymentMethod', 'deliveryDate', 'notes', 'date'],
   document: ['number', 'generatedAt']
 }
@@ -490,7 +490,7 @@ export default function DocumentTemplateEditor({
                   <strong className="text-gray-700">{category}:</strong>
                   <div className="text-gray-600">
                     {Array.isArray(fields) && fields.map(field => (
-                      <div key={field} className="ml-2">• {'{'+category+'.'+field+'}'}</div>
+                      <div key={field} className="ml-2">• {'{{'+category+'.'+field+'}}'}</div>
                     ))}
                   </div>
                 </div>

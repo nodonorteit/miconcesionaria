@@ -107,6 +107,7 @@ export default function CashFlowPage() {
               <Input
                 id="startDate"
                 type="date"
+                lang="es-AR"
                 value={dateRange.start}
                 onChange={(e) => setDateRange({...dateRange, start: e.target.value})}
               />
@@ -116,6 +117,7 @@ export default function CashFlowPage() {
               <Input
                 id="endDate"
                 type="date"
+                lang="es-AR"
                 value={dateRange.end}
                 onChange={(e) => setDateRange({...dateRange, end: e.target.value})}
               />

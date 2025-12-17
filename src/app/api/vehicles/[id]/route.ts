@@ -93,6 +93,26 @@ export async function PUT(
       )
     }
     
+    // Procesar precio - formato argentino: punto para miles, coma para decimales
+    let priceValue: number | null = null
+    if (vehicleData.price) {
+      // Formato argentino: remover puntos (miles) y convertir coma (decimal) a punto
+      const cleanedPrice = vehicleData.price.toString().trim().replace(/\./g, '').replace(',', '.')
+      priceValue = parseFloat(cleanedPrice)
+      
+      if (isNaN(priceValue)) {
+        return NextResponse.json({ error: 'El precio ingresado no es válido' }, { status: 400 })
+      }
+      
+      // Validar que el precio no exceda el máximo permitido (Decimal(20,2))
+      const maxPrice = 999999999999999999.99
+      if (priceValue > maxPrice) {
+        return NextResponse.json({ 
+          error: `El precio no puede ser mayor a $999.999.999.999.999.999,99. Valor ingresado: ${vehicleData.price}` 
+        }, { status: 400 })
+      }
+    }
+    
     // Actualizar vehículo
     const updatedVehicle = await prisma.vehicle.update({
       where: { id: params.id },
@@ -101,7 +121,7 @@ export async function PUT(
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
         mileage: parseInt(vehicleData.mileage),
-        price: vehicleData.price ? parseFloat(vehicleData.price) : null,
+        price: priceValue,
         description: vehicleData.description,
         vin: vehicleData.vin,
         licensePlate: vehicleData.licensePlate,
@@ -130,7 +150,10 @@ export async function PUT(
           const image = images[i]
           const timestamp = Date.now()
           const randomString = Math.random().toString(36).substring(2, 15)
-          const filename = `${params.id}_${timestamp}_${i}_${randomString}.jpg`
+          // Preservar la extensión original del archivo (jpg, png, gif, webp, etc.)
+          const originalName = image.name || 'image'
+          const fileExtension = originalName.split('.').pop()?.toLowerCase() || 'jpg'
+          const filename = `${params.id}_${timestamp}_${i}_${randomString}.${fileExtension}`
           const filePath = path.join(uploadsDir, filename)
           
           console.log(`📸 Procesando imagen ${i + 1}:`, filename)

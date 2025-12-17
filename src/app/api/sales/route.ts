@@ -77,6 +77,70 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Evitar ventas duplicadas del mismo vehículo mientras haya una venta pendiente o completada
+    const existingSale = await prisma.transaction.findFirst({
+      where: {
+        vehicleId,
+        type: 'SALE',
+        status: {
+          in: ['PENDING', 'COMPLETED']
+        }
+      },
+      select: { id: true, transactionNumber: true, status: true }
+    })
+
+    if (existingSale) {
+      return NextResponse.json(
+        { error: `El vehículo ya tiene una venta ${existingSale.status === 'COMPLETED' ? 'completada' : 'pendiente'} (N° ${existingSale.transactionNumber}). No se puede generar otra venta.` },
+        { status: 400 }
+      )
+    }
+
+    // Procesar totalAmount - limpiar formato argentino (quitar puntos de miles, convertir coma a punto)
+    let totalAmountValue: number
+    try {
+      const cleanedTotalAmount = totalAmount.toString().replace(/\./g, '').replace(',', '.')
+      totalAmountValue = parseFloat(cleanedTotalAmount)
+      
+      if (isNaN(totalAmountValue)) {
+        console.error('❌ totalAmount inválido:', totalAmount)
+        return NextResponse.json({ error: 'El monto total ingresado no es válido' }, { status: 400 })
+      }
+      
+      // Validar que el monto no exceda el máximo permitido
+      if (totalAmountValue > 999999999999999999.99) {
+        console.error('❌ totalAmount excede el máximo permitido:', totalAmountValue)
+        return NextResponse.json({ 
+          error: `El monto total no puede ser mayor a $999.999.999.999.999.999,99. Valor ingresado: ${totalAmount}` 
+        }, { status: 400 })
+      }
+    } catch (error) {
+      console.error('❌ Error procesando totalAmount:', error)
+      return NextResponse.json({ error: 'Error al procesar el monto total' }, { status: 400 })
+    }
+
+    // Procesar comisión: calcular a partir del commissionist si corresponde
+    let commissionValue: number = 0
+    try {
+      if (commissionistId) {
+        const comm = await prisma.commissionist.findUnique({
+          where: { id: commissionistId },
+          select: { commissionRate: true }
+        })
+        const rate = comm?.commissionRate ? Number(comm.commissionRate) : 0
+        // Se almacena como porcentaje (ej: 1 = 1%)
+        commissionValue = Number((totalAmountValue * (rate / 100)).toFixed(2))
+      } else if (commission) {
+        // fallback si se envía explícito
+        const cleanedCommission = commission.toString().replace(/\./g, '').replace(',', '.')
+        const parsed = parseFloat(cleanedCommission)
+        commissionValue = isNaN(parsed) ? 0 : parsed
+      }
+    } catch (error) {
+      console.warn('⚠️ Error calculando comisión, usando 0:', error)
+      commissionValue = 0
+    }
+
     // Generar número de transacción único
     let transactionNumber: string
     
@@ -111,9 +175,9 @@ export async function POST(request: NextRequest) {
       data: {
         vehicleId,
         customerId,
-        commissionistId,
-        totalAmount: parseFloat(totalAmount),
-        commission: parseFloat(commission) || 0,
+        commissionistId: commissionistId || null,
+        totalAmount: totalAmountValue,
+        commission: commissionValue,
         status: status || 'PENDING',
         notes,
         type,

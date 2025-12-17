@@ -11,9 +11,6 @@ export interface UserPermissions {
   canViewSellers: boolean
   canCreateSellers: boolean
   canDeleteSellers: boolean
-  canViewProviders: boolean
-  canCreateProviders: boolean
-  canDeleteProviders: boolean
   canViewWorkshops: boolean
   canCreateWorkshops: boolean
   canDeleteWorkshops: boolean
@@ -57,10 +54,6 @@ export function usePermissions(): UserPermissions {
     canDeleteSellers: isAdmin,
 
     // Permisos para proveedores
-    canViewProviders: isAdmin || isManager,
-    canCreateProviders: isAdmin || isManager,
-    canDeleteProviders: isAdmin,
-
     // Permisos para talleres
     canViewWorkshops: isAdmin || isManager,
     canCreateWorkshops: isAdmin || isManager,

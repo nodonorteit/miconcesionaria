@@ -35,7 +35,15 @@ interface SalesReport {
 interface CompanyConfig {
   name: string
   logoUrl: string
-  description: string
+  description?: string
+  address?: string
+  city?: string
+  state?: string
+  cuit?: string
+  phone?: string
+  email?: string
+  postalCode?: string
+  ivaCondition?: string
 }
 
 export default function SalesReportPage() {
@@ -166,6 +174,7 @@ export default function SalesReportPage() {
               <label className="block text-sm font-medium mb-1">Fecha Inicio</label>
               <Input
                 type="date"
+                lang="es-AR"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="w-full"
@@ -175,6 +184,7 @@ export default function SalesReportPage() {
               <label className="block text-sm font-medium mb-1">Fecha Fin</label>
               <Input
                 type="date"
+                lang="es-AR"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 className="w-full"

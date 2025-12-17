@@ -113,6 +113,11 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
     return sortedKeys.map(key => grouped[key])
   }
 
+  // Formatear valores en millones para no desbordar el eje Y
+  const formatMillions = (value: number) => {
+    return `$${(value / 1_000_000).toFixed(2)}M`
+  }
+
   // Función para formatear fechas según el agrupamiento
   const formatDate = (dateStr: string, grouping: string) => {
     switch (grouping) {
@@ -157,7 +162,7 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
           <p className="font-semibold text-gray-800">{formatDate(label, timeGrouping)}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: ${entry.value.toLocaleString()}
+              {entry.name}: {formatMillions(entry.value)}
             </p>
           ))}
         </div>
@@ -186,7 +191,7 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
                 textAnchor="end"
                 height={80}
               />
-              <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+              <YAxis tickFormatter={formatMillions} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Line 
@@ -231,7 +236,7 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
                 textAnchor="end"
                 height={80}
               />
-              <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+              <YAxis tickFormatter={formatMillions} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Bar dataKey="income" fill="#10b981" name="Ingresos" />
@@ -252,7 +257,7 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
                 textAnchor="end"
                 height={80}
               />
-              <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+              <YAxis tickFormatter={formatMillions} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Area 
@@ -290,7 +295,7 @@ export default function CashFlowChart({ data, dateRange, timeGrouping }: CashFlo
                 textAnchor="end"
                 height={80}
               />
-              <YAxis tickFormatter={(value) => `$${value.toLocaleString()}`} />
+              <YAxis tickFormatter={formatMillions} />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Bar dataKey="income" fill="#10b981" fillOpacity={0.8} name="Ingresos" />

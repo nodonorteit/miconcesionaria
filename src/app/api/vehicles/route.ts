@@ -180,13 +180,70 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Procesar precio - formato argentino: punto para miles, coma para decimales
+      // Ejemplo: 1.234.567,89 -> 1234567.89
+      let priceValue: number | null = null
+      if (vehicleData.price) {
+        console.log('🔍 [DEBUG] Precio original recibido:', vehicleData.price, 'Tipo:', typeof vehicleData.price)
+        
+        // Formato argentino: remover puntos (miles) y convertir coma (decimal) a punto
+        const cleanedPrice = vehicleData.price.toString().trim().replace(/\./g, '').replace(',', '.')
+        console.log('🔍 [DEBUG] Precio limpiado (formato AR):', cleanedPrice)
+        
+        priceValue = parseFloat(cleanedPrice)
+        console.log('🔍 [DEBUG] Precio parseado:', priceValue)
+        
+        if (isNaN(priceValue)) {
+          console.error('❌ Precio inválido después de parsear:', vehicleData.price, '->', cleanedPrice, '->', priceValue)
+          return NextResponse.json({ error: 'El precio ingresado no es válido' }, { status: 400 })
+        }
+        
+        // Validar que el precio no exceda el máximo permitido (Decimal(20,2) = 999,999,999,999,999,999.99)
+        const maxPrice = 999999999999999999.99
+        if (priceValue > maxPrice) {
+          console.error('❌ Precio excede el máximo permitido:', priceValue, 'Máximo:', maxPrice)
+          return NextResponse.json({ 
+            error: `El precio no puede ser mayor a $999.999.999.999.999.999,99. Valor ingresado: ${vehicleData.price}` 
+          }, { status: 400 })
+        }
+      }
+      
+      // Procesar purchasePrice - formato argentino: punto para miles, coma para decimales
+      let purchasePriceValue: number | null = null
+      if (vehicleData.purchasePrice) {
+        console.log('🔍 [DEBUG] Precio de compra original:', vehicleData.purchasePrice)
+        
+        // Formato argentino: remover puntos (miles) y convertir coma (decimal) a punto
+        const cleanedPurchasePrice = vehicleData.purchasePrice.toString().trim().replace(/\./g, '').replace(',', '.')
+        purchasePriceValue = parseFloat(cleanedPurchasePrice)
+        
+        if (isNaN(purchasePriceValue)) {
+          purchasePriceValue = null
+        } else {
+          const maxPrice = 999999999999999999.99
+          if (purchasePriceValue > maxPrice) {
+            console.error('❌ Precio de compra excede el máximo permitido:', purchasePriceValue)
+            return NextResponse.json({ 
+              error: `El precio de compra no puede ser mayor a $999.999.999.999.999.999,99. Valor ingresado: ${vehicleData.purchasePrice}` 
+            }, { status: 400 })
+          }
+        }
+      }
+      
+      console.log('🔍 [DEBUG] Valores procesados:', {
+        price: vehicleData.price,
+        priceValue,
+        purchasePrice: vehicleData.purchasePrice,
+        purchasePriceValue
+      })
+
       // Crear el vehículo
       const data = {
         brand: vehicleData.brand,
         model: vehicleData.model,
         year: parseInt(vehicleData.year),
         mileage: parseInt(vehicleData.mileage),
-        price: vehicleData.price ? parseFloat(vehicleData.price) : null,
+        price: priceValue,
         description: vehicleData.description || null,
         vin: vehicleData.vin || null,
         licensePlate: vehicleData.licensePlate || null,
@@ -194,14 +251,64 @@ export async function POST(request: NextRequest) {
         vehicleTypeId: vehicleData.vehicleTypeId,
         // Nuevos campos
         operationType: vehicleData.operationType,
-        purchasePrice: vehicleData.purchasePrice ? parseFloat(vehicleData.purchasePrice) : null,
+        purchasePrice: purchasePriceValue,
         commissionRate: vehicleData.commissionRate ? parseFloat(vehicleData.commissionRate) : null,
         notes: vehicleData.notes || null
       }
 
+      console.log('🔍 [DEBUG] Datos para crear vehículo:', data)
+
       const vehicle = await prisma.vehicle.create({
         data
       })
+
+      // Procesar imágenes si hay
+      const imageFiles = formData.getAll('images')
+      if (imageFiles.length > 0) {
+        console.log(`📸 Procesando ${imageFiles.length} imagen(es) para vehículo nuevo...`)
+        
+        try {
+          const path = await import('path')
+          const uploadsDir = '/app/uploads'
+          await mkdir(uploadsDir, { recursive: true })
+          
+          for (let i = 0; i < imageFiles.length; i++) {
+            const image = imageFiles[i] as any
+            const timestamp = Date.now()
+            const randomString = Math.random().toString(36).substring(2, 15)
+            // Preservar la extensión original del archivo (jpg, png, gif, webp, etc.)
+            const originalName = image.name || 'image'
+            const fileExtension = originalName.split('.').pop()?.toLowerCase() || 'jpg'
+            const filename = `${vehicle.id}_${timestamp}_${i}_${randomString}.${fileExtension}`
+            const filePath = path.join(uploadsDir, filename)
+            
+            console.log(`📸 Procesando imagen ${i + 1}:`, filename)
+            
+            // Convertir a buffer y guardar
+            const bytes = await image.arrayBuffer()
+            const buffer = Buffer.from(bytes)
+            await writeFile(filePath, buffer)
+            console.log(`💾 Imagen guardada: ${filePath}`)
+            
+            // Guardar referencia en BD
+            await prisma.vehicleImage.create({
+              data: {
+                path: `/uploads/${filename}`,
+                filename: filename,
+                isPrimary: i === 0,
+                vehicleId: vehicle.id
+              }
+            })
+            
+            console.log(`💾 Referencia de imagen guardada en BD`)
+          }
+          
+          console.log('✅ Todas las imágenes procesadas correctamente')
+        } catch (imageError) {
+          console.error('❌ Error procesando imágenes:', imageError)
+          // No fallar la creación del vehículo por errores de imagen
+        }
+      }
 
       // Si es una COMPRA, crear la transacción de compra y el egreso
       if (vehicleData.operationType === 'PURCHASE' && vehicleData.purchasePrice && vehicleData.sellerId) {

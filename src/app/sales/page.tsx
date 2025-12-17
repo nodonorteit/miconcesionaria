@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Trash2, ShoppingCart, Receipt, Eye, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Navigation } from '@/components/ui/navigation'
@@ -78,6 +79,9 @@ export default function SalesPage() {
   const [showSaleDocument, setShowSaleDocument] = useState(false)
   const [selectedSaleForDocument, setSelectedSaleForDocument] = useState<Sale | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [editCommissionSale, setEditCommissionSale] = useState<Sale | null>(null)
+  const [editCommissionValue, setEditCommissionValue] = useState<string>('')
+  const [editCommissionLoading, setEditCommissionLoading] = useState(false)
 
   useEffect(() => {
     fetchSales()
@@ -162,6 +166,16 @@ export default function SalesPage() {
     if (!confirmed) return
     
     try {
+      // Preparar commissionistId: si no hay vendedor, enviar null explícitamente
+      const commissionistId = sale.commissionist?.id ? sale.commissionist.id : null
+      
+      console.log('🔍 [DEBUG Frontend] Completando venta:', {
+        saleId: id,
+        commissionistId: commissionistId,
+        hasCommissionist: !!sale.commissionist,
+        commissionistData: sale.commissionist
+      })
+
       const response = await fetch(`/api/sales/${id}`, {
         method: 'PUT',
         headers: {
@@ -170,7 +184,7 @@ export default function SalesPage() {
         body: JSON.stringify({
           vehicleId: sale.vehicle?.id || '',
           customerId: sale.customer?.id || '',
-          commissionistId: sale.commissionist?.id || '',
+          commissionistId: commissionistId,
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           status: 'COMPLETED',
@@ -230,6 +244,51 @@ export default function SalesPage() {
     setShowSaleDocument(true)
   }
 
+  const submitEditCommission = async () => {
+    if (!editCommissionSale) return
+    const sale = editCommissionSale
+    const parsed = parseFloat(editCommissionValue)
+    if (isNaN(parsed) || parsed < 0) {
+      toast.error('Monto de comisión inválido')
+      return
+    }
+    try {
+      setEditCommissionLoading(true)
+      const response = await fetch(`/api/sales/${sale.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          vehicleId: sale.vehicle?.id || '',
+          customerId: sale.customer?.id || '',
+          commissionistId: sale.commissionist?.id || null,
+          totalAmount: sale.totalAmount,
+          commission: sale.commission,
+          commissionOverride: parsed,
+          status: sale.status,
+          notes: sale.notes,
+          type: 'SALE',
+          paymentMethod: sale.paymentMethod || 'CONTADO',
+          deliveryDate: sale.deliveryDate || new Date().toISOString()
+        }),
+      })
+
+      if (response.ok) {
+        toast.success('Comisión actualizada')
+        setEditCommissionSale(null)
+        fetchSales()
+      } else {
+        const err = await response.json()
+        toast.error(err.error || 'Error al actualizar comisión')
+      }
+    } catch (error) {
+      toast.error('Error al actualizar comisión')
+    } finally {
+      setEditCommissionLoading(false)
+    }
+  }
+
   // Filtrar ventas basado en el término de búsqueda
   const filteredSales = sales.filter(sale => {
     // Excluir ventas canceladas
@@ -283,9 +342,9 @@ export default function SalesPage() {
       </div>
 
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {filteredSales.map((sale) => (
-          <div key={sale.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+          <div key={sale.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <div className="flex-1">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
@@ -329,7 +388,7 @@ export default function SalesPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2 ml-4">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               <Button
                 size="sm"
                 variant="outline"
@@ -338,6 +397,18 @@ export default function SalesPage() {
               >
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Ver</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditCommissionSale(sale)
+                  setEditCommissionValue(sale.commission.toString())
+                }}
+                className="flex items-center space-x-1"
+              >
+                <span className="hidden sm:inline">Editar comisión</span>
+                <span className="sm:hidden">Comisión</span>
               </Button>
               <Button
                 size="sm"
@@ -388,6 +459,39 @@ export default function SalesPage() {
           <p className="text-gray-500">
             {searchTerm ? `No se encontraron ventas que coincidan con "${searchTerm}"` : 'No hay ventas registradas'}
           </p>
+        </div>
+      )}
+
+      {/* Modal editar comisión */}
+      {editCommissionSale && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-md">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Editar comisión</h3>
+              <Button variant="outline" size="sm" onClick={() => setEditCommissionSale(null)}>✕</Button>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-sm text-gray-600">
+                Venta {editCommissionSale.saleNumber} — {editCommissionSale.vehicle?.brand} {editCommissionSale.vehicle?.model} {editCommissionSale.vehicle?.year}
+              </p>
+              <div>
+                <Label>Nueva comisión</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editCommissionValue}
+                  onChange={(e) => setEditCommissionValue(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditCommissionSale(null)}>Cancelar</Button>
+                <Button onClick={submitEditCommission} disabled={editCommissionLoading}>
+                  {editCommissionLoading ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

@@ -21,6 +21,20 @@ interface Seller {
   updatedAt: string
 }
 
+interface CommissionPayment {
+  id: string
+  amount: number
+  paymentDate: string
+  notes?: string | null
+}
+
+interface CommissionSummary {
+  earned: number
+  paid: number
+  pending: number
+  payments: CommissionPayment[]
+}
+
 export default function SellersPage() {
   const [sellers, setSellers] = useState<Seller[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,6 +50,16 @@ export default function SellersPage() {
     phone: '',
     commissionRate: '0'
   })
+  const [paySeller, setPaySeller] = useState<Seller | null>(null)
+  const [paySummary, setPaySummary] = useState<CommissionSummary | null>(null)
+  const [payAmount, setPayAmount] = useState<string>('')
+  const [payNotes, setPayNotes] = useState<string>('')
+  const [payLoading, setPayLoading] = useState(false)
+  const [historySeller, setHistorySeller] = useState<Seller | null>(null)
+  const [historySummary, setHistorySummary] = useState<CommissionSummary | null>(null)
+  const [historyStart, setHistoryStart] = useState('')
+  const [historyEnd, setHistoryEnd] = useState('')
+  const [historyLoading, setHistoryLoading] = useState(false)
 
   useEffect(() => {
     fetchSellers()
@@ -175,6 +199,81 @@ export default function SellersPage() {
       }
     } catch (error) {
       toast.error('Error al crear vendedor "CONCESIONARIA"')
+    }
+  }
+
+  const fetchCommissionSummary = async (seller: Seller, startDate?: string, endDate?: string) => {
+    let url = `/api/commissionists/${seller.id}/payments`
+    const params = []
+    if (startDate) params.push(`startDate=${startDate}`)
+    if (endDate) params.push(`endDate=${endDate}`)
+    if (params.length) url += `?${params.join('&')}`
+    const response = await fetch(url)
+    if (!response.ok) throw new Error('Error al obtener comisiones')
+    return (await response.json()) as CommissionSummary
+  }
+
+  const openPayModal = async (seller: Seller) => {
+    try {
+      setPayLoading(true)
+      const summary = await fetchCommissionSummary(seller)
+      setPaySeller(seller)
+      setPaySummary(summary)
+      setPayAmount(summary.pending > 0 ? summary.pending.toString() : '')
+      setPayNotes('')
+    } catch (error) {
+      toast.error('Error al cargar comisiones del vendedor')
+    } finally {
+      setPayLoading(false)
+    }
+  }
+
+  const submitPayment = async () => {
+    if (!paySeller || !payAmount) return
+    const amountNum = parseFloat(payAmount)
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Monto inválido')
+      return
+    }
+    if (paySummary && amountNum > paySummary.pending) {
+      toast.error('El monto excede el pendiente')
+      return
+    }
+
+    try {
+      setPayLoading(true)
+      const response = await fetch(`/api/commissionists/${paySeller.id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: amountNum, notes: payNotes })
+      })
+      if (response.ok) {
+        toast.success('Pago registrado')
+        const updated = await fetchCommissionSummary(paySeller)
+        setPaySummary(updated)
+        setPayAmount(updated.pending > 0 ? updated.pending.toString() : '')
+        fetchSellers()
+      } else {
+        const err = await response.json()
+        toast.error(err.error || 'Error al registrar pago')
+      }
+    } catch (error) {
+      toast.error('Error al registrar pago')
+    } finally {
+      setPayLoading(false)
+    }
+  }
+
+  const openHistory = async (seller: Seller) => {
+    try {
+      setHistoryLoading(true)
+      const summary = await fetchCommissionSummary(seller, historyStart, historyEnd)
+      setHistorySeller(seller)
+      setHistorySummary(summary)
+    } catch (error) {
+      toast.error('Error al cargar historial')
+    } finally {
+      setHistoryLoading(false)
     }
   }
 
@@ -378,6 +477,24 @@ export default function SellersPage() {
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => openPayModal(seller)}
+                className="flex items-center space-x-1"
+              >
+                <span className="hidden sm:inline">Pagar comisiones</span>
+                <span className="sm:hidden">Pagar</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openHistory(seller)}
+                className="flex items-center space-x-1"
+              >
+                <span className="hidden sm:inline">Historial</span>
+                <span className="sm:hidden">Hist.</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => handleEdit(seller)}
                 className="flex items-center space-x-1"
               >
@@ -492,6 +609,143 @@ export default function SellersPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Pagar Comisiones */}
+      {paySeller && paySummary && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-xl">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Pagar comisiones - {paySeller.firstName} {paySeller.lastName}</h2>
+              <Button variant="outline" size="sm" onClick={() => { setPaySeller(null); setPaySummary(null); }}>✕</Button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-green-50 p-3 rounded">
+                  <p className="text-xs text-gray-600">Ganadas</p>
+                  <p className="text-lg font-semibold text-green-700">${paySummary.earned.toLocaleString()}</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded">
+                  <p className="text-xs text-gray-600">Pagadas</p>
+                  <p className="text-lg font-semibold text-blue-700">${paySummary.paid.toLocaleString()}</p>
+                </div>
+                <div className="bg-yellow-50 p-3 rounded">
+                  <p className="text-xs text-gray-600">Pendiente</p>
+                  <p className="text-lg font-semibold text-yellow-700">${paySummary.pending.toLocaleString()}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Monto a pagar</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  placeholder="Ej: 1000"
+                />
+                <p className="text-xs text-gray-500">Máximo: ${paySummary.pending.toLocaleString()}</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Nota (opcional)</Label>
+                <Input
+                  value={payNotes}
+                  onChange={(e) => setPayNotes(e.target.value)}
+                  placeholder="Ej: Pago parcial"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => { setPaySeller(null); setPaySummary(null); }}>Cancelar</Button>
+                <Button onClick={submitPayment} disabled={payLoading}>
+                  {payLoading ? 'Pagando...' : 'Pagar'}
+                </Button>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold">Pagos recientes</h3>
+                <div className="max-h-48 overflow-y-auto border rounded">
+                  {paySummary.payments.length === 0 ? (
+                    <p className="text-sm text-gray-500 p-3">Sin pagos registrados</p>
+                  ) : (
+                    paySummary.payments.map((p) => (
+                      <div key={p.id} className="px-3 py-2 border-b last:border-b-0 text-sm flex justify-between">
+                        <div>
+                          <div className="font-medium">${Number(p.amount).toLocaleString()}</div>
+                          {p.notes && <div className="text-gray-500">{p.notes}</div>}
+                        </div>
+                        <div className="text-gray-500">{new Date(p.paymentDate).toLocaleDateString('es-AR')}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Historial */}
+      {historySeller && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Historial de comisiones - {historySeller.firstName} {historySeller.lastName}</h2>
+              <Button variant="outline" size="sm" onClick={() => { setHistorySeller(null); setHistorySummary(null); }}>✕</Button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Desde</Label>
+                  <Input type="date" value={historyStart} onChange={(e) => setHistoryStart(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Hasta</Label>
+                  <Input type="date" value={historyEnd} onChange={(e) => setHistoryEnd(e.target.value)} />
+                </div>
+                <div className="flex items-end">
+                  <Button onClick={() => historySeller && openHistory(historySeller)} disabled={historyLoading}>
+                    {historyLoading ? 'Cargando...' : 'Filtrar'}
+                  </Button>
+                </div>
+              </div>
+              {historySummary && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-green-50 p-3 rounded">
+                      <p className="text-xs text-gray-600">Ganadas</p>
+                      <p className="text-lg font-semibold text-green-700">${historySummary.earned.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded">
+                      <p className="text-xs text-gray-600">Pagadas</p>
+                      <p className="text-lg font-semibold text-blue-700">${historySummary.paid.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-yellow-50 p-3 rounded">
+                      <p className="text-xs text-gray-600">Pendiente</p>
+                      <p className="text-lg font-semibold text-yellow-700">${historySummary.pending.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-2">Pagos</h3>
+                    <div className="max-h-72 overflow-y-auto border rounded">
+                      {historySummary.payments.length === 0 ? (
+                        <p className="text-sm text-gray-500 p-3">Sin pagos en el rango</p>
+                      ) : (
+                        historySummary.payments.map((p) => (
+                          <div key={p.id} className="px-3 py-2 border-b last:border-b-0 text-sm flex justify-between">
+                            <div>
+                              <div className="font-medium">${Number(p.amount).toLocaleString()}</div>
+                              {p.notes && <div className="text-gray-500">{p.notes}</div>}
+                            </div>
+                            <div className="text-gray-500">{new Date(p.paymentDate).toLocaleDateString('es-AR')}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

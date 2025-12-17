@@ -26,6 +26,8 @@ interface SaleDocumentProps {
     totalAmount: number
     commission: number
     notes?: string
+    paymentMethod?: string
+    deliveryDate?: string
     vehicle: {
       id: string
       brand: string
@@ -109,14 +111,13 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
           totalAmount: sale.totalAmount,
           commission: sale.commission,
           notes: sale.notes,
-          paymentMethod: 'CONTADO',
-          deliveryDate: undefined,
+          paymentMethod: sale.paymentMethod || 'CONTADO',
+          deliveryDate: sale.deliveryDate || undefined,
           vehicle: {
             id: sale.vehicle.id,
             brand: sale.vehicle.brand,
             model: sale.vehicle.model,
             year: sale.vehicle.year,
-            color: sale.vehicle.color,
             mileage: sale.vehicle.mileage,
             vin: sale.vehicle.vin,
             licensePlate: sale.vehicle.licensePlate,
@@ -155,7 +156,11 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
           address: companyConfig?.address || '',
           city: companyConfig?.city || '',
           state: companyConfig?.state || '',
-          cuit: companyConfig?.cuit || ''
+          cuit: companyConfig?.cuit || '',
+          phone: companyConfig?.phone || '',
+          email: companyConfig?.email || '',
+          postalCode: companyConfig?.postalCode || '',
+          ivaCondition: companyConfig?.ivaCondition || ''
         }
         
         // Obtener el documento real de la base de datos
@@ -178,12 +183,47 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         console.log('🔍 [DEBUG] documentNumber final a usar:', documentNumber)
         
         // Renderizar el template usando el sistema correcto
-        const htmlContent = renderTemplate(
+        let htmlContent = renderTemplate(
           template,
           saleData,
           companyConfigData,
           documentNumber
         )
+
+        // Fallback de seguridad: si alguna variable quedó sin reemplazar, forzar reemplazo de monto y número
+        const formattedTotalAmount = new Intl.NumberFormat('es-AR', {
+          style: 'currency',
+          currency: 'ARS',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(sale.totalAmount || 0)
+
+        // Limpiar prefijos del número para reuso (SALE-, COMP-, DOC-)
+        const cleanNumber = (num: string) => {
+          let n = num || ''
+          n = n.replace(/^(SALE|COMP|DOC)-?/i, '')
+          if (n.includes('-')) {
+            const parts = n.split('-')
+            const numericPart = parts.find(p => /^\d+$/.test(p))
+            n = numericPart || parts[parts.length - 1]
+          }
+          n = n.replace(/^[^0-9]+/, '').replace(/^0+/, '') || '0'
+          return n
+        }
+
+        const documentNumberClean = cleanNumber(documentNumber)
+
+        // Reemplazos de seguridad en el HTML generado
+        htmlContent = htmlContent
+          .replace(/\{\{\s*sale\.totalAmountFormatted\s*\}\}/g, formattedTotalAmount)
+          .replace(/\{\s*sale\.totalAmountFormatted\s*\}/g, formattedTotalAmount)
+          .replace(/sale\.totalAmountFormatted/g, formattedTotalAmount)
+          .replace(/\{\{\s*sale\.totalAmount\s*\}\}/g, formattedTotalAmount)
+          .replace(/\{\s*sale\.totalAmount\s*\}/g, formattedTotalAmount)
+          .replace(/sale\.totalAmount/g, formattedTotalAmount)
+          .replace(/\{\{\s*document\.number\s*\}\}/g, documentNumberClean)
+          .replace(/\{\s*document\.number\s*\}/g, documentNumberClean)
+          .replace(/document\.number/g, documentNumberClean)
         
         // Crear un elemento temporal para renderizar el HTML
         const tempDiv = document.createElement('div')
@@ -234,7 +274,9 @@ export function SaleDocument({ sale, isOpen, onClose, onGenerateDocument }: Sale
         }
         
         // Descargar PDF
-        const fileName = `boleto-venta-${sale.saleNumber}-${new Date().toISOString().split('T')[0]}.pdf`
+        // Construir nombre de archivo limpio usando el número de boleto sin prefijos
+        let docNumberForFile = documentNumberClean || sale.saleNumber || sale.id || 'documento'
+        const fileName = `boleto-compraventa-${docNumberForFile}.pdf`
         pdf.save(fileName)
         
       } else {

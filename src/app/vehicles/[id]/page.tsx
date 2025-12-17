@@ -240,8 +240,11 @@ export default function VehicleDetailPage({ params }: { params: { id: string } }
 
               {vehicle.description && (
                 <div className="mt-4">
-                  <p className="text-sm text-gray-600">Descripción</p>
-                  <p className="mt-1">{vehicle.description}</p>
+                  <p className="text-sm text-gray-600 mb-2">Descripción</p>
+                  <div 
+                    className="mt-1 prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: vehicle.description }}
+                  />
                 </div>
               )}
             </CardContent>

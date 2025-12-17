@@ -8,8 +8,6 @@ const protectedRoutes = [
   '/customers',
   '/sales',
   '/sellers',
-  '/providers',
-  '/workshops',
   '/expenses',
   '/cashflow',
   '/reports',
@@ -26,8 +24,6 @@ const managerAndAdminRoutes = [
   '/reports',
   '/sales',
   '/sellers',
-  '/providers',
-  '/workshops',
   '/expenses',
   '/cashflow'
 ]
