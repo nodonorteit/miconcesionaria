@@ -6,6 +6,7 @@ import { Header } from '@/components/ui/header'
 import { MainNavigation } from '@/components/ui/main-navigation'
 import { Toaster } from 'react-hot-toast'
 import { ConditionalLayout } from '@/components/ui/conditional-layout'
+import { SetupChecker } from '@/components/ui/setup-checker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -25,12 +26,14 @@ export default function RootLayout({
   return (
     <html lang="es-AR">
       <body className={inter.className}>
-        <AuthProvider>
-          <ConditionalLayout>
-            {children}
-          </ConditionalLayout>
-          <Toaster position="top-right" />
-        </AuthProvider>
+        <SetupChecker>
+          <AuthProvider>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+            <Toaster position="top-right" />
+          </AuthProvider>
+        </SetupChecker>
       </body>
     </html>
   )

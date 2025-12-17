@@ -41,8 +41,16 @@ const passwordChangeAllowedRoutes = [
   '/auth/logout'
 ]
 
+// Rutas que no requieren verificación de setup
+const setupRoutes = ['/setup', '/api/setup', '/api/health']
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Permitir rutas de setup y API sin verificación
+  if (setupRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next()
+  }
 
   // Obtener token si existe (aunque la ruta no sea protegida) para validar mustChangePassword
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
@@ -109,7 +117,8 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - auth (auth routes)
+     * - setup (setup route)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public|auth).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public|auth|setup).*)',
   ],
 } 
