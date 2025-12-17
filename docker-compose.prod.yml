@@ -5,7 +5,7 @@ services:
     image: gmsastre/miconcesionaria:latest
     platform: linux/amd64
     ports:
-      - "3001:3000"
+      - "3002:3000"
     environment:
       - 'DATABASE_URL=mysql://miconcesionaria:!FVsxr?pmm34xm2N@db:3306/miconcesionaria'
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
