@@ -120,24 +120,64 @@ docker-compose exec app npx prisma db seed
 
 ## 🌐 Configuración de Plesk
 
-### 1. Configurar Proxy Reverso
+### 1. Configurar Docker Container
+
+**IMPORTANTE**: La aplicación corre internamente en el puerto **3021**, no en 3000.
+
+1. En Plesk, ir al plugin "Docker"
+2. Crear o editar el contenedor
+3. Configurar las siguientes variables de entorno:
+   - `PORT=3021` (obligatorio)
+   - `DATABASE_URL=mysql://usuario:contraseña@host:3306/nombre_bd`
+   - `NEXTAUTH_URL=https://tu-dominio.com`
+   - `NEXTAUTH_SECRET=tu-secret-key`
+   - `SMTP_HOST=smtp.gmail.com`
+   - `SMTP_PORT=587`
+   - `SMTP_USER=tu-email@gmail.com`
+   - `SMTP_PASS=tu-password`
+   - `NODE_ENV=production`
+
+4. Configurar mapeo de puertos:
+   - **Puerto del host**: El que Plesk asigne (ej: 32770) o uno específico (ej: 3021)
+   - **Puerto del contenedor**: `3021` (siempre 3021)
+
+### 2. Configurar Proxy Reverso (Nginx)
 
 1. En Plesk, ir al dominio
 2. Ir a "Apache & nginx Settings"
 3. Habilitar "Proxy mode"
-4. Configurar proxy reverso:
+4. Configurar proxy reverso en la sección "Additional nginx directives":
 
 ```nginx
-# En la configuración de Apache
-ProxyPass / http://localhost:3000/
-ProxyPassReverse / http://localhost:3000/
+location / {
+    proxy_pass http://127.0.0.1:PUERTO_DEL_HOST;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_cache_bypass $http_upgrade;
+}
 ```
 
-### 2. Configurar SSL/HTTPS
+**Reemplazar `PUERTO_DEL_HOST`** con el puerto que Plesk asignó al contenedor (puedes verlo con `docker ps`).
+
+**Ejemplo**: Si el contenedor está mapeado a `0.0.0.0:32770->3021/tcp`, usar:
+```nginx
+proxy_pass http://127.0.0.1:32770;
+```
+
+### 3. Configurar SSL/HTTPS (Puerto 443)
 
 1. En Plesk, ir a "SSL/TLS Certificates"
 2. Instalar certificado Let's Encrypt gratuito
 3. Forzar redirección HTTPS
+4. El puerto 443 ya está configurado por Plesk, solo necesitas asegurarte de que:
+   - El certificado SSL esté instalado
+   - La redirección HTTP → HTTPS esté habilitada
+   - El proxy reverso apunte al puerto correcto del contenedor
 
 ### 3. Configurar backups
 
@@ -153,8 +193,10 @@ ProxyPassReverse / http://localhost:3000/
 # Verificar logs
 docker-compose logs -f app
 
-# Verificar health check
-curl http://localhost:3000/api/health
+# Verificar health check (usar el puerto del contenedor, ej: 3021 o el puerto asignado por Plesk)
+curl http://localhost:3021/api/health
+# O si está mapeado a otro puerto del host:
+curl http://localhost:PUERTO_ASIGNADO/api/health
 ```
 
 ### 2. Acceder a la aplicación

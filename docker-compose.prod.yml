@@ -6,13 +6,14 @@ services:
     platform: linux/amd64
     network_mode: host
     environment:
+      - PORT=3021
       - DATABASE_URL=mysql://miconcesionaria:%21FVsxr%3Fpmm34xm2N@127.0.0.1:3306/miconcesionaria
       - NEXTAUTH_URL=https://miconcesionaria.nodonorte.com
       - NEXTAUTH_SECRET=09W4JFuZPYwZ02dQ/3WDHQggQ+fDCp55nfJCFjoTWC4=
       - SMTP_HOST=smtp1.s.ipzmarketing.com
       - SMTP_PORT=587
-      - SMTP_USER=pzbkjxwenzkr
-      - SMTP_PASS=7FOtsP0qKvNF
+      - SMTP_USER=
+      - SMTP_PASS=
       - NODE_ENV=production
     volumes:
       - uploads_data:/app/uploads
