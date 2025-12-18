@@ -23,7 +23,9 @@ export default function SetupPage() {
     dbName: 'miconcesionaria',
     dbUser: 'miconcesionaria',
     dbPassword: '',
-    rootPassword: '' // Para crear la DB y usuario
+    adminEmail: 'admin@miconcesionaria.com',
+    adminPassword: 'admin123',
+    adminName: 'Administrador'
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,23 +37,6 @@ export default function SetupPage() {
     setProgress('Iniciando configuración...')
 
     try {
-      setProgress('Creando base de datos y usuario...')
-      const createResponse = await fetch('/api/setup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'create-db',
-          ...formData
-        }),
-      })
-
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json()
-        throw new Error(errorData.error || 'Error al crear la base de datos')
-      }
-
       setProgress('Creando tablas en la base de datos...')
       const migrateResponse = await fetch('/api/setup', {
         method: 'POST',
@@ -139,9 +124,9 @@ export default function SetupPage() {
               </AlertDescription>
             </Alert>
             <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>Credenciales por defecto:</strong></p>
-              <p>Email: <code className="bg-gray-100 px-2 py-1 rounded">admin@miconcesionaria.com</code></p>
-              <p>Contraseña: <code className="bg-gray-100 px-2 py-1 rounded">admin123</code></p>
+              <p><strong>Credenciales de acceso:</strong></p>
+              <p>Email: <code className="bg-gray-100 px-2 py-1 rounded">{formData.adminEmail}</code></p>
+              <p>Contraseña: <code className="bg-gray-100 px-2 py-1 rounded">(la que configuraste)</code></p>
               <p className="text-xs text-yellow-600 mt-4">
                 ⚠️ Se te pedirá cambiar la contraseña en el primer inicio de sesión
               </p>
@@ -251,20 +236,46 @@ export default function SetupPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="rootPassword">Contraseña Root (para crear DB y usuario)</Label>
-              <Input
-                id="rootPassword"
-                type="password"
-                value={formData.rootPassword}
-                onChange={(e) => setFormData({ ...formData, rootPassword: e.target.value })}
-                required
-                disabled={isLoading}
-                placeholder="Se usará solo para crear la DB y usuario"
-              />
-              <p className="text-xs text-gray-500">
-                Esta contraseña se usa solo durante la instalación para crear la base de datos y el usuario
-              </p>
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-lg font-semibold mb-4">Usuario Administrador del Sistema</h3>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="adminName">Nombre del Administrador</Label>
+                  <Input
+                    id="adminName"
+                    value={formData.adminName}
+                    onChange={(e) => setFormData({ ...formData, adminName: e.target.value })}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adminEmail">Email del Administrador</Label>
+                  <Input
+                    id="adminEmail"
+                    type="email"
+                    value={formData.adminEmail}
+                    onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="adminPassword">Contraseña del Administrador</Label>
+                  <Input
+                    id="adminPassword"
+                    type="password"
+                    value={formData.adminPassword}
+                    onChange={(e) => setFormData({ ...formData, adminPassword: e.target.value })}
+                    required
+                    disabled={isLoading}
+                    minLength={6}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Mínimo 6 caracteres. Se pedirá cambiar la contraseña en el primer login.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <Button

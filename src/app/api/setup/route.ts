@@ -8,13 +8,15 @@ import { join } from 'path'
 const execAsync = promisify(exec)
 
 interface SetupRequest {
-  action: 'create-db' | 'migrate' | 'seed' | 'finalize'
+  action: 'migrate' | 'seed' | 'finalize'
   dbHost: string
   dbPort: string
   dbName: string
   dbUser: string
   dbPassword: string
-  rootPassword: string
+  adminEmail?: string
+  adminPassword?: string
+  adminName?: string
 }
 
 function buildDatabaseUrl(host: string, port: string, database: string, user: string, password: string): string {
@@ -26,46 +28,7 @@ function buildDatabaseUrl(host: string, port: string, database: string, user: st
 export async function POST(request: NextRequest) {
   try {
     const body: SetupRequest = await request.json()
-    const { action, dbHost, dbPort, dbName, dbUser, dbPassword, rootPassword } = body
-
-    if (action === 'create-db') {
-      // Crear base de datos y usuario usando MySQL root
-      const rootUrl = buildDatabaseUrl(dbHost, dbPort, 'mysql', 'root', rootPassword)
-      const rootPrisma = new PrismaClient({
-        datasources: {
-          db: {
-            url: rootUrl
-          }
-        }
-      })
-
-      try {
-        // Crear base de datos
-        await rootPrisma.$executeRawUnsafe(
-          `CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`
-        )
-
-        // Crear usuario y otorgar permisos
-        await rootPrisma.$executeRawUnsafe(
-          `CREATE USER IF NOT EXISTS '${dbUser}'@'%' IDENTIFIED BY ?`,
-          dbPassword
-        )
-
-        await rootPrisma.$executeRawUnsafe(
-          `GRANT ALL PRIVILEGES ON \`${dbName}\`.* TO '${dbUser}'@'%'`
-        )
-
-        await rootPrisma.$executeRawUnsafe(`FLUSH PRIVILEGES`)
-
-        await rootPrisma.$disconnect()
-
-        return NextResponse.json({ success: true, message: 'Base de datos y usuario creados exitosamente' })
-      } catch (error) {
-        await rootPrisma.$disconnect()
-        console.error('Error creating database:', error)
-        throw error
-      }
-    }
+    const { action, dbHost, dbPort, dbName, dbUser, dbPassword, adminEmail, adminPassword, adminName } = body
 
     if (action === 'migrate') {
       // Crear tablas desde el schema usando db push
@@ -115,14 +78,22 @@ export async function POST(request: NextRequest) {
         const bcrypt = await import('bcryptjs')
         const prisma = new PrismaClient()
 
-        // Crear admin user
-        const hashedPassword = await bcrypt.default.hash('admin123', 12)
+        // Crear admin user con credenciales personalizadas
+        const adminEmailFinal = adminEmail || 'admin@miconcesionaria.com'
+        const adminPasswordFinal = adminPassword || 'admin123'
+        const adminNameFinal = adminName || 'Administrador'
+        
+        const hashedPassword = await bcrypt.default.hash(adminPasswordFinal, 12)
         const adminUser = await prisma.user.upsert({
-          where: { email: 'admin@miconcesionaria.com' },
-          update: { mustChangePassword: true },
+          where: { email: adminEmailFinal },
+          update: { 
+            mustChangePassword: true,
+            password: hashedPassword,
+            name: adminNameFinal
+          },
           create: {
-            email: 'admin@miconcesionaria.com',
-            name: 'Administrador',
+            email: adminEmailFinal,
+            name: adminNameFinal,
             password: hashedPassword,
             role: 'ADMIN',
             mustChangePassword: true,

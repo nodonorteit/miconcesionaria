@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    image: gmsastre/miconcesionaria:latest
+    platform: linux/amd64
+    ports:
+      - "${PORT:-3021}:3021"
+    environment:
+      - PORT=3021
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - SMTP_HOST=${SMTP_HOST:-smtp1.s.ipzmarketing.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - NODE_ENV=production
+    volumes:
+      - uploads_data:/app/uploads
+    restart: unless-stopped
+
+volumes:
+  uploads_data:
+
