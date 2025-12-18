@@ -61,6 +61,11 @@ RUN mkdir -p ./uploads
 RUN chown nextjs:nodejs ./uploads
 RUN chmod 755 ./uploads
 
+# Create .config directory for setup configuration
+RUN mkdir -p ./.config
+RUN chown nextjs:nodejs ./.config
+RUN chmod 755 ./.config
+
 USER nextjs
 
 EXPOSE 3021
