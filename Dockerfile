@@ -66,6 +66,10 @@ RUN mkdir -p ./.config
 RUN chown nextjs:nodejs ./.config
 RUN chmod 755 ./.config
 
+# Copy and set up docker-entrypoint.sh for Plesk compatibility
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3021
@@ -73,7 +77,6 @@ EXPOSE 3021
 ENV PORT=3021
 ENV HOSTNAME="0.0.0.0"
 
-# server.js is created by next build from the standalone output
-# https://nextjs.org/docs/pages/api-reference/next-config-js/output
-# PORT can be overridden via environment variable in docker-compose
+# Use entrypoint for Plesk compatibility, fallback to direct node command
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "server.js"] 
